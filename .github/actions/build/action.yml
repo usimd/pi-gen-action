@@ -1,0 +1,21 @@
+name: 'Run pi-gen build'
+inputs:
+  config-file:
+    description: 'Location of the pi-gen config file to use'
+    required: true
+  target-stage:
+    description: 'Name of the pi-gen stage to run the build to'
+    required: true
+  pi-gen-version:
+    description: 'Ref of the pi-gen repo to clone for building'
+    required: true
+  enable-noobs:
+    description: 'Control whether a noobs image will be created as well'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" . -t pi-gen-build:latest
+      shell: bash
+    - run: docker run --rm -v $(pwd):/github/workspace --workdir /github/workspace pi-gen-build:latest ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
+      shell: bash
