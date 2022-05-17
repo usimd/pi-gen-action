@@ -1,0 +1,91 @@
+name: 'RPi image build action'
+description: 'Build a custom Raspberry Pi image'
+inputs:
+  pi-gen-version:
+    description: 'Release version of pi-gen to use'
+    required: false
+    # Currently, there's a bug in pi-gen if building for 64bit targets: https://github.com/RPi-Distro/pi-gen/issues/271
+    # We assume this is mostly the case, so this is set to the fix in the branch by default
+    default: 'arm64'
+  image-name:
+    description: 'Final image name'
+    required: true
+  enable-noobs:
+    description: 'Set whether a noobs image should be built as well'
+    required: false
+    default: false
+  final-stage:
+    description: 'pi-gen stage name to stop before executing custom stage'
+    required: false
+    default: 'stage3'
+  custom-stage:
+    description: 'Directory containing a valid pi-gen custom stage to execute after the configured final stage'
+    required: true
+  release:
+    description: 'The release version to build images against. Valid values are jessie, stretch, buster, bullseye, and testing'
+    required: false
+    default: 'bullseye'
+  compression:
+    description: 'Compression to apply on final image (either "none", "zip", "xz" or "gz")'
+    required: false
+    default: 'zip'
+  locale:
+    description: 'Default locale of the system image'
+    required: false
+    default: 'en_GB.UTF-8'
+  hostname:
+    description: 'Host name of the image'
+    required: false
+    default: 'raspberrypi'
+  keyboard-keymap:
+    description: 'Default keyboard keymap'
+    required: false
+    default: 'gb'
+  keyboard-layout:
+    description: 'Default keyboard layout'
+    required: false
+    default: 'English (UK)'
+  timezone:
+    description: 'System timezone'
+    required: false
+    default: 'Europe/London'
+  username:
+    description: 'Name of the initial user account'
+    required: false
+    default: 'pi'
+  password:
+    description: 'Password of the intial user account, locked if empty'
+    required: false
+  wpa-essid:
+    description: 'SSID of a default wifi network to connect to'
+    required: false
+  wpa-password:
+    description: 'Password of default wifi network to connect to'
+    required: false
+  wpa-country:
+    description: 'Wifi country code of default network to connect to'
+    required: false
+  enable-ssh:
+    description: 'Enable SSH access to Pi'
+    required: false
+    default: 0
+outputs:
+  image-path:
+    description: 'Path to the final custom image'
+    value: ''
+  image-noobs-path:
+    description: 'Path to final noobs image, if enabled'
+    value: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Validate and create pi-gen config'
+      uses: ./.github/actions/configure
+      id: 'configure'
+    - name: 'Build Raspberry Pi image'
+      uses: ./.github/actions/build
+      with:
+        config-file: "${{ steps.configure.outputs.config-file }}"
+        target-stage: "${{ inputs.final-stage }}"
+        pi-gen-version: "${{ inputs.pi-gen-version }}"
+        enable-noobs: "${{ inputs.enable-noobs }}"
