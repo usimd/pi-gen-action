@@ -5,16 +5,8 @@ jobs:
   pi-gen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: ./
         with:
-          repository: 'RPi-Distro/pi-gen'
-          ref: 'arm64'
-          path: 'pi-gen'
+          image-name: test
+          custom-stage: test
 
-      - run: sudo apt-get install $(grep -Po '[^:]+$' pi-gen/depends)
-
-      - run: >
-          echo -e "IMG_NAME='pi-gen-action-test'\nUSE_QCOW2=0\nDEPLOY_COMPRESSION=xz" > config &&
-          touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP ./stage4/SKIP_IMAGES ./stage5/SKIP_IMAGES &&
-          sudo ./build.sh
-        working-directory: pi-gen
