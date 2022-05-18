@@ -20,9 +20,10 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/checkout@v3
-      repository: RPi-Distro/pi-gen
-      ref: ${{ inputs.pi-gen-version }}
-      path: ${{ inputs.pi-gen-dir }}
+      with:
+        repository: RPi-Distro/pi-gen
+        ref: ${{ inputs.pi-gen-version }}
+        path: ${{ inputs.pi-gen-dir }}
 
     - run: sudo modprobe binfmt_misc
       shell: bash
