@@ -15,7 +15,7 @@ inputs:
   pi-gen-dir:
     description: 'Temporary directory where to run pi-gen in container'
     required: false
-    default: '/tmp/pi-gen'
+    default: './pi-gen'
 runs:
   using: 'composite'
   steps:
