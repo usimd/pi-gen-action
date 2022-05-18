@@ -30,6 +30,7 @@ runs:
 
     - run: ./prepare-stages.sh ${{ inputs.pi-gen-dir }} ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
       shell: bash
+      working-directory: ${{ github.action_path }}
 
     - run: ${{ inputs.pi-gen-dir }}/build-docker.sh -c ${{ inputs.config-file }}
       shell: bash
