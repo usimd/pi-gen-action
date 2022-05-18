@@ -8,34 +8,34 @@ async function run(): Promise<void> {
     const lines: string[] = []
 
     const imageName: string = core.getInput('image_name')
-    lines.push(`IMG_NAME=${imageName}`)
+    lines.push(`IMG_NAME="${imageName}"`)
 
     const release: string = core.getInput('release')
-    lines.push(`RELEASE=${release}`)
+    lines.push(`RELEASE="${release}"`)
 
     const compression: string = core.getInput('compression')
-    lines.push(`DEPLOY_COMPRESSION=${compression}`)
+    lines.push(`DEPLOY_COMPRESSION="${compression}"`)
 
     const locale: string = core.getInput('locale')
-    lines.push(`LOCALE_DEFAULT=${locale}`)
+    lines.push(`LOCALE_DEFAULT="${locale}"`)
 
     const hostname: string = core.getInput('hostname')
-    lines.push(`TARGET_HOSTNAME=${hostname}`)
+    lines.push(`TARGET_HOSTNAME="${hostname}"`)
 
     const keyboardKeymap: string = core.getInput('keyboard_keymap')
-    lines.push(`KEYBOARD_KEYMAP=${keyboardKeymap}`)
+    lines.push(`KEYBOARD_KEYMAP="${keyboardKeymap}"`)
 
     const keyboardLayout: string = core.getInput('keyboard_layout')
-    lines.push(`KEYBOARD_LAYOUT=${keyboardLayout}`)
+    lines.push(`KEYBOARD_LAYOUT="${keyboardLayout}"`)
 
     const timezone: string = core.getInput('timezone')
-    lines.push(`TIMEZONE_DEFAULT=${timezone}`)
+    lines.push(`TIMEZONE_DEFAULT="${timezone}"`)
 
     const username: string = core.getInput('username')
-    lines.push(`FIRST_USER_NAME=${username}`)
+    lines.push(`FIRST_USER_NAME="${username}"`)
 
     const password: string = core.getInput('password')
-    lines.push(`FIRST_USER_PASS=${password}`)
+    lines.push(`FIRST_USER_PASS="${password}"`)
 
     await fs.writeFile('pi_gen_config', lines.join('\n'))
     const pigenConfigFile = await fs.readFile('pi_gen_config', {
