@@ -12,10 +12,14 @@ inputs:
   enable-noobs:
     description: 'Control whether a noobs image will be created as well'
     required: true
+  pi-gen-dir:
+    description: 'Temporary directory where to run pi-gen in container'
+    required: false
+    default: '/tmp/pi-gen'
 runs:
   using: 'composite'
   steps:
-    - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" ${{github.action_path}} -t pi-gen-build:latest
+    - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" --build-arg "PI_GEN_DIR=${{ inputs.pi-gen-dir }}" ${{github.action_path}} -t pi-gen-build:latest
       shell: bash
-    - run: docker run --rm -v $(pwd):/github/workspace --workdir /github/workspace pi-gen-build:latest ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
+    - run: docker run --rm -v $(pwd):/github/workspace --workdir /github/workspace pi-gen-build:latest ${{ inputs.pi-gen-dir }} ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
       shell: bash
