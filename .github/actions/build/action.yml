@@ -21,5 +21,7 @@ runs:
   steps:
     - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" --build-arg "PI_GEN_DIR=${{ inputs.pi-gen-dir }}" ${{github.action_path}} -t pi-gen-build:latest
       shell: bash
+    - run: sudo modprobe binfmt_misc
+      shell: bash
     - run: docker run --rm -v $(pwd):/github/workspace --workdir /github/workspace pi-gen-build:latest ${{ inputs.pi-gen-dir }} ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
       shell: bash
