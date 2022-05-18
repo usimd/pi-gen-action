@@ -1,10 +1,11 @@
 import * as core from '@actions/core'
 import * as fs from 'fs/promises'
-import * as io from '@actions/io'
 
 async function run(): Promise<void> {
   try {
-    let lines: string[] = []
+    core.info('Running check and creation of pi-gen config')
+
+    const lines: string[] = []
 
     const imageName: string = core.getInput('image-name')
     lines.push(`IMG_NAME=${imageName}`)
@@ -36,12 +37,13 @@ async function run(): Promise<void> {
     const password: string = core.getInput('password')
     lines.push(`FIRST_USER_PASS=${password}`)
 
-    await fs.writeFile('pi_gen_config', lines.join("\n"))
-    const pigenConfigFile = await fs.readFile('pi_gen_config', { encoding: 'utf8' })
+    await fs.writeFile('pi_gen_config', lines.join('\n'))
+    const pigenConfigFile = await fs.readFile('pi_gen_config', {
+      encoding: 'utf8'
+    })
     core.info(`Wrote to file 'pi_gen_config':\n\n${pigenConfigFile}`)
 
     core.setOutput('config-file', 'pi_gen_config')
-
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
