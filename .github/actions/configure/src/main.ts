@@ -37,8 +37,11 @@ async function run(): Promise<void> {
     lines.push(`FIRST_USER_PASS=${password}`)
 
     await fs.writeFile('pi_gen_config', lines.join("\n"))
+    const pigenConfigFile = await fs.readFile('pi_gen_config', { encoding: 'utf8' })
+    core.info(`Wrote to file 'pi_gen_config':\n\n${pigenConfigFile}`)
 
     core.setOutput('config-file', 'pi_gen_config')
+
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

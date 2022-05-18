@@ -15,7 +15,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" . -t pi-gen-build:latest
+    - run: docker build --build-arg "PI_GEN_VERSION=${{ inputs.pi-gen-version }}" ${{github.action_path}} -t pi-gen-build:latest
       shell: bash
     - run: docker run --rm -v $(pwd):/github/workspace --workdir /github/workspace pi-gen-build:latest ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
       shell: bash
