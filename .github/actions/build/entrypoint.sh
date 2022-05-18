@@ -20,7 +20,7 @@ for stage in ${!PI_GEN_STAGES[@]}; do
   fi
 done
 
-if [[ " ${PI_GEN_STAGES[*]} " !~ " ${TARGET_STAGE} " ]]; then
+if ! [[ " ${PI_GEN_STAGES[*]} " =~ " ${TARGET_STAGE} " ]]; then
   ln -s ${TARGET_STAGE} ${PI_GEN_DIR}
 fi
 
