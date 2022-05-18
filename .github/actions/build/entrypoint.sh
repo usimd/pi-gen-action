@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 PI_GEN_DIR=$1
 CONFIG_FILE=$2
