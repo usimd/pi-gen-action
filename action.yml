@@ -89,7 +89,7 @@ runs:
         INPUT_LOCALE: ${{ inputs.locale }}
         INPUT_HOSTNAME: ${{ inputs.hostname }}
         INPUT_KEYBOARD_KEYMAP: ${{ inputs.keyboard-keymap }}
-        INPUT_KEYBOARD_LPAYOUT: ${{ inputs.kayboard-layout }}
+        INPUT_KEYBOARD_LAYOUT: ${{ inputs.keyboard-layout }}
         INPUT_TIMEZONE: ${{ inputs.timezone}}
         INPUT_USERNAME: ${{ inputs.username }}
         INPUT_PASSWORD: ${{ inputs.password }}

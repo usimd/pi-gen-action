@@ -7,7 +7,7 @@ async function run(): Promise<void> {
 
     const lines: string[] = []
 
-    const imageName: string = core.getInput('image-name')
+    const imageName: string = core.getInput('image_name')
     lines.push(`IMG_NAME=${imageName}`)
 
     const release: string = core.getInput('release')
@@ -22,10 +22,10 @@ async function run(): Promise<void> {
     const hostname: string = core.getInput('hostname')
     lines.push(`TARGET_HOSTNAME=${hostname}`)
 
-    const keyboardKeymap: string = core.getInput('keyboard-keymap')
+    const keyboardKeymap: string = core.getInput('keyboard_keymap')
     lines.push(`KEYBOARD_KEYMAP=${keyboardKeymap}`)
 
-    const keyboardLayout: string = core.getInput('keyboard-layout')
+    const keyboardLayout: string = core.getInput('keyboard_layout')
     lines.push(`KEYBOARD_LAYOUT=${keyboardLayout}`)
 
     const timezone: string = core.getInput('timezone')
