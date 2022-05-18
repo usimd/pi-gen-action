@@ -25,7 +25,7 @@ runs:
         ref: ${{ inputs.pi-gen-version }}
         path: ${{ inputs.pi-gen-dir }}
 
-    - run: sudo modprobe binfmt_misc
+    - run: sudo apt-get update && sudo apt-get install -y binfmt-support && sudo modprobe binfmt_misc
       shell: bash
 
     - run: ./prepare-stages.sh ${{ inputs.pi-gen-dir }} ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
