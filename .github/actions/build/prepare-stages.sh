@@ -23,7 +23,3 @@ done
 if ! [[ " ${PI_GEN_STAGES[*]} " =~ " ${TARGET_STAGE} " ]]; then
   ln -s ${TARGET_STAGE} ${PI_GEN_DIR}
 fi
-
-modprobe binfmt_misc
-
-${PI_GEN_DIR}/build.sh -c $CONFIG_FILE
