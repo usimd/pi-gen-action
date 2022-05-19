@@ -10,4 +10,5 @@ jobs:
         with:
           image-name: test
           custom-stage: test
+          release: buster
 
