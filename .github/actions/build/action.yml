@@ -25,13 +25,13 @@ runs:
         ref: ${{ inputs.pi-gen-version }}
         path: ${{ inputs.pi-gen-dir }}
 
-    - run: sudo apt-get update && sudo apt-get install -y binfmt-support qemu-user-static && sudo modprobe binfmt_misc
+    - run: sudo apt-get install -y $(grep -Po '[^:]+$' ${{ inputs.pi-gen-dir }}/depends)
       shell: bash
 
     - run: ${{ github.action_path }}/prepare-stages.sh ${{ inputs.pi-gen-dir }} ${{ inputs.config-file }} ${{ inputs.target-stage }} ${{ inputs.enable-noobs }}
       shell: bash
 
-    - run: ${{ inputs.pi-gen-dir }}/build-docker.sh -c ${{ inputs.config-file }}
+    - run: ${{ inputs.pi-gen-dir }}/build.sh -c ${{ inputs.config-file }}
       shell: bash
 
     - if: failure()
