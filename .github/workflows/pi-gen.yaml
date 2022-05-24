@@ -1,13 +1,25 @@
 name: Run pi-gen
-on: push
+on: 
+  workflow_dispatch:
 
 jobs:
   pi-gen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./
+      - uses: actions/checkout@v3
         with:
-          image-name: test
-          custom-stage: test
+          repository: RPi-Distro/pi-gen
+          #ref: arm64
+          path: pi-gen
+      
+      - run: mkdir my-stage
+
+      - run: sudo apt-get install -y binfmt-support && sudo modprobe binfmt_misc
+
+      - run: echo -e 'IMG_NAME=test\nSTAGE_LIST="stage0 stage1 stage2 stage3 stage99"' > pi-gen-config
+
+      - run: ln -s $(readlink -f my-stage) pi-gen/stage99
+
+      - run: PIGEN_DOCKER_OPTS="-v $(readlink -f my-stage):$(readlink -f my-stage)" ./pi-gen/build-docker.sh -c pi-gen-config
 
