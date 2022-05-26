@@ -17,7 +17,7 @@ jobs:
 
       - run: sudo apt-get install -y binfmt-support qemu-user-static && sudo modprobe binfmt_misc
 
-      - run: echo -e 'IMG_NAME=test\nSTAGE_LIST="stage0 stage1 stage2 stage3 stage99"' > pi-gen-config
+      - run: echo -e 'IMG_NAME=test\nSTAGE_LIST="stage0 stage1 stage2 stage3 stage99"\nUSE_QCOW2=1' > pi-gen-config
 
       - run: ln -s $(readlink -f my-stage) pi-gen/stage99
 
