@@ -7,19 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+
+      - uses: ./
         with:
-          repository: RPi-Distro/pi-gen
-          ref: arm64
-          path: pi-gen
-      
-      - run: mkdir my-stage
-
-      - run: sudo apt-get install -y binfmt-support qemu-user-static qemu-utils nbd-server nbd-client && sudo modprobe -a binfmt_misc nbd
-
-      - run: echo -e 'IMG_NAME=test\nSTAGE_LIST="stage0 stage1 stage2 stage3 stage99"\nUSE_QCOW2=1' > pi-gen-config
-
-      - run: ln -s $(readlink -f my-stage) pi-gen/stage99
-
-      - run: PIGEN_DOCKER_OPTS="-v $(readlink -f my-stage):$(readlink -f my-stage)" ./pi-gen/build-docker.sh -c pi-gen-config
+          image-name: test
 

@@ -1,7 +1,0 @@
-name: 'Validate user input and configure pi-gen build'
-outputs:
-  config-file:
-    description: 'Created file containing valid user pi-gen configuration'
-runs:
-  using: 'node16'
-  main: 'dist/index.js'

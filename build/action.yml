@@ -1,0 +1,14 @@
+name: build-pi-gen
+description: Run pi-gen build with user configured values
+
+inputs:
+  config-file:
+    description: The location of the pi-gen config file to execute the build with
+    required: true
+  pi-gen-dir:
+    description: Directory where pi-gen was cloned into
+    required: true
+
+runs:
+  using: node16
+  main: dist/index.js
