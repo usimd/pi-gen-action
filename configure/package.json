@@ -1,0 +1,31 @@
+{
+  "name": "@pi-gen-action/configure",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub action to configure pi-gen execution in pi-gen-action",
+  "author": "Simon Domke",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build -m --no-source-map-register --license licenses.txt"
+  },
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/io": "^1.1.2",
+    "@pi-gen-action/common": "0.0.0"
+  },
+  "main": "lib/main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usimd/pi-gen-action.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/usimd/pi-gen-action/issues"
+  },
+  "homepage": "https://github.com/usimd/pi-gen-action#readme"
+}

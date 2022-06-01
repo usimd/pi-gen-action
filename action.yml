@@ -1,88 +1,113 @@
-name: 'RPi image build action'
-description: 'Build a custom Raspberry Pi image'
+name: pi-gen-action
+description: Build a custom Raspberry Pi image
+
 inputs:
+  # pi-gen variables
+
   pi-gen-version:
-    description: 'Release version of pi-gen to use'
+    description: Release version of pi-gen to use
     required: false
-    # Currently, there's a bug in pi-gen if building for 64bit targets: https://github.com/RPi-Distro/pi-gen/issues/271
+    # Currently, theres a bug in pi-gen if building for 64bit targets: https://github.com/RPi-Distro/pi-gen/issues/271
     # We assume this is mostly the case, so this is set to the fix in the branch by default
-    default: 'arm64'
-  image-name:
-    description: 'Final image name'
-    required: true
+    default: arm64
   enable-noobs:
-    description: 'Set whether a noobs image should be built as well'
+    description: Set whether a noobs image should be built as well
     required: false
     default: false
-  final-stage:
-    description: 'pi-gen stage name to stop before executing custom stage'
+  use-qcow2:
+    description: Use qcow2 images to reduce space and runtime requirements
     required: false
-    default: 'stage3'
-  custom-stage:
-    description: 'Directory containing a valid pi-gen custom stage to execute after the configured final stage'
+    default: 1
+  stage-list:
+    description: Stringified JSON string array representing the list of stages and their order to execute. Relative and absolute paths to custom stage directories are allowed here.
+    required: false
+    default: '["stage0", "stage1", "stage2"]'
+  image-name:
+    description: Final image name
     required: true
   release:
-    description: 'The release version to build images against. Valid values are jessie, stretch, buster, bullseye, and testing'
+    description: The release version to build images against. Valid values are jessie, stretch, buster, bullseye, and testing
     required: false
-    default: 'bullseye'
+    default: bullseye
   compression:
-    description: 'Compression to apply on final image (either "none", "zip", "xz" or "gz")'
+    description: Compression to apply on final image (either "none", "zip", "xz" or "gz")
     required: false
-    default: 'zip'
+    default: zip
   locale:
-    description: 'Default locale of the system image'
+    description: Default locale of the system image
     required: false
-    default: 'en_GB.UTF-8'
+    default: en_GB.UTF-8
   hostname:
-    description: 'Host name of the image'
+    description: Host name of the image
     required: false
-    default: 'raspberrypi'
+    default: raspberrypi
   keyboard-keymap:
-    description: 'Default keyboard keymap'
+    description: Default keyboard keymap
     required: false
-    default: 'gb'
+    default: gb
   keyboard-layout:
-    description: 'Default keyboard layout'
+    description: Default keyboard layout
     required: false
-    default: 'English (UK)'
+    default: English (UK)
   timezone:
-    description: 'System timezone'
+    description: System timezone
     required: false
-    default: 'Europe/London'
+    default: Europe/London
   username:
-    description: 'Name of the initial user account'
+    description: Name of the initial user account
     required: false
-    default: 'pi'
+    default: pi
   password:
-    description: 'Password of the intial user account, locked if empty'
+    description: Password of the intial user account, locked if empty
     required: false
   wpa-essid:
-    description: 'SSID of a default wifi network to connect to'
+    description: SSID of a default wifi network to connect to
     required: false
   wpa-password:
-    description: 'Password of default wifi network to connect to'
+    description: Password of default wifi network to connect to
     required: false
   wpa-country:
-    description: 'Wifi country code of default network to connect to'
+    description: Wifi country code of default network to connect to
     required: false
   enable-ssh:
-    description: 'Enable SSH access to Pi'
+    description: Enable SSH access to Pi
     required: false
     default: 0
+
+  # action variables
+  pi-gen-dir:
+    description: Temporary directory where to run pi-gen in container
+    required: false
+    default: pi-gen
+  pi-gen-config-file:
+    description: Configuration file keeping user input to pi-gen
+    required: false
+    default: pi-gen/config
+
 outputs:
   image-path:
-    description: 'Path to the final custom image'
-    value: ''
+    description: Path to the final custom image
+    value: 
   image-noobs-path:
-    description: 'Path to final noobs image, if enabled'
-    value: ''
+    description: Path to final noobs image, if enabled
+    value: 
+
 runs:
-  using: 'composite'
+  using: composite
   steps:
-    - name: 'Validate and create pi-gen config'
-      uses: ./.github/actions/configure
-      id: 'configure'
+    - uses: actions/checkout@v3
+      with:
+        repository: RPi-Distro/pi-gen
+        ref: ${{ inputs.pi-gen-version }}
+        path: ${{ inputs.pi-gen-dir }}
+
+    - uses: ./configure
+      id: configure
       env:
+        INPUT_PI_GEN_DIR: ${{ inputs.pi-gen-dir }}
+        INPUT_CONFIG_FILE: ${{ inputs.pi-gen-config-file }}
+        INPUT_STAGE_LIST: ${{ inputs.stage-list }}
+        INPUT_ENABLE_NOOBS: ${{ inputs.enable-noobs }}
         INPUT_IMAGE_NAME: ${{ inputs.image-name }}
         INPUT_RELEASE: ${{ inputs.release }}
         INPUT_COMPRESSION: ${{ inputs.compression }}
@@ -93,10 +118,19 @@ runs:
         INPUT_TIMEZONE: ${{ inputs.timezone}}
         INPUT_USERNAME: ${{ inputs.username }}
         INPUT_PASSWORD: ${{ inputs.password }}
-    - name: 'Build Raspberry Pi image'
-      uses: ./.github/actions/build
+        INPUT_WPA_ESSID: ${{ inputs.wpa-essid }}
+        INPUT_WPA_PASSWORD: ${{ inputs.wpa-password }}
+        INPUT_WPA_COUNTRY: ${{ inputs.wpa-country }}
+        INPUT_ENABLE_SSH: ${{ inputs.enable-ssh }}
+        INPUT_USE_QCOW2: ${{ inputs.use-qcow2 }}
+
+    - run: >
+        sudo apt-get install -y binfmt-support qemu-user-static qemu-utils nbd-server nbd-client && 
+        sudo modprobe -a binfmt_misc nbd
+      shell: bash
+
+    - uses: ./build
+      id: build
       with:
-        config-file: "${{ steps.configure.outputs.config-file }}"
-        target-stage: "${{ inputs.final-stage }}"
-        pi-gen-version: "${{ inputs.pi-gen-version }}"
-        enable-noobs: "${{ inputs.enable-noobs }}"
+        pi-gen-dir: ${{ inputs.pi-gen-dir }}
+        config-file: ${{ inputs.pi-gen-config-file }}

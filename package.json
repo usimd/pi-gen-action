@@ -1,0 +1,44 @@
+{
+  "name": "@pi-gen-action",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
+  "author": "",
+  "scripts": {
+    "test": "jest",
+    "all": "npm run build -ws && npm run format && npm run lint -ws && npm test && npm run package -ws",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usimd/pi-gen-action.git"
+  },
+  "keywords": [
+    "actions",
+    "raspberry",
+    "pi-gen"
+  ],
+  "license": "MIT",
+  "workspaces": [
+    "common",
+    "configure",
+    "build"
+  ],
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.35",
+    "@typescript-eslint/parser": "^5.8.1",
+    "@vercel/ncc": "^0.33.4",
+    "eslint": "^8.16.0",
+    "eslint-import-resolver-typescript": "^2.7.1",
+    "eslint-plugin-github": "^4.3.2",
+    "eslint-plugin-jest": "^26.2.2",
+    "eslint-plugin-workspaces": "^0.7.0",
+    "jest": "^28.1.0",
+    "js-yaml": "^4.1.0",
+    "prettier": "^2.6.2",
+    "ts-jest": "^28.0.3",
+    "typescript": "^4.7.2"
+  }
+}
