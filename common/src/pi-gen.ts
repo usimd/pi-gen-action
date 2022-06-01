@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as exec from '@actions/exec'
+import * as core from '@actions/core'
 import {PiGenStages} from './pi-gen-stages'
 import {loadFromFile, PiGenConfig} from './pi-gen-config'
 
@@ -29,6 +30,7 @@ export class PiGen {
     const dirStat = fs.statSync(this.piGenDirectory)
 
     if (!dirStat.isDirectory) {
+      core.debug(`Not a directory: ${this.piGenDirectory}`)
       return false
     }
 
@@ -44,10 +46,21 @@ export class PiGen {
       .filter(entry => entry.isFile())
       .map(entry => entry.name)
 
-    if (
-      !requiredFiles.every(file => existingFiles.includes(file)) ||
-      !requiredDirectories.every(dir => existingDirectories.includes(dir))
-    ) {
+    if (!requiredFiles.every(file => existingFiles.includes(file))) {
+      core.debug(
+        `Not all required files in pi-gen dir. Required: ${requiredFiles.join(
+          ', '
+        )} but found ${existingFiles.join(', ')}`
+      )
+      return false
+    }
+
+    if (!requiredDirectories.every(dir => existingDirectories.includes(dir))) {
+      core.debug(
+        `Not all required directories in pi-gen dir. Required: ${requiredDirectories.join(
+          ', '
+        )} but found ${existingDirectories.join(', ')}`
+      )
       return false
     }
 
