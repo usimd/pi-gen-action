@@ -13,7 +13,7 @@ export class PiGen {
       throw new Error(`pi-gen directory at ${this.piGenDirectory} is invalid`)
     }
 
-    this.configFilePath = fs.readlinkSync(piGenConfigFile)
+    this.configFilePath = fs.realpathSync(piGenConfigFile)
     this.config = loadFromFile(this.configFilePath)
   }
 
