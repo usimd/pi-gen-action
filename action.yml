@@ -19,9 +19,9 @@ inputs:
     required: false
     default: 1
   stage-list:
-    description: Stringified JSON string array representing the list of stages and their order to execute. Relative and absolute paths to custom stage directories are allowed here.
+    description: List of stage name to execute in given order. Relative and absolute paths to custom stage directories are allowed here.
     required: false
-    default: '["stage0", "stage1", "stage2"]'
+    default: 'stage0 stage1 stage2'
   image-name:
     description: Final image name
     required: true
@@ -95,13 +95,15 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v3
+    - name: Get pi-gen
+      uses: actions/checkout@v3
       with:
         repository: RPi-Distro/pi-gen
         ref: ${{ inputs.pi-gen-version }}
         path: ${{ inputs.pi-gen-dir }}
 
-    - uses: ./configure
+    - name: Check user input and create pi-gen config file
+      uses: ./configure
       id: configure
       env:
         INPUT_PI_GEN_DIR: ${{ inputs.pi-gen-dir }}
@@ -124,12 +126,14 @@ runs:
         INPUT_ENABLE_SSH: ${{ inputs.enable-ssh }}
         INPUT_USE_QCOW2: ${{ inputs.use-qcow2 }}
 
-    - run: >
+    - name: Install pi-gen host prerequisites
+      run: >
         sudo apt-get install -y binfmt-support qemu-user-static qemu-utils nbd-server nbd-client && 
         sudo modprobe -a binfmt_misc nbd
       shell: bash
 
-    - uses: ./build
+    - name: Run pi-gen
+      uses: ./build
       id: build
       with:
         pi-gen-dir: ${{ inputs.pi-gen-dir }}
