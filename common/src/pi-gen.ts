@@ -38,12 +38,14 @@ export class PiGen {
       withFileTypes: true
     })
     const requiredFiles = ['build-docker.sh', 'Dockerfile']
-    const requiredDirectories = Object.keys(PiGenStages)
+    const requiredDirectories = Object.values(PiGenStages).filter(
+      value => typeof value === 'string'
+    ) as string[]
     const existingFiles = piGenDirContent
       .filter(entry => entry.isFile())
       .map(entry => entry.name)
     const existingDirectories = piGenDirContent
-      .filter(entry => entry.isFile())
+      .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
 
     if (!requiredFiles.every(file => existingFiles.includes(file))) {
