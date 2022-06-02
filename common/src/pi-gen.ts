@@ -69,22 +69,11 @@ export class PiGen {
     return true
   }
 
-  private validateStageDirectory(stageDirectory: string): boolean {
-    const dirStat = fs.statSync(stageDirectory)
-
-    if (!dirStat || !dirStat.isDirectory) {
-      return false
-    }
-
-    return true
-  }
-
   private async getUserStagesAsDockerMounts(): Promise<string> {
     const userConfig = await this.config
     return new Promise(() =>
       userConfig.stageList
         .split(' ')
-        .filter(stageDir => this.validateStageDirectory(stageDir))
         .map(userStageDir => fs.realpathSync(userStageDir))
         .map(userStageDir => `-v "${userStageDir}:${userStageDir}"`)
     )

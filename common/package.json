@@ -20,7 +20,6 @@
     "lib": "lib",
     "test": "test"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/usimd/pi-gen-action.git"
