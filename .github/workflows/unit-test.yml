@@ -1,8 +1,6 @@
 name: pi-gen-action-unit-tests
 on:
   push:
-    branches:
-      - main
     paths-ignore:
       - '**.md'
   pull_request:
