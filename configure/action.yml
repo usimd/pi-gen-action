@@ -4,6 +4,8 @@ description: Write user configuration and prepare build workspace for execution
 outputs:
   config-file:
     description: Created file containing valid user pi-gen configuration
+  pi-gen-directory:
+    description: Directory of pi-gen checkout
 
 runs:
   using: node16
