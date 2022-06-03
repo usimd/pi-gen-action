@@ -1,5 +1,7 @@
 import {PathLike} from 'fs'
 import * as fs from 'fs/promises'
+import {PiGenStages} from './pi-gen-stages'
+import * as core from '@actions/core'
 
 export interface PiGenConfig {
   imgName: string
@@ -43,8 +45,10 @@ export const DEFAULT_CONFIG: PiGenConfig = {
 
 export async function writeToFile(
   config: PiGenConfig,
-  file: PathLike
+  piGenDirectory: string,
+  file: string
 ): Promise<void> {
+  config = await absolutizePiGenStages(config, piGenDirectory)
   const configContent = Object.getOwnPropertyNames(config)
     .map(
       prop =>
@@ -79,4 +83,23 @@ function snakeCaseToCamelCase(label: string): string {
   return label
     .toLowerCase()
     .replace(/_(?<camel>[a-z])/g, (match, letter) => letter.toUpperCase())
+}
+
+async function absolutizePiGenStages(
+  config: PiGenConfig,
+  piGenDirectory: string
+): Promise<PiGenConfig> {
+  const stages = config.stageList.split(' ')
+  core.debug(
+    `Resolving directories to asbolute paths: ${stages} using pi-gen base dir ${piGenDirectory}`
+  )
+  for (let i = 0; i < stages.length; i++) {
+    stages[i] = await fs.realpath(
+      Object.values(PiGenStages).includes(stages[i])
+        ? `${piGenDirectory}/${stages[i]}`
+        : stages[i]
+    )
+  }
+  config.stageList = stages.join(' ')
+  return config
 }

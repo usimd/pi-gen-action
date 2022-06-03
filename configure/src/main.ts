@@ -3,6 +3,9 @@ import {DEFAULT_CONFIG, writeToFile} from '@pi-gen-action/common'
 
 async function run(): Promise<void> {
   try {
+    const piGenDirectory = core.getInput('pi_gen_dir')
+    core.debug(`Using pi-gen directory: ${piGenDirectory}`)
+
     const configFilePath = core.getInput('config_file')
     core.debug(`Writing pi-gen config file to ${configFilePath}`)
 
@@ -37,7 +40,7 @@ async function run(): Promise<void> {
       core.getInput('enable_ssh') ?? DEFAULT_CONFIG.enableSsh
     userConfig.useQcow2 = core.getInput('use_qcow2') ?? DEFAULT_CONFIG.useQcow2
 
-    await writeToFile(userConfig, configFilePath)
+    await writeToFile(userConfig, piGenDirectory, configFilePath)
 
     core.setOutput('config-file', configFilePath)
   } catch (error) {
