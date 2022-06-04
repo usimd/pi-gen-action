@@ -70,13 +70,13 @@ describe('PiGen', () => {
     expect(exec.exec).toBeCalledWith(
       '"./build-docker.sh"',
       ['-c', '/pi-gen/config'],
-      {
+      expect.objectContaining({
         cwd: 'pi-gen-dir',
         env: {
           PIGEN_DOCKER_OPTS:
             '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'
         }
-      }
+      })
     )
   })
 })

@@ -8,6 +8,10 @@ inputs:
   pi-gen-dir:
     description: Directory where pi-gen was cloned into
     required: true
+  verbose-output:
+    description: Print all output from pi-gen
+    required: false
+    default: false
 
 runs:
   using: node16
