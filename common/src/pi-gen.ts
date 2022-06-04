@@ -40,7 +40,7 @@ export class PiGen {
           listeners: {
             stdline: (line: string) => this.logOutput(line, verbose)
           },
-          outStream: undefined
+          silent: true
         }
       )
 
