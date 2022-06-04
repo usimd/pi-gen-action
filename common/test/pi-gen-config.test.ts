@@ -1,4 +1,9 @@
-import {PiGenConfig, writeToFile, loadFromFile} from '../src/pi-gen-config'
+import {
+  PiGenConfig,
+  writeToFile,
+  loadFromFile,
+  DEFAULT_CONFIG
+} from '../src/pi-gen-config'
 import fs from 'fs/promises'
 import * as path from 'path'
 
@@ -17,13 +22,36 @@ describe('PiGenConfig', () => {
         Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
       )
 
-    let fileName = 'test-file'
+    const fileName = 'test-file'
     await writeToFile(config, 'pi-gen', fileName)
+
     expect(fs.writeFile).toHaveBeenCalledWith(
       fileName,
       expect.stringMatching(
         new RegExp(
           `^(?=.*IMG_NAME="${imageName}"$)(?=.*STAGE_LIST="/pi-gen/stage0 /pi-gen/stage1"$)(?=.*FIRST_USER_NAME="test"$).*`,
+          'sm'
+        )
+      )
+    )
+  })
+
+  it('skips undefined config values when writing to file', async () => {
+    jest.spyOn(fs, 'writeFile').mockImplementation(() => Promise.resolve())
+    jest
+      .spyOn(fs, 'realpath')
+      .mockImplementation(p =>
+        Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
+      )
+
+    const fileName = 'test-file'
+    await writeToFile(DEFAULT_CONFIG, 'pi-gen', fileName)
+
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      fileName,
+      expect.stringMatching(
+        new RegExp(
+          `^(?!.*APT_PROXY="[^"]*"$)(?!.*FIRST_USER_PASS="[^"]*"$)(?!.*WPA_ESSID="[^"]*"$)(?!.*WPA_PASSWORD="[^"]*"$)(?!.*WPA_COUNTRY="[^"]*"$).*`,
           'sm'
         )
       )
