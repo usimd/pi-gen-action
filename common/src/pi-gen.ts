@@ -18,16 +18,23 @@ export class PiGen {
   }
 
   async build(): Promise<number> {
-    const dockerOpts = await this.getStagesAsDockerMounts()
-    const userConfig = await this.config
-    core.debug(
-      `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${userConfig}`
-    )
-    return exec.exec('"./build-docker.sh"', ['-c', this.configFilePath], {
-      cwd: this.piGenDirectory.toString(),
-      env: {
-        PIGEN_DOCKER_OPTS: dockerOpts
-      }
+    return new Promise<number>(async () => {
+      const dockerOpts = await this.getStagesAsDockerMounts()
+      const userConfig = await this.config
+
+      core.debug(
+        `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${userConfig}`
+      )
+      return await exec.exec(
+        '"./build-docker.sh"',
+        ['-c', this.configFilePath],
+        {
+          cwd: this.piGenDirectory.toString(),
+          env: {
+            PIGEN_DOCKER_OPTS: dockerOpts
+          }
+        }
+      )
     })
   }
 
