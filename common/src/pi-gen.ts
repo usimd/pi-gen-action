@@ -22,7 +22,9 @@ export class PiGen {
     const dockerOpts = this.getStagesAsDockerMounts(userConfig)
 
     core.debug(
-      `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${userConfig}`
+      `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
+        userConfig
+      )}`
     )
     await exec.exec('"./build-docker.sh"', ['-c', this.configFilePath], {
       cwd: this.piGenDirectory.toString(),
@@ -79,7 +81,7 @@ export class PiGen {
     return userConfig.stageList
       .split(' ')
       .map(userStageDir => fs.realpathSync(userStageDir))
-      .map(userStageDir => `-v "${userStageDir}:${userStageDir}"`)
+      .map(userStageDir => `-v ${userStageDir}:${userStageDir}`)
       .join(' ')
   }
 }

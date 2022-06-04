@@ -9,11 +9,9 @@ jest.mock('@actions/exec', () => ({
 }))
 
 jest.mock('../src/pi-gen-config', () => ({
-  loadFromFile: jest
-    .fn()
-    .mockResolvedValue({
-      stageList: '/any/stage/path /pi-gen/stage0'
-    } as PiGenConfig)
+  loadFromFile: jest.fn().mockResolvedValue({
+    stageList: '/any/stage/path /pi-gen/stage0'
+  } as PiGenConfig)
 }))
 
 describe('PiGen', () => {
@@ -43,25 +41,23 @@ describe('PiGen', () => {
     jest
       .spyOn(fs, 'statSync')
       .mockReturnValue({isDirectory: () => true} as fs.Stats)
-    jest
-      .spyOn(fs, 'readdirSync')
-      .mockReturnValue([
-        {
-          name: 'Dockerfile',
-          isFile: () => true,
-          isDirectory: () => false
-        } as Dirent,
-        {
-          name: 'build-docker.sh',
-          isFile: () => true,
-          isDirectory: () => false
-        } as Dirent,
-        ...(Object.values(PiGenStages).map(stage => ({
-          name: stage,
-          isDirectory: () => true,
-          isFile: () => false
-        })) as Dirent[])
-      ])
+    jest.spyOn(fs, 'readdirSync').mockReturnValue([
+      {
+        name: 'Dockerfile',
+        isFile: () => true,
+        isDirectory: () => false
+      } as Dirent,
+      {
+        name: 'build-docker.sh',
+        isFile: () => true,
+        isDirectory: () => false
+      } as Dirent,
+      ...(Object.values(PiGenStages).map(stage => ({
+        name: stage,
+        isDirectory: () => true,
+        isFile: () => false
+      })) as Dirent[])
+    ])
     jest
       .spyOn(fs, 'realpathSync')
       .mockReturnValueOnce('/pi-gen/config')
@@ -78,7 +74,7 @@ describe('PiGen', () => {
         cwd: 'pi-gen-dir',
         env: {
           PIGEN_DOCKER_OPTS:
-            '-v "/any/stage/path:/any/stage/path" -v "/pi-gen/stage0:/pi-gen/stage0"'
+            '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'
         }
       }
     )
