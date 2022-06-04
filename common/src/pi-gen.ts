@@ -7,6 +7,7 @@ import {loadFromFile, PiGenConfig} from './pi-gen-config'
 export class PiGen {
   private configFilePath: string
   private config: Promise<PiGenConfig>
+  private lastLogLine?: string
 
   constructor(private piGenDirectory: fs.PathLike, piGenConfigFile = 'config') {
     if (!this.validatePigenDirectory()) {
@@ -17,7 +18,7 @@ export class PiGen {
     this.config = loadFromFile(this.configFilePath)
   }
 
-  async build(): Promise<void> {
+  async build(verbose = false): Promise<void> {
     const userConfig = await this.config
     const dockerOpts = this.getStagesAsDockerMounts(userConfig)
 
@@ -26,12 +27,28 @@ export class PiGen {
         userConfig
       )}`
     )
-    await exec.exec('"./build-docker.sh"', ['-c', this.configFilePath], {
-      cwd: this.piGenDirectory.toString(),
-      env: {
-        PIGEN_DOCKER_OPTS: dockerOpts
+
+    try {
+      const ret = await exec.exec(
+        '"./build-docker.sh"',
+        ['-c', this.configFilePath],
+        {
+          cwd: this.piGenDirectory.toString(),
+          env: {
+            PIGEN_DOCKER_OPTS: dockerOpts
+          },
+          listeners: {
+            stdout: (data: Buffer) => this.logOutput(data, verbose)
+          }
+        }
+      )
+
+      if (ret !== 0) {
+        throw new Error()
       }
-    })
+    } catch (error) {
+      core.setFailed(`Build failed: ${this.lastLogLine}`)
+    }
   }
 
   private validatePigenDirectory(): boolean {
@@ -83,5 +100,17 @@ export class PiGen {
       .map(userStageDir => fs.realpathSync(userStageDir))
       .map(userStageDir => `-v ${userStageDir}:${userStageDir}`)
       .join(' ')
+  }
+
+  private logOutput(data: Buffer, verbose: boolean): void {
+    const lines = data.toString()?.split('\n')
+
+    if (lines?.length > 0) {
+      this.lastLogLine = lines[lines.length - 1]
+      for (const outputLine of lines.filter(
+        line => verbose || line.match(new RegExp('^[(?:d{2}:?){3}].*'))
+      ))
+        core.info(outputLine)
+    }
   }
 }

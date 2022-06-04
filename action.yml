@@ -83,6 +83,10 @@ inputs:
     description: Configuration file keeping user input to pi-gen
     required: false
     default: pi-gen/config
+  verbose-output:
+    description: Print all output from pi-gen
+    required: false
+    default: false
 
 outputs:
   image-path:
@@ -138,3 +142,4 @@ runs:
       with:
         pi-gen-dir: ${{ inputs.pi-gen-dir }}
         config-file: ${{ inputs.pi-gen-config-file }}
+        verbose-output: ${{ inputs.verbose-output }}
