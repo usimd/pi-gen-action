@@ -39,7 +39,8 @@ export class PiGen {
             PIGEN_DOCKER_OPTS: dockerOpts
           },
           listeners: {
-            stdline: (line: string) => this.logOutput(line, verbose)
+            stdline: (line: string) => this.logOutput(line, verbose, 'info'),
+            errline: (line: string) => this.logOutput(line, verbose, 'error')
           },
           silent: true
         }
@@ -104,10 +105,14 @@ export class PiGen {
       .join(' ')
   }
 
-  private logOutput(line: string, verbose: boolean): void {
+  private logOutput(
+    line: string,
+    verbose: boolean,
+    stream: 'info' | 'error'
+  ): void {
     this.lastLogLine = line
     if (verbose || this.piGenBuildLogPattern.test(line)) {
-      core.info(line)
+      stream === 'info' ? core.info(line) : core.error(line)
     }
   }
 }
