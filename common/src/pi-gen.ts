@@ -8,7 +8,10 @@ export class PiGen {
   private configFilePath: string
   private config: Promise<PiGenConfig>
   private lastLogLine?: string
-  private piGenBuildLogPattern = new RegExp('^[(?:d{2}:?){3}].*')
+  private piGenBuildLogPattern = new RegExp(
+    '^\\s*\\[(?:\\d{2}:?){3}\\].*',
+    'gm'
+  )
 
   constructor(private piGenDirectory: fs.PathLike, piGenConfigFile = 'config') {
     if (!this.validatePigenDirectory()) {
