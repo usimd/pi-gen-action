@@ -50,6 +50,7 @@ export async function writeToFile(
 ): Promise<void> {
   config = await absolutizePiGenStages(config, piGenDirectory)
   const configContent = Object.getOwnPropertyNames(config)
+    .filter(prop => config[prop as keyof PiGenConfig])
     .map(
       prop =>
         `${camelCaseToSnakeCase(prop)}="${config[prop as keyof PiGenConfig]}"`
