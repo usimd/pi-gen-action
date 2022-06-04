@@ -18,8 +18,8 @@ export class PiGen {
   }
 
   async build(): Promise<void> {
-    const dockerOpts = await this.getStagesAsDockerMounts()
     const userConfig = await this.config
+    const dockerOpts = this.getStagesAsDockerMounts(userConfig)
 
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${userConfig}`
@@ -35,7 +35,7 @@ export class PiGen {
   private validatePigenDirectory(): boolean {
     const dirStat = fs.statSync(this.piGenDirectory)
 
-    if (!dirStat.isDirectory) {
+    if (!dirStat.isDirectory()) {
       core.debug(`Not a directory: ${this.piGenDirectory}`)
       return false
     }
@@ -75,13 +75,11 @@ export class PiGen {
     return true
   }
 
-  private async getStagesAsDockerMounts(): Promise<string> {
-    const userConfig = await this.config
-    return new Promise(() =>
-      userConfig.stageList
-        .split(' ')
-        .map(userStageDir => fs.realpathSync(userStageDir))
-        .map(userStageDir => `-v "${userStageDir}:${userStageDir}"`)
-    )
+  private getStagesAsDockerMounts(userConfig: PiGenConfig): string {
+    return userConfig.stageList
+      .split(' ')
+      .map(userStageDir => fs.realpathSync(userStageDir))
+      .map(userStageDir => `-v "${userStageDir}:${userStageDir}"`)
+      .join(' ')
   }
 }
