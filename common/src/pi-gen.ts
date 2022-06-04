@@ -38,8 +38,9 @@ export class PiGen {
             PIGEN_DOCKER_OPTS: dockerOpts
           },
           listeners: {
-            stdout: (data: Buffer) => this.logOutput(data, verbose)
-          }
+            stdline: (line: string) => this.logOutput(line, verbose)
+          },
+          outStream: undefined
         }
       )
 
@@ -102,15 +103,10 @@ export class PiGen {
       .join(' ')
   }
 
-  private logOutput(data: Buffer, verbose: boolean): void {
-    const lines = data.toString()?.split('\n')
-
-    if (lines?.length > 0) {
-      this.lastLogLine = lines[lines.length - 1]
-      for (const outputLine of lines.filter(
-        line => verbose || line.match(new RegExp('^[(?:d{2}:?){3}].*'))
-      ))
-        core.info(outputLine)
+  private logOutput(line: string, verbose: boolean): void {
+    this.lastLogLine = line
+    if (verbose || line.match(new RegExp('^[(?:d{2}:?){3}].*'))) {
+      core.info(line)
     }
   }
 }
