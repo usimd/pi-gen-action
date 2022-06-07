@@ -2,11 +2,11 @@ import {PathLike} from 'fs'
 import * as fs from 'fs/promises'
 import {PiGenStages} from './pi-gen-stages'
 import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 
 export interface PiGenConfig {
   imgName: string
   release: string
-  aptProxy?: string
   deployCompression: string
   compressionLevel: string
   localeDefault: string
@@ -74,6 +74,101 @@ export async function loadFromFile(file: PathLike): Promise<PiGenConfig> {
   }
 
   return config
+}
+
+export async function validateConfig(config: PiGenConfig): Promise<void> {
+  if (!config.imgName) {
+    throw new Error('image-name must not be empty')
+  }
+
+  if (
+    !['bullseye', 'jessie', 'stretch', 'buster', 'testing'].includes(
+      config.release?.toLowerCase()
+    )
+  ) {
+    throw new Error(
+      'release must be one of ["bullseye", "jessie", "stretch", "buster", "testing"]'
+    )
+  }
+
+  if (
+    !['none', 'zip', 'gz', 'xz'].includes(
+      config.deployCompression?.toLowerCase()
+    )
+  ) {
+    throw new Error('compression must be one of ["none", "zip", "gz", "xz"]')
+  }
+
+  if (!/^[0-9]$/.test(config.compressionLevel)) {
+    throw new Error('compression-level must be between 0 and 9')
+  }
+
+  const supportedLocales = (
+    await exec.getExecOutput('cut', [
+      '-d',
+      '" "',
+      '-f1',
+      '/usr/share/i18n/SUPPORTED'
+    ])
+  ).stdout.split('\n')
+  if (!supportedLocales.includes(config.localeDefault)) {
+    throw new Error(
+      'locale is not included in the list of supported locales (retrieved from /usr/share/i18n/SUPPORTED)'
+    )
+  }
+
+  if (!config.targetHostname) {
+    throw new Error('hostname must not be empty')
+  }
+
+  if (!config.keyboardKeymap) {
+    throw new Error('keyboard-keymap must not be empty')
+  }
+
+  if (!config.keyboardLayout) {
+    throw new Error('keyboard-layout must not be empty')
+  }
+
+  const supportedTimezones = (
+    await exec.getExecOutput('timedatectl', ['list-timezones'])
+  ).stdout.split('\n')
+  if (!supportedTimezones.includes(config.timezoneDefault)) {
+    throw new Error(
+      'timezone is not included in output of "timedatectl list-timezones"'
+    )
+  }
+
+  if (!config.firstUserName) {
+    throw new Error('username must not be empty')
+  }
+
+  if (
+    config.wpaPassword &&
+    (config.wpaPassword?.length < 8 || config.wpaPassword?.length > 63)
+  ) {
+    throw new Error(
+      'wpa-password must be between 8 and 63 characters (or unset)'
+    )
+  }
+
+  if (!config.stageList) {
+    throw new Error('stage-list must not be empty')
+  }
+
+  for (const stageDir of config.stageList.split(' ')) {
+    if (!Object.values(PiGenStages).includes(stageDir)) {
+      try {
+        const stat = await fs.stat(stageDir)
+        if (!stat.isDirectory) {
+          throw new Error()
+        }
+      } catch (error) {
+        throw new Error(
+          'stage-list must contain valid pi-gen stage names "stage[0-5]" and/or valid directories'
+        )
+      }
+    }
+  }
 }
 
 function camelCaseToSnakeCase(label: string): string {

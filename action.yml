@@ -33,6 +33,10 @@ inputs:
     description: Compression to apply on final image (either "none", "zip", "xz" or "gz")
     required: false
     default: zip
+  compression-level:
+    description: Compression level to be used. From 0 to 9 (refer to the tool man page for more information on this. Usually 0 is no compression but very fast, up to 9 with the best compression but very slow).
+    required: false
+    default: 6
   locale:
     description: Default locale of the system image
     required: false
@@ -117,6 +121,7 @@ runs:
         INPUT_IMAGE_NAME: ${{ inputs.image-name }}
         INPUT_RELEASE: ${{ inputs.release }}
         INPUT_COMPRESSION: ${{ inputs.compression }}
+        INPUT_COMPRESSION_LEVEL: ${{ inputs.compression-level }}
         INPUT_LOCALE: ${{ inputs.locale }}
         INPUT_HOSTNAME: ${{ inputs.hostname }}
         INPUT_KEYBOARD_KEYMAP: ${{ inputs.keyboard-keymap }}

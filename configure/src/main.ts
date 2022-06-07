@@ -1,8 +1,14 @@
 import * as core from '@actions/core'
-import {DEFAULT_CONFIG, writeToFile} from '@pi-gen-action/common'
+import {
+  DEFAULT_CONFIG,
+  writeToFile,
+  validateConfig
+} from '@pi-gen-action/common'
 
 async function run(): Promise<void> {
   try {
+    core.startGroup('Validating input and generating pi-gen config')
+
     const piGenDirectory = core.getInput('pi_gen_dir')
     core.debug(`Using pi-gen directory: ${piGenDirectory}`)
 
@@ -17,6 +23,8 @@ async function run(): Promise<void> {
     userConfig.release = core.getInput('release') ?? DEFAULT_CONFIG.release
     userConfig.deployCompression =
       core.getInput('compression') ?? DEFAULT_CONFIG.deployCompression
+    userConfig.compressionLevel =
+      core.getInput('compression_level') ?? DEFAULT_CONFIG.compressionLevel
     userConfig.localeDefault =
       core.getInput('locale') ?? DEFAULT_CONFIG.localeDefault
     userConfig.targetHostname =
@@ -40,11 +48,15 @@ async function run(): Promise<void> {
       core.getInput('enable_ssh') ?? DEFAULT_CONFIG.enableSsh
     userConfig.useQcow2 = core.getInput('use_qcow2') ?? DEFAULT_CONFIG.useQcow2
 
+    validateConfig(userConfig)
+
     await writeToFile(userConfig, piGenDirectory, configFilePath)
 
     core.setOutput('config-file', configFilePath)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
+  } finally {
+    core.endGroup()
   }
 }
 
