@@ -106,12 +106,11 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
 
   const cutCmd = await io.which('cut', true)
   const supportedLocales = (
-    await exec.getExecOutput(cutCmd, [
-      '-d',
-      ' ',
-      '-f1',
-      '/usr/share/i18n/SUPPORTED'
-    ])
+    await exec.getExecOutput(
+      cutCmd,
+      ['-d', ' ', '-f1', '/usr/share/i18n/SUPPORTED'],
+      {silent: true}
+    )
   ).stdout.split('\n')
   if (!supportedLocales.includes(config.localeDefault)) {
     throw new Error(
@@ -132,7 +131,7 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
   }
 
   const supportedTimezones = (
-    await exec.getExecOutput('timedatectl', ['list-timezones'])
+    await exec.getExecOutput('timedatectl', ['list-timezones'], {silent: true})
   ).stdout.split('\n')
   if (!supportedTimezones.includes(config.timezoneDefault)) {
     throw new Error(
