@@ -3,6 +3,7 @@ import * as fs from 'fs/promises'
 import {PiGenStages} from './pi-gen-stages'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as io from '@actions/io'
 
 export interface PiGenConfig {
   imgName: string
@@ -103,10 +104,11 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error('compression-level must be between 0 and 9')
   }
 
+  const cutCmd = await io.which('cut', true)
   const supportedLocales = (
-    await exec.getExecOutput('cut', [
+    await exec.getExecOutput(cutCmd, [
       '-d',
-      '" "',
+      ' ',
       '-f1',
       '/usr/share/i18n/SUPPORTED'
     ])
