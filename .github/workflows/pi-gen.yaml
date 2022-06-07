@@ -8,7 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - run: mkdir -p test-stage/package-test && echo "openjdk-8-java" > test-stage/package-test/00-packages && touch test-stage/EXPORT_IMAGE
+
       - uses: ./
         with:
           image-name: test
+          stage-list: stage0 stage1 stage2 test-stage
 
