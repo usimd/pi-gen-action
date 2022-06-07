@@ -4,5 +4,6 @@ export {
   PiGenConfig,
   DEFAULT_CONFIG,
   loadFromFile,
-  writeToFile
+  writeToFile,
+  validateConfig
 } from './pi-gen-config'
