@@ -7,7 +7,9 @@ export async function clonePigen(
 ): Promise<void> {
   try {
     core.startGroup('Cloning pi-gen repository')
-    const git = await Git.getInstance(piGenDirectory)
+    core.debug(`Checking out ref ${ref} into ${piGenDirectory}`)
+    const verbose = core.getBooleanInput('verbose-output')
+    const git = await Git.getInstance(piGenDirectory, verbose)
     await git.clone('https://github.com/RPi-Distro/pi-gen', ref)
   } finally {
     core.endGroup()

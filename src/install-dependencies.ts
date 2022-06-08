@@ -7,6 +7,7 @@ export async function installHostDependencies(): Promise<void> {
 
   try {
     core.startGroup('Installing build dependencies on host')
+    const verbose = core.getBooleanInput('verbose-output')
 
     const sudoPath = await io.which('sudo', true)
     execOutput = await exec.getExecOutput(
@@ -23,12 +24,12 @@ export async function installHostDependencies(): Promise<void> {
         'nbd-server',
         'nbd-client'
       ],
-      {silent: true}
+      {silent: verbose}
     )
     execOutput = await exec.getExecOutput(
       sudoPath,
       ['modprobe', '-a', 'binfmt_misc', 'nbd'],
-      {silent: true}
+      {silent: verbose}
     )
   } catch (error) {
     throw new Error(execOutput?.stderr || (error as Error).message)
