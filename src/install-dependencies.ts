@@ -31,7 +31,7 @@ export async function installHostDependencies(): Promise<void> {
       {silent: true}
     )
   } catch (error) {
-    core.setFailed(`${(error as Error).message}\n${execOutput?.stderr}`)
+    throw new Error(execOutput?.stderr || (error as Error).message)
   } finally {
     core.endGroup()
   }
