@@ -97,34 +97,5 @@ outputs:
     value: 
 
 runs:
-  using: composite
-  steps:
-    - name: Get pi-gen
-      uses: actions/checkout@v3
-      with:
-        repository: RPi-Distro/pi-gen
-        ref: ${{ inputs.pi-gen-version }}
-        path: ${{ inputs.pi-gen-dir }}
-
-    - uses: ./
-      with:
-        pi-gen-dir: ${{ inputs.pi-gen-dir }}
-        stage-list: ${{ inputs.stage-list }}
-        enable-noobs: ${{ inputs.enable-noobs }}
-        image-name: ${{ inputs.image-name }}
-        release: ${{ inputs.release }}
-        compression: ${{ inputs.compression }}
-        compression-level: ${{ inputs.compression-level }}
-        locale: ${{ inputs.locale }}
-        hostname: ${{ inputs.hostname }}
-        keyboard-keymap: ${{ inputs.keyboard-keymap }}
-        keyboard-layout: ${{ inputs.keyboard-layout }}
-        timezone: ${{ inputs.timezone}}
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-        wpa-essid: ${{ inputs.wpa-essid }}
-        wpa-password: ${{ inputs.wpa-password }}
-        wpa-country: ${{ inputs.wpa-country }}
-        enable-ssh: ${{ inputs.enable-ssh }}
-        use-qcow2: ${{ inputs.use-qcow2 }}
-        verbose-output: ${{ inputs.verbose-output }}
+  using: node16
+  main: dist/index.js
