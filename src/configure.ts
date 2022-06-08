@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import {DEFAULT_CONFIG, validateConfig, PiGenConfig} from './pi-gen-config'
+import colorize from 'json-colorizer'
 
 export async function configure(): Promise<PiGenConfig> {
   try {
@@ -7,7 +8,7 @@ export async function configure(): Promise<PiGenConfig> {
 
     const userConfig = DEFAULT_CONFIG
 
-    userConfig.imgName = core.getInput('image-name') ?? DEFAULT_CONFIG.imgName
+    userConfig.imgName = core.getInput('image-name', {required: true})
     userConfig.stageList =
       core.getInput('stage-list') ?? DEFAULT_CONFIG.stageList
     userConfig.release = core.getInput('release') ?? DEFAULT_CONFIG.release
@@ -40,8 +41,35 @@ export async function configure(): Promise<PiGenConfig> {
 
     validateConfig(userConfig)
 
+    core.info(
+      colorize(JSON.stringify(userConfig, filterConfigFormat, 2), {
+        colors: {
+          BRACKET: 'magenta',
+          BRACE: 'magenta',
+          STRING_KEY: 'cyanBright',
+          BOOLEAN_LITERAL: 'blueBright',
+          NUMBER_LITERAL: 'greenBright',
+          NULL_LITERAL: 'blueBright',
+          STRING_LITERAL: 'redBright'
+        }
+      })
+    )
+
     return userConfig
   } finally {
     core.endGroup()
   }
+}
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function filterConfigFormat(key: string, value: any): any {
+  if (typeof value === 'string' && !value) {
+    return undefined
+  }
+
+  if (key.toLowerCase().includes('pass')) {
+    return '***'
+  }
+
+  return value
 }
