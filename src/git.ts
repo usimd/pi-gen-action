@@ -9,7 +9,7 @@ export class Git {
 
   static async getInstance(repoPath: string): Promise<Git> {
     const git = new Git()
-    git.initialize(repoPath)
+    await git.initialize(repoPath)
     return git
   }
 
@@ -47,7 +47,7 @@ export class Git {
   }
 
   private async execGit(args: string[]): Promise<exec.ExecOutput> {
-    return exec.getExecOutput(this.gitCmd, args, {
+    return await exec.getExecOutput(this.gitCmd, args, {
       silent: true,
       cwd: this.repoPath
     })
