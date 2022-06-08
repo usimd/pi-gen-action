@@ -24,12 +24,12 @@ export async function installHostDependencies(): Promise<void> {
         'nbd-server',
         'nbd-client'
       ],
-      {silent: verbose}
+      {silent: !verbose}
     )
     execOutput = await exec.getExecOutput(
       sudoPath,
       ['modprobe', '-a', 'binfmt_misc', 'nbd'],
-      {silent: verbose}
+      {silent: !verbose}
     )
   } catch (error) {
     throw new Error(execOutput?.stderr || (error as Error).message)

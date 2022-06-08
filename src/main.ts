@@ -14,7 +14,7 @@ async function run(): Promise<void> {
     await installHostDependencies()
     await build(piGenDirectory, userConfig)
   } catch (error) {
-    core.setFailed(`${(error as Error).message}`)
+    core.setFailed(`${(error as Error)?.message ?? error}`)
   }
 }
 

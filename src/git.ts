@@ -23,9 +23,16 @@ export class Git {
   }
 
   async clone(repository: string, ref: string): Promise<void> {
+    let checkoutArgs: string[] = []
+
+    if (this.verbose) {
+      checkoutArgs.push('--progress')
+    }
+
     await this.execGit(['remote', 'add', 'origin', repository])
     await this.execGit([
       'fetch',
+      ...checkoutArgs,
       '--prune',
       '--no-tags',
       '--no-recurse-submodules',
@@ -35,7 +42,6 @@ export class Git {
       `+refs/tags/${ref}*:refs/tags/${ref}*`
     ])
 
-    let checkoutArgs: string[]
     if (await this.tagExists(ref)) {
       checkoutArgs = [ref]
     } else if (await this.branchExists(ref)) {

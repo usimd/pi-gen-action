@@ -26,7 +26,8 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/exec": "1.1.1",
-    "@actions/io": "^1.1.2"
+    "@actions/io": "^1.1.2",
+    "json-colorizer": "^2.2.2"
   },
   "main": "lib/main.js",
   "devDependencies": {
