@@ -1,15 +1,18 @@
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
+import * as core from '@actions/core'
 
 export class Git {
   private gitCmd = ''
   private repoPath = ''
+  private verbose = false
 
   private constructor() {}
 
-  static async getInstance(repoPath: string): Promise<Git> {
+  static async getInstance(repoPath: string, verbose = false): Promise<Git> {
     const git = new Git()
     await git.initialize(repoPath)
+    git.setVerbosity(verbose)
     return git
   }
 
@@ -40,6 +43,10 @@ export class Git {
     await this.execGit(['checkout', '--force', ...checkoutArgs])
   }
 
+  private setVerbosity(verbose: boolean): void {
+    this.verbose = verbose
+  }
+
   private async initialize(repoPath: string): Promise<void> {
     this.gitCmd = await io.which('git', true)
     await io.mkdirP(repoPath)
@@ -47,8 +54,9 @@ export class Git {
   }
 
   private async execGit(args: string[]): Promise<exec.ExecOutput> {
+    core.debug(`Executing: ${this.gitCmd} ${args?.join(' ')}`)
     return await exec.getExecOutput(this.gitCmd, args, {
-      silent: true,
+      silent: this.verbose,
       cwd: this.repoPath
     })
   }
