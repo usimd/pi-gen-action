@@ -1,6 +1,8 @@
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 import * as core from '@actions/core'
+import path from 'path'
+import fs from 'fs'
 
 export class Git {
   private gitCmd = ''
@@ -9,17 +11,19 @@ export class Git {
 
   private constructor() {}
 
-  static async getInstance(repoPath: string, verbose = false): Promise<Git> {
+  static async getInstance(
+    repoPath: string,
+    token: string,
+    verbose = false
+  ): Promise<Git> {
     const git = new Git()
-    await git.initialize(repoPath)
+    await git.initialize(repoPath, token)
     git.setVerbosity(verbose)
     return git
   }
 
   async clone(repository: string, ref: string): Promise<void> {
-    await this.execGit(['init', this.repoPath])
     await this.execGit(['remote', 'add', 'origin', repository])
-    await this.execGit(['config', '--local', 'gc.auto', '0'])
     await this.execGit([
       'fetch',
       '--prune',
@@ -47,10 +51,31 @@ export class Git {
     this.verbose = verbose
   }
 
-  private async initialize(repoPath: string): Promise<void> {
+  private async initialize(repoPath: string, token: string): Promise<void> {
     this.gitCmd = await io.which('git', true)
     await io.mkdirP(repoPath)
-    this.repoPath = repoPath
+    this.repoPath = await fs.promises.realpath(repoPath)
+
+    await this.execGit(['init', this.repoPath])
+    await this.execGit(['config', '--local', 'gc.auto', '0'])
+    await this.execGit([
+      'config',
+      '--local',
+      `http.https://github.com/.extraheader`,
+      'AUTHORIZATION: basic ***'
+    ])
+
+    const basicCredential = Buffer.from(
+      `x-access-token:${token}`,
+      'utf8'
+    ).toString('base64')
+    const configPath = path.join(this.repoPath, '.git', 'config')
+    let content = (await fs.promises.readFile(configPath)).toString()
+    content = content.replace(
+      'AUTHORIZATION: basic ***',
+      `AUTHORIZATION: basic ${basicCredential}`
+    )
+    await fs.promises.writeFile(configPath, content)
   }
 
   private async execGit(args: string[]): Promise<exec.ExecOutput> {

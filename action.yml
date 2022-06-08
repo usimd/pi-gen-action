@@ -87,6 +87,10 @@ inputs:
     description: Print all output from pi-gen
     required: false
     default: false
+  github-token:
+    description: Token to use for checking out pi-gen repo
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   image-path:
