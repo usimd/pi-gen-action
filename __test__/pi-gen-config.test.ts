@@ -1,9 +1,4 @@
-import {
-  PiGenConfig,
-  writeToFile,
-  loadFromFile,
-  DEFAULT_CONFIG
-} from '../src/pi-gen-config'
+import {PiGenConfig, writeToFile, DEFAULT_CONFIG} from '../src/pi-gen-config'
 import fs from 'fs/promises'
 import * as path from 'path'
 
@@ -56,16 +51,5 @@ describe('PiGenConfig', () => {
         )
       )
     )
-  })
-
-  it('instance loads values correctly from file', async () => {
-    jest
-      .spyOn(fs, 'readFile')
-      .mockImplementationOnce(() =>
-        Promise.resolve('IMG_NAME="test"\nCOMPRESSION_LEVEL="8"')
-      )
-    const piGen = await loadFromFile('any')
-
-    expect(piGen).toMatchObject({imgName: 'test', compressionLevel: '8'})
   })
 })

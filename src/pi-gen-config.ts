@@ -1,4 +1,3 @@
-import {PathLike} from 'fs'
 import * as fs from 'fs/promises'
 import {PiGenStages} from './pi-gen-stages'
 import * as core from '@actions/core'
@@ -58,23 +57,6 @@ export async function writeToFile(
     )
     .join('\n')
   return fs.writeFile(file, configContent)
-}
-
-export async function loadFromFile(file: PathLike): Promise<PiGenConfig> {
-  const configLines = (await fs.readFile(file, {encoding: 'utf-8'})).split(/\n/)
-  const config = {} as PiGenConfig
-
-  for (const line of configLines) {
-    const [label, value] = line.split(/=/, 2)
-    const propName = snakeCaseToCamelCase(label)
-
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    ;(config as any)[propName as keyof PiGenConfig] = value
-      .trim()
-      .replace(/(?:^"|"$)/g, '')
-  }
-
-  return config
 }
 
 export async function validateConfig(config: PiGenConfig): Promise<void> {
@@ -174,12 +156,6 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
 
 function camelCaseToSnakeCase(label: string): string {
   return label.replace(/[A-Z]/g, letter => `_${letter}`).toUpperCase()
-}
-
-function snakeCaseToCamelCase(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/_(?<camel>[a-z])/g, (match, letter) => letter.toUpperCase())
 }
 
 async function absolutizePiGenStages(

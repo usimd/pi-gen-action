@@ -83,10 +83,6 @@ inputs:
     description: Temporary directory where to run pi-gen in container
     required: false
     default: pi-gen
-  pi-gen-config-file:
-    description: Configuration file keeping user input to pi-gen
-    required: false
-    default: pi-gen/config
   verbose-output:
     description: Print all output from pi-gen
     required: false
@@ -110,41 +106,25 @@ runs:
         ref: ${{ inputs.pi-gen-version }}
         path: ${{ inputs.pi-gen-dir }}
 
-    - name: Check user input and create pi-gen config file
-      uses: ./configure
-      id: configure
-      env:
-        INPUT_PI_GEN_DIR: ${{ inputs.pi-gen-dir }}
-        INPUT_CONFIG_FILE: ${{ inputs.pi-gen-config-file }}
-        INPUT_STAGE_LIST: ${{ inputs.stage-list }}
-        INPUT_ENABLE_NOOBS: ${{ inputs.enable-noobs }}
-        INPUT_IMAGE_NAME: ${{ inputs.image-name }}
-        INPUT_RELEASE: ${{ inputs.release }}
-        INPUT_COMPRESSION: ${{ inputs.compression }}
-        INPUT_COMPRESSION_LEVEL: ${{ inputs.compression-level }}
-        INPUT_LOCALE: ${{ inputs.locale }}
-        INPUT_HOSTNAME: ${{ inputs.hostname }}
-        INPUT_KEYBOARD_KEYMAP: ${{ inputs.keyboard-keymap }}
-        INPUT_KEYBOARD_LAYOUT: ${{ inputs.keyboard-layout }}
-        INPUT_TIMEZONE: ${{ inputs.timezone}}
-        INPUT_USERNAME: ${{ inputs.username }}
-        INPUT_PASSWORD: ${{ inputs.password }}
-        INPUT_WPA_ESSID: ${{ inputs.wpa-essid }}
-        INPUT_WPA_PASSWORD: ${{ inputs.wpa-password }}
-        INPUT_WPA_COUNTRY: ${{ inputs.wpa-country }}
-        INPUT_ENABLE_SSH: ${{ inputs.enable-ssh }}
-        INPUT_USE_QCOW2: ${{ inputs.use-qcow2 }}
-
-    - name: Install pi-gen host prerequisites
-      run: >
-        sudo apt-get --no-install-recommends --no-install-suggests install -y binfmt-support qemu-user-static qemu-utils nbd-server nbd-client && 
-        sudo modprobe -a binfmt_misc nbd
-      shell: bash
-
-    - name: Run pi-gen
-      uses: ./build
-      id: build
+    - uses: ./
       with:
         pi-gen-dir: ${{ inputs.pi-gen-dir }}
-        config-file: ${{ inputs.pi-gen-config-file }}
+        stage-list: ${{ inputs.stage-list }}
+        enable-noobs: ${{ inputs.enable-noobs }}
+        image-name: ${{ inputs.image-name }}
+        release: ${{ inputs.release }}
+        compression: ${{ inputs.compression }}
+        compression-level: ${{ inputs.compression-level }}
+        locale: ${{ inputs.locale }}
+        hostname: ${{ inputs.hostname }}
+        keyboard-keymap: ${{ inputs.keyboard-keymap }}
+        keyboard-layout: ${{ inputs.keyboard-layout }}
+        timezone: ${{ inputs.timezone}}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+        wpa-essid: ${{ inputs.wpa-essid }}
+        wpa-password: ${{ inputs.wpa-password }}
+        wpa-country: ${{ inputs.wpa-country }}
+        enable-ssh: ${{ inputs.enable-ssh }}
+        use-qcow2: ${{ inputs.use-qcow2 }}
         verbose-output: ${{ inputs.verbose-output }}
