@@ -1,17 +1,15 @@
 import {PiGen} from '../src/pi-gen'
 import fs, {Dirent} from 'fs'
-import {PiGenConfig} from '../src/pi-gen-config'
+import {DEFAULT_CONFIG, PiGenConfig} from '../src/pi-gen-config'
 import {PiGenStages} from '../src/pi-gen-stages'
 import * as exec from '@actions/exec'
 
 jest.mock('@actions/exec', () => ({
-  exec: jest.fn()
+  getExecOutput: jest.fn().mockResolvedValue({exitCode: 0} as exec.ExecOutput)
 }))
 
 jest.mock('../src/pi-gen-config', () => ({
-  loadFromFile: jest.fn().mockResolvedValue({
-    stageList: '/any/stage/path /pi-gen/stage0'
-  } as PiGenConfig)
+  writeToFile: jest.fn()
 }))
 
 describe('PiGen', () => {
@@ -20,7 +18,7 @@ describe('PiGen', () => {
       .spyOn(fs, 'statSync')
       .mockReturnValue({isDirectory: () => false} as fs.Stats)
 
-    expect(() => new PiGen('pi-gen-dir', 'pi-gen-dir/config')).toThrowError()
+    expect(() => new PiGen('pi-gen-dir', DEFAULT_CONFIG)).toThrowError()
   })
 
   it('should fail on missing entries at pi-gen path', async () => {
@@ -34,10 +32,12 @@ describe('PiGen', () => {
         {name: 'stage0', isDirectory: () => true} as Dirent
       ])
 
-    expect(() => new PiGen('pi-gen-dir', 'pi-gen-dir/config')).toThrowError()
+    expect(() => new PiGen('pi-gen-dir', DEFAULT_CONFIG)).toThrowError()
   })
 
   it('mounts all stage paths as Docker volumes', async () => {
+    const piGenDir = 'pi-gen'
+
     jest
       .spyOn(fs, 'statSync')
       .mockReturnValue({isDirectory: () => true} as fs.Stats)
@@ -60,18 +60,20 @@ describe('PiGen', () => {
     ])
     jest
       .spyOn(fs, 'realpathSync')
-      .mockReturnValueOnce('/pi-gen/config')
+      .mockReturnValueOnce(`/${piGenDir}`)
       .mockReturnValueOnce('/any/stage/path')
       .mockReturnValueOnce('/pi-gen/stage0')
 
-    const piGen = new PiGen('pi-gen-dir', 'pi-gen-dir/config')
+    const piGen = new PiGen(piGenDir, {
+      stageList: '/any/stage/path /pi-gen/stage0'
+    } as PiGenConfig)
     await piGen.build()
 
-    expect(exec.exec).toBeCalledWith(
+    expect(exec.getExecOutput).toBeCalledWith(
       '"./build-docker.sh"',
-      ['-c', '/pi-gen/config'],
+      ['-c', `/${piGenDir}/config`],
       expect.objectContaining({
-        cwd: 'pi-gen-dir',
+        cwd: piGenDir,
         env: {
           PIGEN_DOCKER_OPTS:
             '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'

@@ -2,59 +2,50 @@ import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import {PiGenStages} from './pi-gen-stages'
-import {loadFromFile, PiGenConfig} from './pi-gen-config'
+import {PiGenConfig, writeToFile} from './pi-gen-config'
 
 export class PiGen {
   private configFilePath: string
-  private config: Promise<PiGenConfig>
   private lastLogLine?: string
   private piGenBuildLogPattern = new RegExp(
     '^\\s*\\[(?:\\d{2}:?){3}\\].*',
     'gm'
   )
 
-  constructor(private piGenDirectory: fs.PathLike, piGenConfigFile = 'config') {
+  constructor(private piGenDirectory: string, private config: PiGenConfig) {
     if (!this.validatePigenDirectory()) {
       throw new Error(`pi-gen directory at ${this.piGenDirectory} is invalid`)
     }
 
-    this.configFilePath = fs.realpathSync(piGenConfigFile)
-    this.config = loadFromFile(this.configFilePath)
+    this.configFilePath = `${fs.realpathSync(this.piGenDirectory)}/config`
   }
 
-  async build(verbose = false): Promise<void> {
-    const userConfig = await this.config
-    const dockerOpts = this.getStagesAsDockerMounts(userConfig)
+  async build(verbose = false): Promise<exec.ExecOutput> {
+    core.debug(`Writing user config to ${this.configFilePath}`)
+    await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
 
+    const dockerOpts = this.getStagesAsDockerMounts(this.config)
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
-        userConfig
+        this.config
       )}`
     )
 
-    try {
-      const ret = await exec.exec(
-        '"./build-docker.sh"',
-        ['-c', this.configFilePath],
-        {
-          cwd: this.piGenDirectory.toString(),
-          env: {
-            PIGEN_DOCKER_OPTS: dockerOpts
-          },
-          listeners: {
-            stdline: (line: string) => this.logOutput(line, verbose, 'info'),
-            errline: (line: string) => this.logOutput(line, verbose, 'error')
-          },
-          silent: true
-        }
-      )
-
-      if (ret !== 0) {
-        throw new Error()
+    return await exec.getExecOutput(
+      '"./build-docker.sh"',
+      ['-c', this.configFilePath],
+      {
+        cwd: this.piGenDirectory,
+        env: {
+          PIGEN_DOCKER_OPTS: dockerOpts
+        },
+        listeners: {
+          stdline: (line: string) => this.logOutput(line, verbose, 'info'),
+          errline: (line: string) => this.logOutput(line, verbose, 'error')
+        },
+        silent: true
       }
-    } catch (error) {
-      core.setFailed(`Build failed: ${this.lastLogLine}`)
-    }
+    )
   }
 
   private validatePigenDirectory(): boolean {

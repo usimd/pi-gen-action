@@ -5,8 +5,11 @@
   "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
   "author": "",
   "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build -m --no-source-map-register --license licenses.txt",
     "test": "jest",
-    "all": "npm run build -ws && npm run format && npm run lint -ws && npm test && npm run package -ws",
+    "all": "npm run build && npm run format && npm run lint && npm test && npm run package",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'"
   },
@@ -20,11 +23,12 @@
     "pi-gen"
   ],
   "license": "MIT",
-  "workspaces": [
-    "common",
-    "configure",
-    "build"
-  ],
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "1.1.1",
+    "@actions/io": "^1.1.2"
+  },
+  "main": "lib/main.js",
   "devDependencies": {
     "@types/jest": "^27.5.1",
     "@types/node": "^17.0.35",
