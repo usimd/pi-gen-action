@@ -1,8 +1,10 @@
 import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
+import * as io from '@actions/io'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
+import path from 'path'
 
 export class PiGen {
   private configFilePath: string
@@ -23,7 +25,9 @@ export class PiGen {
     core.debug(`Writing user config to ${this.configFilePath}`)
     await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
 
-    const dockerOpts = this.getStagesAsDockerMounts(this.config)
+    await this.configureStagesImageExport()
+
+    const dockerOpts = this.getStagesAsDockerMounts()
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
         this.config
@@ -90,9 +94,9 @@ export class PiGen {
     return true
   }
 
-  private getStagesAsDockerMounts(userConfig: PiGenConfig): string {
-    return userConfig.stageList
-      .split(' ')
+  private getStagesAsDockerMounts(): string {
+    return this.config.stageList
+      .split(/\s+/)
       .map(userStageDir => fs.realpathSync(userStageDir))
       .map(userStageDir => `-v ${userStageDir}:${userStageDir}`)
       .join(' ')
@@ -105,6 +109,18 @@ export class PiGen {
   ): void {
     if (verbose || this.piGenBuildLogPattern.test(line)) {
       stream === 'info' ? core.info(line) : core.error(line)
+    }
+  }
+
+  private async configureStagesImageExport(): Promise<void> {
+    for (const stageDir of this.config.stageList.split(/\s+/)) {
+      if (Object.values(PiGenStages).includes(path.basename(stageDir))) {
+        io.rmRF(`${stageDir}/EXPORT_IMAGE`)
+      } else if (!fs.existsSync(`${stageDir}/EXPORT_IMAGE`)) {
+        core.warning(
+          `Custom stage directory ${stageDir} did not contain an EXPORT_IMAGE file, created it automatically`
+        )
+      }
     }
   }
 }
