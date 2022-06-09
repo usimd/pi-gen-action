@@ -44,13 +44,13 @@ export async function configure(): Promise<PiGenConfig> {
     core.info(
       colorize(JSON.stringify(userConfig, filterConfigFormat, 2), {
         colors: {
-          BRACKET: 'magenta',
-          BRACE: 'magenta',
+          BRACKET: 'magenta.bold',
+          BRACE: 'magenta.bold',
           STRING_KEY: 'cyanBright',
           BOOLEAN_LITERAL: 'blueBright',
           NUMBER_LITERAL: 'greenBright',
           NULL_LITERAL: 'blueBright',
-          STRING_LITERAL: 'redBright'
+          STRING_LITERAL: 'red'
         }
       })
     )

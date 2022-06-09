@@ -86,7 +86,7 @@ inputs:
   verbose-output:
     description: Print all output from pi-gen
     required: false
-    default: false
+    default: true
   github-token:
     description: Token to use for checking out pi-gen repo
     required: false
