@@ -1,14 +1,15 @@
 {
-  "name": "@pi-gen-action",
+  "name": "pi-gen-action",
   "version": "0.0.0",
   "private": true,
   "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
-  "author": "",
+  "author": "Simon Domke",
+  "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build -m --no-source-map-register --license licenses.txt",
-    "test": "jest",
+    "test": "jest --coverage",
     "all": "npm run build && npm run format && npm run lint && npm test && npm run package",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'"
@@ -29,7 +30,6 @@
     "@actions/io": "^1.1.2",
     "json-colorizer": "^2.2.2"
   },
-  "main": "lib/main.js",
   "devDependencies": {
     "@types/jest": "^27.5.1",
     "@types/node": "^17.0.35",
@@ -45,5 +45,8 @@
     "prettier": "^2.6.2",
     "ts-jest": "^28.0.3",
     "typescript": "^4.7.2"
+  },
+  "overrides": {
+    "chalk": "^4.1.0"
   }
 }

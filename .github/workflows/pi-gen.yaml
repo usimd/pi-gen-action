@@ -14,5 +14,4 @@ jobs:
         with:
           image-name: test
           stage-list: stage0 stage1 stage2 test-stage
-          verbose-output: true
 
