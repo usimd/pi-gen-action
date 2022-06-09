@@ -6,6 +6,10 @@ import {clonePigen} from './clone-pigen'
 
 async function run(): Promise<void> {
   try {
+    // Need to force color output for chalk, until https://github.com/actions/runner/issues/241 is resolved.
+    // See also https://github.com/chalk/supports-color/issues/106
+    process.env['FORCE_COLOR'] = '2'
+
     const piGenDirectory = core.getInput('pi-gen-dir')
     core.debug(`Using pi-gen directory: ${piGenDirectory}`)
 
