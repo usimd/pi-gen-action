@@ -87,7 +87,7 @@ export class Git {
   private async execGit(args: string[]): Promise<exec.ExecOutput> {
     core.debug(`Executing: ${this.gitCmd} ${args?.join(' ')}`)
     return await exec.getExecOutput(this.gitCmd, args, {
-      silent: this.verbose,
+      silent: !this.verbose,
       cwd: this.repoPath
     })
   }
