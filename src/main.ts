@@ -42,9 +42,9 @@ async function cleanup(): Promise<void> {
   }
 }
 
-// eslint-disable-next-line no-extra-boolean-cast
-if (!!process.env['STATE_isPost']) {
+if (core.getState('main-executed')) {
   cleanup()
 } else {
+  core.saveState('main-executed', true)
   run()
 }
