@@ -3,6 +3,9 @@ import {configure} from './configure'
 import {installHostDependencies} from './install-dependencies'
 import {build} from './build'
 import {clonePigen} from './clone-pigen'
+import {removeContainer} from './remove-container'
+
+const piGenBuildStartedState = 'pi-gen-build-started'
 
 async function run(): Promise<void> {
   try {
@@ -19,10 +22,29 @@ async function run(): Promise<void> {
       core.getInput('extra-host-dependencies'),
       core.getInput('extra-host-modules')
     )
+
+    core.saveState(piGenBuildStartedState, true)
     await build(piGenDirectory, userConfig)
   } catch (error) {
-    core.setFailed(`${(error as Error)?.message ?? error}`)
+    core.setFailed((error as Error)?.message ?? error)
   }
 }
 
-run()
+async function cleanup(): Promise<void> {
+  try {
+    if (core.getState(piGenBuildStartedState)) {
+      await removeContainer('pigen_work')
+    } else {
+      core.info('No build started, nothing to clean')
+    }
+  } catch (error) {
+    core.warning((error as Error)?.message ?? error)
+  }
+}
+
+// eslint-disable-next-line no-extra-boolean-cast
+if (!!process.env['STATE_isPost']) {
+  cleanup()
+} else {
+  run()
+}

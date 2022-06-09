@@ -6,7 +6,6 @@ import {PiGenConfig, writeToFile} from './pi-gen-config'
 
 export class PiGen {
   private configFilePath: string
-  private lastLogLine?: string
   private piGenBuildLogPattern = new RegExp(
     '^\\s*\\[(?:\\d{2}:?){3}\\].*',
     'gm'
@@ -104,7 +103,6 @@ export class PiGen {
     verbose: boolean,
     stream: 'info' | 'error'
   ): void {
-    this.lastLogLine = line
     if (verbose || this.piGenBuildLogPattern.test(line)) {
       stream === 'info' ? core.info(line) : core.error(line)
     }
