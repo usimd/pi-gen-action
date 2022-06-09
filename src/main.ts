@@ -15,7 +15,10 @@ async function run(): Promise<void> {
 
     const userConfig = await configure()
     await clonePigen(piGenDirectory, core.getInput('pi-gen-version'))
-    await installHostDependencies()
+    await installHostDependencies(
+      core.getInput('extra-host-dependencies'),
+      core.getInput('extra-host-modules')
+    )
     await build(piGenDirectory, userConfig)
   } catch (error) {
     core.setFailed(`${(error as Error)?.message ?? error}`)

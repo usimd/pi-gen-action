@@ -79,6 +79,15 @@ inputs:
     default: 0
 
   # action variables
+
+  extra-host-dependencies:
+    description: Additional packages to install on host before running pi-gen; whitespace or comma separated
+    required: false
+    default: ''
+  extra-host-modules:
+    description: Additional modules to load on host before running pi-gen; whitespace or comma separated
+    required: false
+    default: ''
   pi-gen-dir:
     description: Temporary directory where to run pi-gen in container
     required: false
