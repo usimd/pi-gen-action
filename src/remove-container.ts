@@ -10,13 +10,16 @@ export async function removeContainer(containerName: string): Promise<void> {
     const dockerCmd = await io.which('docker', true)
     execOutput = await exec.getExecOutput(
       dockerCmd,
-      ['rm', '-v', '-f', containerName],
+      ['rm', '-v', containerName],
       {
-        silent: !core.getBooleanInput('verbose-output')
+        silent: !core.getBooleanInput('verbose-output'),
+        ignoreReturnCode: true
       }
     )
 
-    core.info(`Successfully removed container ${containerName}`)
+    if (execOutput.exitCode === 0) {
+      core.info(`Successfully removed container ${containerName}`)
+    }
   } catch (error) {
     throw new Error(execOutput?.stderr ?? (error as Error)?.message ?? error)
   } finally {
