@@ -16,9 +16,15 @@ jobs:
           echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh
 
       - uses: ./
+        id: build
         with:
           image-name: test
           stage-list: stage0 stage1 stage2 test-stage
 
-      - run: tree && ls -laR pi-gen
+      - run: tree 
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pi-gen-image
+          path: ${{ steps.build.outputs.image-path }}
 
