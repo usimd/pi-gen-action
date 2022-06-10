@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
+import * as glob from '@actions/glob'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
 
@@ -45,6 +46,19 @@ export class PiGen {
         silent: true
       }
     )
+  }
+
+  async getLastImagePath(): Promise<string | undefined> {
+    const imageExtension =
+      this.config.deployCompression === 'none'
+        ? 'img'
+        : this.config.deployCompression
+    const imageGlob = await glob.create(
+      `${this.piGenDirectory}/deploy/*.${imageExtension}`,
+      {matchDirectories: false}
+    )
+    const foundImages = await imageGlob.glob()
+    return foundImages.length > 0 ? foundImages[0] : undefined
   }
 
   private validatePigenDirectory(): boolean {

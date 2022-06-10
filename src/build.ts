@@ -15,6 +15,8 @@ export async function build(
 
     const piGen = new PiGen(piGenDir, userConfig)
     execOutput = await piGen.build(verbose)
+
+    core.setOutput('image-path', await piGen.getLastImagePath())
   } catch (error) {
     throw new Error(
       execOutput?.stderr.split('\n').slice(-10).join('\n') ??

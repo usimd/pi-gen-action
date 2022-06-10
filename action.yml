@@ -4,33 +4,26 @@ description: Build a custom Raspberry Pi image
 inputs:
   # pi-gen variables
 
-  pi-gen-version:
-    description: Release version of pi-gen to use
-    required: false
-    # Currently, theres a bug in pi-gen if building for 64bit targets: https://github.com/RPi-Distro/pi-gen/issues/271
-    # We assume this is mostly the case, so this is set to the fix in the branch by default
-    default: arm64
-  enable-noobs:
-    description: Set whether a noobs image should be built as well
-    required: false
-    default: false
+  image-name:
+    description: Final image name.
+    required: true
   use-qcow2:
-    description: Use qcow2 images to reduce space and runtime requirements
+    description: Use qcow2 images to reduce space and runtime requirements.
     required: false
     default: 1
   stage-list:
-    description: List of stage name to execute in given order. Relative and absolute paths to custom stage directories are allowed here.
+    description: |
+      List of stage name to execute in given order. Relative and absolute paths to custom stage directories are allowed here.
+      Note that by default pi-gen exports images in stage2 (lite), stage4 and stage5. You probably want to hook in custom stages
+      before one of the exported stages.
     required: false
     default: 'stage0 stage1 stage2'
-  image-name:
-    description: Final image name
-    required: true
   release:
-    description: The release version to build images against. Valid values are jessie, stretch, buster, bullseye, and testing
+    description: The release version to build images against. Valid values are jessie, stretch, buster, bullseye, and testing.
     required: false
     default: bullseye
   compression:
-    description: Compression to apply on final image (either "none", "zip", "xz" or "gz")
+    description: Compression to apply on final image (either "none", "zip", "xz" or "gz").
     required: false
     default: zip
   compression-level:
@@ -38,66 +31,76 @@ inputs:
     required: false
     default: 6
   locale:
-    description: Default locale of the system image
+    description: Default locale of the system image.
     required: false
     default: en_GB.UTF-8
   hostname:
-    description: Host name of the image
+    description: Host name of the image.
     required: false
     default: raspberrypi
   keyboard-keymap:
-    description: Default keyboard keymap
+    description: Default keyboard keymap.
     required: false
     default: gb
   keyboard-layout:
-    description: Default keyboard layout
+    description: Default keyboard layout.
     required: false
     default: English (UK)
   timezone:
-    description: System timezone
+    description: System timezone.
     required: false
     default: Europe/London
   username:
-    description: Name of the initial user account
+    description: Name of the initial user account.
     required: false
     default: pi
   password:
-    description: Password of the intial user account, locked if empty
+    description: Password of the intial user account, locked if empty.
     required: false
   wpa-essid:
-    description: SSID of a default wifi network to connect to
+    description: SSID of a default wifi network to connect to.
     required: false
   wpa-password:
-    description: Password of default wifi network to connect to
+    description: Password of default wifi network to connect to.
     required: false
   wpa-country:
-    description: Wifi country code of default network to connect to
+    description: Wifi country code of default network to connect to.
     required: false
   enable-ssh:
-    description: Enable SSH access to Pi
+    description: Enable SSH access to Pi.
     required: false
     default: 0
 
   # action variables
 
+  pi-gen-version:
+    description: Release version of pi-gen to use. This can both be a branch or tag name known in the pi-gen repository.
+    required: false
+    # Currently, theres a bug in pi-gen if building for 64bit targets: https://github.com/RPi-Distro/pi-gen/issues/271
+    # We assume this is mostly the case, so this is set to the fix in the branch by default
+    default: arm64
+  enable-noobs:
+    description: Set whether a noobs image should be built as well.
+    required: false
+    default: false
   extra-host-dependencies:
-    description: Additional packages to install on host before running pi-gen; whitespace or comma separated
+    description: Comma or whitespace separated list of additional packages to install on host before running pi-gen.
     required: false
     default: ''
   extra-host-modules:
-    description: Additional modules to load on host before running pi-gen; whitespace or comma separated
+    description: Comma or whitespace separated list of additional modules to load on host before running pi-gen.
     required: false
     default: ''
   pi-gen-dir:
-    description: Temporary directory where to run pi-gen in container
+    description: Path where selected pi-gen ref will be checked out to. If the path does not yet exist, it will be created (including its parents).
     required: false
     default: pi-gen
   verbose-output:
-    description: Print all output from pi-gen
+    description: Print all output from pi-gen.
     required: false
-    default: true
+    default: false
   github-token:
-    description: Token to use for checking out pi-gen repo
+    description: Token to use for checking out pi-gen repo.
     required: false
     default: ${{ github.token }}
 

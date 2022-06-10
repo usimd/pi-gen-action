@@ -1,7 +1,6 @@
 {
   "name": "pi-gen-action",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
   "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
   "author": "Simon Domke",
   "main": "lib/main.js",
@@ -12,12 +11,17 @@
     "test": "jest --coverage",
     "all": "npm run build && npm run format && npm run lint && npm test && npm run package",
     "format": "prettier --write '**/*.ts'",
-    "format-check": "prettier --check '**/*.ts'"
+    "format-check": "prettier --check '**/*.ts'",
+    "update-readme": "ts-node src/misc/update-readme.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/usimd/pi-gen-action.git"
   },
+  "bugs": {
+    "url": "https://github.com/usimd/pi-gen-action/issues"
+  },
+  "homepage": "https://github.com/usimd/pi-gen-action#readme",
   "keywords": [
     "actions",
     "raspberry",
@@ -27,12 +31,15 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/exec": "1.1.1",
+    "@actions/glob": "^0.3.0",
     "@actions/io": "^1.1.2",
     "json-colorizer": "^2.2.2"
   },
   "devDependencies": {
     "@types/jest": "^27.5.1",
+    "@types/js-yaml": "^4.0.5",
     "@types/node": "^17.0.35",
+    "@types/semver": "^7.3.9",
     "@typescript-eslint/parser": "^5.8.1",
     "@vercel/ncc": "^0.33.4",
     "eslint": "^8.16.0",
@@ -42,9 +49,13 @@
     "eslint-plugin-workspaces": "^0.7.0",
     "jest": "^28.1.0",
     "js-yaml": "^4.1.0",
+    "markdown-replace-section": "^0.4.0",
     "prettier": "^2.6.2",
+    "semver": "^7.3.7",
     "ts-jest": "^28.0.3",
-    "typescript": "^4.7.2"
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.2",
+    "word-wrap": "^1.2.3"
   },
   "overrides": {
     "chalk": "^4.1.0"
