@@ -86,10 +86,18 @@ export class Git {
 
   private async execGit(args: string[]): Promise<exec.ExecOutput> {
     core.debug(`Executing: ${this.gitCmd} ${args?.join(' ')}`)
-    return await exec.getExecOutput(this.gitCmd, args, {
+    const execOutput = await exec.getExecOutput(this.gitCmd, args, {
       silent: !this.verbose,
-      cwd: this.repoPath
+      cwd: this.repoPath,
+      ignoreReturnCode: true,
+      failOnStdErr: false
     })
+
+    if (execOutput.exitCode !== 0) {
+      throw new Error(execOutput.stderr)
+    }
+
+    return execOutput
   }
 
   private async branchExists(branchName: string): Promise<boolean> {
