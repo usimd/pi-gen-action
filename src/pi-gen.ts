@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
+import * as io from '@actions/io'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
 
@@ -23,6 +24,8 @@ export class PiGen {
   async build(verbose = false): Promise<exec.ExecOutput> {
     core.debug(`Writing user config to ${this.configFilePath}`)
     await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
+
+    await this.configureNoobs()
 
     const dockerOpts = this.getStagesAsDockerMounts()
     core.debug(
@@ -119,6 +122,20 @@ export class PiGen {
   ): void {
     if (verbose || this.piGenBuildLogPattern.test(line)) {
       stream === 'info' ? core.info(line) : core.error(line)
+    }
+  }
+
+  private async configureNoobs(): Promise<void> {
+    if (this.config.enableNoobs !== 'true') {
+      core.info('NOOBS output not configured, removing from pi-gen')
+      const noobsConfig = await (
+        await glob.create(`${this.piGenDirectory}/**/EXPORT_NOOBS`, {
+          matchDirectories: false
+        })
+      ).glob()
+      for (const config of noobsConfig) {
+        await io.rmRF(config)
+      }
     }
   }
 }
