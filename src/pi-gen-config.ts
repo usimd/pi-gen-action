@@ -155,8 +155,10 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     }
   }
 
-  if (/^(true|false)$/.test(config.enableNoobs)) {
-    throw new Error('enable-noobs must be eiter set to "true" or "false"')
+  if (!/^(true|false)$/.test(config.enableNoobs)) {
+    throw new Error(
+      `enable-noobs must be either set to "true" or "false", was: ${config.enableNoobs}`
+    )
   }
 }
 
