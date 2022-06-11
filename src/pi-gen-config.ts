@@ -24,6 +24,7 @@ export interface PiGenConfig {
   pubkeyOnlySsh: string
   stageList: string
   useQcow2: string
+  enableNoobs: string
 }
 
 export const DEFAULT_CONFIG: PiGenConfig = {
@@ -40,7 +41,8 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   enableSsh: '0',
   pubkeyOnlySsh: '0',
   stageList: 'stage*',
-  useQcow2: '1'
+  useQcow2: '1',
+  enableNoobs: 'false'
 }
 
 export async function writeToFile(
@@ -151,6 +153,10 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
         )
       }
     }
+  }
+
+  if (/^(true|false)$/.test(config.enableNoobs)) {
+    throw new Error('enable-noobs must be eiter set to "true" or "false"')
   }
 }
 
