@@ -37,11 +37,8 @@ function buildUsageSection(actionYaml: any, actionVersion: number): string {
 
     let defaultValue
     if (input.default !== undefined && input.default.toString()) {
-      //usageSection.push('    #')
-      //usageSection.push(
-      //  `    # Default: ${input.default?.toString().trim()}`
-      //)
-      defaultValue = typeof input.default === 'string' ? `${input.default}` : input.default
+      defaultValue =
+        typeof input.default === 'string' ? `${input.default}` : input.default
     } else {
       defaultValue = "''"
     }

@@ -17,6 +17,10 @@ export async function build(
     execOutput = await piGen.build(verbose)
 
     core.setOutput('image-path', await piGen.getLastImagePath())
+
+    if (userConfig.enableNoobs === 'true') {
+      core.setOutput('image-noobs-path', await piGen.getLastNoobsImagePath())
+    }
   } catch (error) {
     throw new Error(
       execOutput?.stderr.split('\n').slice(-10).join('\n') ??
