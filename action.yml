@@ -15,7 +15,7 @@ inputs:
     description: |
       List of stage name to execute in given order. Relative and absolute paths to custom stage directories are allowed here.
       Note that by default pi-gen exports images in stage2 (lite), stage4 and stage5. You probably want to hook in custom stages
-      before one of the exported stages.
+      before one of the exported stages. Otherwise, the action will make sure any custom stage will include an image export directive.
     required: false
     default: 'stage0 stage1 stage2'
   release:
@@ -80,7 +80,7 @@ inputs:
     # We assume this is mostly the case, so this is set to the fix in the branch by default
     default: arm64
   enable-noobs:
-    description: Set whether a noobs image should be built as well.
+    description: Set whether a NOOBS image should be built as well. If enabled, the output directory containing the NOOBS files will be saved as output variable 'image-noobs-path'.
     required: false
     default: false
   extra-host-dependencies:
@@ -107,10 +107,8 @@ inputs:
 outputs:
   image-path:
     description: Path to the final custom image
-    value: 
   image-noobs-path:
     description: Path to final noobs image, if enabled
-    value: 
 
 runs:
   using: node16

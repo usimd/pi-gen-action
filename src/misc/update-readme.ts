@@ -35,14 +35,18 @@ function buildUsageSection(actionYaml: any, actionVersion: number): string {
       wrap(description, {indent: '    # ', width: 80}).trimEnd()
     )
 
-    if (input.default) {
-      usageSection.push('    #')
-      usageSection.push(
-        `    # Default: ${(input.default as string)?.toString().trim()}`
-      )
+    let defaultValue
+    if (input.default !== undefined && input.default.toString()) {
+      //usageSection.push('    #')
+      //usageSection.push(
+      //  `    # Default: ${input.default?.toString().trim()}`
+      //)
+      defaultValue = typeof input.default === 'string' ? `${input.default}` : input.default
+    } else {
+      defaultValue = "''"
     }
 
-    usageSection.push(`    ${key}: ''`)
+    usageSection.push(`    ${key}: ${defaultValue}`)
     usageSection.push('')
   }
 
