@@ -14,8 +14,7 @@ jobs:
           chmod +x test-stage/package-test/00-run-chroot.sh &&
           echo "nodejs" > test-stage/package-test/01-packages && 
           echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh &&
-          chmod +x test-stage/prerun.sh && 
-          touch test-stage/EXPORT_IMAGE
+          chmod +x test-stage/prerun.sh
 
       - uses: ./
         id: build
@@ -23,6 +22,19 @@ jobs:
           image-name: test
           stage-list: stage0 stage1 stage2 test-stage
           verbose-output: true
+          enable-noobs: true
+          compression: xz
+          compression-level: 9
+          locale: de_DE.UTF-8
+          hostname: pi-gen-test
+          keyboard-keymap: de
+          keyboard-layout: German - no dead keys
+          username: pi-gen
+          wpa-essid: foo
+          wpa-password: '1234567890'
+
+          # System timezone.
+          timezone: Europe/London
 
       - run: tree 
       
@@ -30,5 +42,11 @@ jobs:
         with:
           name: pi-gen-image
           path: ${{ steps.build.outputs.image-path }}
+          retention-days: 2
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pi-gen-noobs-image
+          path: ${{ steps.build.outputs.image-noobs-path }}
           retention-days: 2
 
