@@ -14,13 +14,15 @@ jobs:
           chmod +x test-stage/package-test/00-run-chroot.sh &&
           echo "nodejs" > test-stage/package-test/01-packages && 
           echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh &&
-          chmod +x test-stage/prerun.sh
+          chmod +x test-stage/prerun.sh && 
+          touch test-stage/EXPORT_IMAGE
 
       - uses: ./
         id: build
         with:
           image-name: test
           stage-list: stage0 stage1 stage2 test-stage
+          verbose-output: true
 
       - run: tree 
       
