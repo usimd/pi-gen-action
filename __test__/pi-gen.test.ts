@@ -63,6 +63,7 @@ describe('PiGen', () => {
       .mockReturnValueOnce(`/${piGenDir}`)
       .mockReturnValueOnce('/any/stage/path')
       .mockReturnValueOnce('/pi-gen/stage0')
+    jest.spyOn(fs, 'writeFileSync').mockReturnValue()
 
     const piGen = new PiGen(piGenDir, {
       stageList: '/any/stage/path /pi-gen/stage0'

@@ -5,6 +5,7 @@ import * as glob from '@actions/glob'
 import * as io from '@actions/io'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
+import path from 'path'
 
 export class PiGen {
   private configFilePath: string
@@ -26,6 +27,7 @@ export class PiGen {
     await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
 
     await this.configureNoobs()
+    await this.ensureLastStageExported()
 
     const dockerOpts = this.getStagesAsDockerMounts()
     core.debug(
@@ -44,7 +46,7 @@ export class PiGen {
         },
         listeners: {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
-          errline: (line: string) => this.logOutput(line, verbose, 'error')
+          errline: (line: string) => this.logOutput(line, verbose, 'warning')
         },
         silent: true
       }
@@ -59,6 +61,15 @@ export class PiGen {
     const imageGlob = await glob.create(
       `${this.piGenDirectory}/deploy/*.${imageExtension}`,
       {matchDirectories: false}
+    )
+    const foundImages = await imageGlob.glob()
+    return foundImages.length > 0 ? foundImages[0] : undefined
+  }
+
+  async getLastNoobsImagePath(): Promise<string | undefined> {
+    const imageGlob = await glob.create(
+      `${this.piGenDirectory}/deploy/${this.config.imgName}-`,
+      {matchDirectories: true}
     )
     const foundImages = await imageGlob.glob()
     return foundImages.length > 0 ? foundImages[0] : undefined
@@ -118,16 +129,16 @@ export class PiGen {
   private logOutput(
     line: string,
     verbose: boolean,
-    stream: 'info' | 'error'
+    stream: 'info' | 'warning'
   ): void {
     if (verbose || this.piGenBuildLogPattern.test(line)) {
-      stream === 'info' ? core.info(line) : core.error(line)
+      stream === 'info' ? core.info(line) : core.warning(line)
     }
   }
 
   private async configureNoobs(): Promise<void> {
     if (this.config.enableNoobs !== 'true') {
-      core.info('NOOBS output not configured, removing from pi-gen')
+      core.notice('NOOBS output not configured, removing from pi-gen')
       const noobsConfig = await (
         await glob.create(`${this.piGenDirectory}/**/EXPORT_NOOBS`, {
           matchDirectories: false
@@ -135,6 +146,40 @@ export class PiGen {
       ).glob()
       for (const config of noobsConfig) {
         await io.rmRF(config)
+      }
+    } else {
+      for (const stageDir of this.config.stageList.split(/\s+/)) {
+        const configGlob = await glob.create(`${stageDir}/EXPORT_NOOBS`, {
+          matchDirectories: false
+        })
+
+        if ((await configGlob.glob()).length == 0) {
+          core.notice(
+            `Added directive to create NOOBS image of stage ${path.basename(
+              stageDir
+            )}`
+          )
+          fs.writeFileSync(`${stageDir}/EXPORT_NOOBS`, '')
+        }
+      }
+    }
+  }
+
+  private async ensureLastStageExported(): Promise<void> {
+    const lastStageDir = this.config.stageList.split(/\s+/).at(-1)
+
+    if (lastStageDir) {
+      const configGlob = await glob.create(`${lastStageDir}/EXPORT_IMAGE`, {
+        matchDirectories: false
+      })
+
+      if ((await configGlob.glob()).length == 0) {
+        core.notice(
+          `Added missing directive to create image of final stage ${path.basename(
+            lastStageDir
+          )}`
+        )
+        fs.writeFileSync(`${lastStageDir}/EXPORT_IMAGE`, '')
       }
     }
   }
