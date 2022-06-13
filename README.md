@@ -6,6 +6,18 @@ Generated images can subsequently be used in workflows, e.g. uploaded as build a
 `pi-gen` is the official tool to generate Raspberry Pi OS images that can be flashed on SD cards. Refer to the
 `pi-gen` repository for detailed information on the scripts and its usage.
 
+## Outputs
+
+### `image-path`
+
+If an image was built successfully, the action will set this property to point to the file. This will be located
+in `${{ inputs.pi-gen-dir }}/deploy`.
+
+### `image-noobs-path`
+
+If NOOBS build is enabled by setting `${{ inputs.enable-noobs }}` to `true`, the property will point to the directory
+in `pi-gen`'s output directory containing the build result.  
+
 ## How it works
 
 The action exposes most of `pi-gen`'s configuration properties as input variables and performs sanity checks on the
@@ -92,11 +104,16 @@ tries to make sure the stage is respected and its changes are included in the fi
     enable-noobs: false
 
     # Comma or whitespace separated list of additional packages to install on host 
-    # before running pi-gen.
+    # before running pi-gen. Use this list to add any packages your custom stages may 
+    # require. Note that this is not affecting the final image. In order to add 
+    # additional packages, you need to add a respective 'XX-packages' file in your 
+    # custom stage.
     extra-host-dependencies: ''
 
     # Comma or whitespace separated list of additional modules to load on host before 
-    # running pi-gen.
+    # running pi-gen. If your custom stage requires additional software or kernel 
+    # modules to be loaded, add them here. Note that this is not meant to configure 
+    # modules to be loaded in the target image.
     extra-host-modules: ''
 
     # Path where selected pi-gen ref will be checked out to. If the path does not yet 
@@ -113,7 +130,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 ## Scenarios
 - [Install NodeJS from Nodesource in the target image](#install-nodejs-from-nodesource-in-the-target-image)
 - [Enable detailed output from `pi-gen` build](#enable-detailed-output-from-pi-gen-build)
-- [Upload final image as artifact]
+- [Upload final image as artifact](#upload-final-image-as-artifact)
 
 ### Install NodeJS from Nodesource in the target image
 ```yaml
@@ -128,8 +145,7 @@ jobs:
           chmod +x test-stage/package-test/00-run-chroot.sh &&
           echo "nodejs" > test-stage/package-test/01-packages && 
           echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh &&
-          chmod +x test-stage/prerun.sh && 
-          touch test-stage/EXPORT_IMAGE
+          chmod +x test-stage/prerun.sh
 
       - uses: usimd/pi-gen-action@v1
         with:
