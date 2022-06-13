@@ -1,3 +1,5 @@
+[![CI](https://github.com/usimd/pi-gen-action/actions/workflows/unit-test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/unit-test.yml)
+
 # pi-gen-action
 
 This action wraps [`pi-gen`](https://github.com/RPi-Distro/pi-gen) to make it easily accessible in GitHub workflows.
@@ -5,6 +7,21 @@ Generated images can subsequently be used in workflows, e.g. uploaded as build a
 
 `pi-gen` is the official tool to generate Raspberry Pi OS images that can be flashed on SD cards. Refer to the
 `pi-gen` repository for detailed information on the scripts and its usage.
+
+**NOTE**: This action requires a Debian-based distribution as runner (i.e. `ubuntu-latest`), since it invokes tools
+like `sudo` and `apt-get` and relies on QEMU and other Linux native components.
+
+## Default behavior
+
+The minimum input to the action will be the `image-name` and the `stage-list` containing the list of `pi-gen` stages
+and/or custom stages. This will build all stages and export the last stage (including all previous changes) as an
+image.
+
+If multiple images should be exported, disable the `export-last-stage-only` property and configure `pi-gen`'s 
+[`EXPORT_IMAGE`](https://github.com/RPi-Distro/pi-gen#how-the-build-process-works) in the respective stages accordingly.
+This will keep the default `pi-gen` export directives unchanged. If changes in the `pi-gen` internal stages are
+required, a custom stage at first position in the list could [perform the changes](#modify-pi-gen-internal-stages)
+in the other directories.
 
 ## Outputs
 
@@ -94,6 +111,13 @@ tries to make sure the stage is respected and its changes are included in the fi
     # Enable SSH access to Pi.
     enable-ssh: 0
 
+    # If this feature is enabled, the action will configure pi-gen to not export any 
+    # stage as image but the last one defined in property 'stage-list'. This is 
+    # helpful when building a single image flavor (in contrast to building a 
+    # lite/server and full-blown desktop image), since it speeds up the build process 
+    # significantly.
+    export-last-stage-only: true
+
     # Release version of pi-gen to use. This can both be a branch or tag name known in 
     # the pi-gen repository.
     pi-gen-version: arm64
@@ -131,6 +155,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 - [Install NodeJS from Nodesource in the target image](#install-nodejs-from-nodesource-in-the-target-image)
 - [Enable detailed output from `pi-gen` build](#enable-detailed-output-from-pi-gen-build)
 - [Upload final image as artifact](#upload-final-image-as-artifact)
+- [Modify `pi-gen` internal stages](#modify-pi-gen-internal-stages)
 
 ### Install NodeJS from Nodesource in the target image
 ```yaml
@@ -139,12 +164,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Create a stage 'test-stage' instructing to add Nodesource repo and install nodejs as dependency
-      - run: >
-          mkdir -p test-stage/package-test && 
-          echo -e "#!/bin/bash\napt-get install -y curl\ncurl -fsSL https://deb.nodesource.com/setup_16.x | bash -" > test-stage/package-test/00-run-chroot.sh &&
+      - run: |
+          mkdir -p test-stage/package-test &&
+          {
+          cat > test-stage/package-test/00-run-chroot.sh <<-EOF
+          #!/bin/bash
+          apt-get install -y curl
+          curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+          EOF
+          } &&
           chmod +x test-stage/package-test/00-run-chroot.sh &&
-          echo "nodejs" > test-stage/package-test/01-packages && 
-          echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh &&
+          echo "nodejs" > test-stage/package-test/01-packages &&
+          {
+          cat > test-stage/prerun.sh <<-EOF
+          #!/bin/bash -e
+          if [ ! -d "\${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          } &&
           chmod +x test-stage/prerun.sh
 
       - uses: usimd/pi-gen-action@v1
@@ -180,6 +218,33 @@ jobs:
         with:
           name: pi-gen-image
           path: ${{ steps.build.outputs.image-path }}
+```
+
+### Modify `pi-gen` internal stages
+
+In this scenario, a dummy preparation stage `clean-stage` is prepended to the list of stages which will remove
+export directives of `stage4` and `stage5` in the internally mounted stage volumes. 
+
+```yaml
+jobs:
+  pi-gen-modified-stages:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          mkdir -p clean-stage &&
+          {
+          cat > clean-stage/prerun.sh <<-EOF
+          #!/bin/bash
+          rm -f ${{ github.workspace }}/${{ inputs.custom-pi-gen-dir }}/stage[45]/EXPORT*
+          EOF
+          } &&
+          chmod +x clean-stage/prerun.sh
+
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: test
+          stage-list: clean-stage stage0 stage1 stage2 custom-stage stage3 stage4
+          pi-gen-dir: ${{ inputs.custom-pi-gen-dir }}
 ```
 
 ## License

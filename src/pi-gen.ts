@@ -26,8 +26,7 @@ export class PiGen {
     core.debug(`Writing user config to ${this.configFilePath}`)
     await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
 
-    await this.configureNoobs()
-    await this.ensureLastStageExported()
+    await this.configureImageExports()
 
     const dockerOpts = this.getStagesAsDockerMounts()
     core.debug(
@@ -120,7 +119,6 @@ export class PiGen {
 
   private getStagesAsDockerMounts(): string {
     return this.config.stageList
-      .split(/\s+/)
       .map(userStageDir => fs.realpathSync(userStageDir))
       .map(userStageDir => `-v ${userStageDir}:${userStageDir}`)
       .join(' ')
@@ -136,50 +134,67 @@ export class PiGen {
     }
   }
 
-  private async configureNoobs(): Promise<void> {
-    if (this.config.enableNoobs !== 'true') {
-      core.notice('NOOBS output not configured, removing from pi-gen')
-      const noobsConfig = await (
-        await glob.create(`${this.piGenDirectory}/**/EXPORT_NOOBS`, {
-          matchDirectories: false
-        })
-      ).glob()
-      for (const config of noobsConfig) {
-        await io.rmRF(config)
-      }
-    } else {
-      for (const stageDir of this.config.stageList.split(/\s+/)) {
-        const configGlob = await glob.create(`${stageDir}/EXPORT_NOOBS`, {
-          matchDirectories: false
-        })
+  private async configureStageExport(
+    stageDir: string,
+    exportType: 'image' | 'noobs',
+    targetState: boolean
+  ): Promise<void> {
+    const exportFileName =
+      exportType === 'image' ? 'EXPORT_IMAGE' : 'EXPORT_NOOBS'
+    const configPath = `${stageDir}/${exportFileName}`
 
-        if ((await configGlob.glob()).length == 0) {
-          core.notice(
-            `Added directive to create NOOBS image of stage ${path.basename(
-              stageDir
-            )}`
-          )
-          fs.writeFileSync(`${stageDir}/EXPORT_NOOBS`, '')
-        }
-      }
+    if (!targetState) {
+      await io.rmRF(configPath)
+    } else if (!fs.existsSync(configPath)) {
+      fs.writeFileSync(configPath, '')
     }
   }
 
-  private async ensureLastStageExported(): Promise<void> {
-    const lastStageDir = this.config.stageList.split(/\s+/).at(-1)
+  private async configureImageExports(): Promise<void> {
+    const lastStage = this.config.stageList.at(-1)
 
-    if (lastStageDir) {
-      const configGlob = await glob.create(`${lastStageDir}/EXPORT_IMAGE`, {
-        matchDirectories: false
-      })
+    if (!lastStage) {
+      throw new Error('stage list is empty')
+    }
 
-      if ((await configGlob.glob()).length == 0) {
-        core.notice(
-          `Added missing directive to create image of final stage ${path.basename(
-            lastStageDir
-          )}`
-        )
-        fs.writeFileSync(`${lastStageDir}/EXPORT_IMAGE`, '')
+    if (this.config.exportLastStageOnly) {
+      for (const stage of this.config.stageList.slice(0, -1)) {
+        await this.configureStageExport(stage, 'image', false)
+        await this.configureStageExport(stage, 'noobs', false)
+      }
+
+      await this.configureStageExport(lastStage, 'image', true)
+
+      if (this.config.enableNoobs) {
+        await this.configureStageExport(lastStage, 'noobs', true)
+      }
+    } else {
+      // In this case, only warn about missing export if last stage is a custom stage.
+      // Add any EXPORT_NOOBS, if missing
+      if (!Object.values(PiGenStages).includes(path.basename(lastStage))) {
+        const imageGlob = await glob.create(`${lastStage}/EXPORT_IMAGE`, {
+          matchDirectories: false
+        })
+        if ((await imageGlob.glob()).length === 0) {
+          core.warning(
+            `User stage ${lastStage} does not have an EXPORT_IMAGE directive and will not be included in the generated image`
+          )
+        }
+      }
+
+      for (const stage of this.config.stageList) {
+        const exportGlob = await glob.create(`${stage}/EXPORT*`, {
+          matchDirectories: false
+        })
+        const exportDirectives = await exportGlob.glob()
+
+        if (
+          exportDirectives.some(p => p.endsWith('EXPORT_IMAGE')) &&
+          exportDirectives.length === 1
+        ) {
+          fs.writeFileSync(`${stage}/EXPORT_NOOBS`, '')
+          core.notice(`Created NOOBS export directive in ${stage}`)
+        }
       }
     }
   }

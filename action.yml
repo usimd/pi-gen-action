@@ -74,6 +74,13 @@ inputs:
 
   # action variables
 
+  export-last-stage-only:
+    description: |
+      If this feature is enabled, the action will configure pi-gen to not export any stage as image but the last one
+      defined in property 'stage-list'. This is helpful when building a single image flavor (in contrast to building
+      a lite/server and full-blown desktop image), since it speeds up the build process significantly.
+    required: false
+    default: true
   pi-gen-version:
     description: Release version of pi-gen to use. This can both be a branch or tag name known in the pi-gen repository.
     required: false

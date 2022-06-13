@@ -66,7 +66,7 @@ describe('PiGen', () => {
     jest.spyOn(fs, 'writeFileSync').mockReturnValue()
 
     const piGen = new PiGen(piGenDir, {
-      stageList: '/any/stage/path /pi-gen/stage0'
+      stageList: ['/any/stage/path', '/pi-gen/stage0']
     } as PiGenConfig)
     await piGen.build()
 
