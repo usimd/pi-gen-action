@@ -10,7 +10,7 @@ export async function configure(): Promise<PiGenConfig> {
 
     userConfig.imgName = core.getInput('image-name', {required: true})
     userConfig.stageList =
-      core.getInput('stage-list') ?? DEFAULT_CONFIG.stageList
+      core.getInput('stage-list').split(/\s+/) ?? DEFAULT_CONFIG.stageList
     userConfig.release = core.getInput('release') ?? DEFAULT_CONFIG.release
     userConfig.deployCompression =
       core.getInput('compression') ?? DEFAULT_CONFIG.deployCompression
@@ -41,8 +41,11 @@ export async function configure(): Promise<PiGenConfig> {
     userConfig.enableNoobs =
       core.getBooleanInput('enable-noobs').toString() ??
       DEFAULT_CONFIG.enableNoobs
+    userConfig.exportLastStageOnly =
+      core.getBooleanInput('export-last-stage-only').toString() ??
+      DEFAULT_CONFIG.exportLastStageOnly
 
-    validateConfig(userConfig)
+    await validateConfig(userConfig)
 
     core.info(
       colorize(JSON.stringify(userConfig, filterConfigFormat, 2), {

@@ -22,9 +22,10 @@ export interface PiGenConfig {
   enableSsh: string
   pubkeySshFirstUser?: string
   pubkeyOnlySsh: string
-  stageList: string
+  stageList: string[]
   useQcow2: string
   enableNoobs: string
+  exportLastStageOnly: string
 }
 
 export const DEFAULT_CONFIG: PiGenConfig = {
@@ -40,9 +41,10 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   firstUserName: 'pi',
   enableSsh: '0',
   pubkeyOnlySsh: '0',
-  stageList: 'stage*',
+  stageList: ['stage*'],
   useQcow2: '1',
-  enableNoobs: 'false'
+  enableNoobs: 'false',
+  exportLastStageOnly: 'true'
 }
 
 export async function writeToFile(
@@ -55,7 +57,11 @@ export async function writeToFile(
     .filter(prop => config[prop as keyof PiGenConfig])
     .map(
       prop =>
-        `${camelCaseToSnakeCase(prop)}="${config[prop as keyof PiGenConfig]}"`
+        `${camelCaseToSnakeCase(prop)}="${
+          Array.isArray(config[prop as keyof PiGenConfig])
+            ? (config[prop as keyof PiGenConfig] as string[]).join(' ')
+            : config[prop as keyof PiGenConfig]
+        }"`
     )
     .join('\n')
   return fs.writeFile(file, configContent)
@@ -136,15 +142,27 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     )
   }
 
-  if (!config.stageList) {
+  if (!/^(true|false)$/.test(config.enableNoobs)) {
+    throw new Error(
+      `enable-noobs must be either set to "true" or "false", was: ${config.enableNoobs}`
+    )
+  }
+
+  if (!/^(true|false)$/.test(config.exportLastStageOnly)) {
+    throw new Error(
+      `export-last-stage-only must be either set to "true" or "false", was: ${config.exportLastStageOnly}`
+    )
+  }
+
+  if (!config.stageList || config.stageList.length === 0) {
     throw new Error('stage-list must not be empty')
   }
 
-  for (const stageDir of config.stageList.split(' ')) {
+  for (const stageDir of config.stageList) {
     if (!Object.values(PiGenStages).includes(stageDir)) {
       try {
         const stat = await fs.stat(stageDir)
-        if (!stat.isDirectory) {
+        if (!stat.isDirectory()) {
           throw new Error()
         }
       } catch (error) {
@@ -153,12 +171,6 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
         )
       }
     }
-  }
-
-  if (!/^(true|false)$/.test(config.enableNoobs)) {
-    throw new Error(
-      `enable-noobs must be either set to "true" or "false", was: ${config.enableNoobs}`
-    )
   }
 }
 
@@ -170,9 +182,9 @@ async function absolutizePiGenStages(
   config: PiGenConfig,
   piGenDirectory: string
 ): Promise<PiGenConfig> {
-  const stages = config.stageList.split(' ')
+  const stages = config.stageList
   core.debug(
-    `Resolving directories to asbolute paths: ${stages} using pi-gen base dir ${piGenDirectory}`
+    `Resolving directories to absolute paths: ${stages} using pi-gen base dir ${piGenDirectory}`
   )
   for (let i = 0; i < stages.length; i++) {
     stages[i] = await fs.realpath(
@@ -181,6 +193,6 @@ async function absolutizePiGenStages(
         : stages[i]
     )
   }
-  config.stageList = stages.join(' ')
+  config.stageList = stages
   return config
 }

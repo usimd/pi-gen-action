@@ -8,19 +8,42 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: >
-          mkdir -p test-stage/package-test && 
-          echo -e "#!/bin/bash\napt-get install -y curl\ncurl -fsSL https://deb.nodesource.com/setup_16.x | bash -" > test-stage/package-test/00-run-chroot.sh &&
+      - run: |
+          mkdir -p test-stage/package-test &&
+          {
+          cat > test-stage/package-test/00-run-chroot.sh <<EOF
+          #!/bin/bash
+          apt-get install -y curl
+          curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+          EOF
+          } &&
           chmod +x test-stage/package-test/00-run-chroot.sh &&
-          echo "nodejs" > test-stage/package-test/01-packages && 
-          echo -e "#!/bin/bash -e\nif [ ! -d \"\${ROOTFS_DIR}\" ]; then\n  copy_previous\nfi" > test-stage/prerun.sh &&
+          echo "nodejs" > test-stage/package-test/01-packages &&
+          {
+          cat > test-stage/prerun.sh <<EOF
+          #!/bin/bash -e
+          if [ ! -d "\${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          } &&
           chmod +x test-stage/prerun.sh
+
+      - run: |
+          mkdir -p clean-stage &&
+          {
+          cat > clean-stage/prerun.sh <<EOF
+          #!/bin/bash
+          rm -f ${{ github.workspace }}/pi-gen/stage[45]/EXPORT*
+          EOF
+          } &&
+          chmod +x clean-stage/prerun.sh
 
       - uses: ./
         id: build
         with:
           image-name: test
-          stage-list: stage0 stage1 stage2 test-stage
+          stage-list: clean-stage stage0 stage1 stage2 test-stage
           verbose-output: true
           enable-noobs: true
           compression: xz

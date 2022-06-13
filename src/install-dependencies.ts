@@ -14,16 +14,10 @@ export async function installHostDependencies(
     const verbose = core.getBooleanInput('verbose-output')
 
     const installPackages = [
-      ...new Set([
-        ...hostDependencies.packages,
-        ...packages.split(new RegExp('[s,]'))
-      ])
+      ...new Set([...hostDependencies.packages, ...packages.split(/[\s,]/)])
     ].filter(p => p)
     const hostModules = [
-      ...new Set([
-        ...hostDependencies.modules,
-        ...modules.split(new RegExp('[s,]'))
-      ])
+      ...new Set([...hostDependencies.modules, ...modules.split(/[\s,]/)])
     ].filter(m => m)
     core.debug(
       `Installing additional host packages '${installPackages.join(' ')}'`
