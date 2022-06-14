@@ -34,6 +34,7 @@ jobs:
           {
           cat > clean-stage/prerun.sh <<EOF
           #!/bin/bash
+          set -x
           rm -f ${{ github.workspace }}/pi-gen/stage[45]/EXPORT*
           EOF
           } &&
@@ -43,7 +44,7 @@ jobs:
         id: build
         with:
           image-name: test
-          stage-list: clean-stage stage0 stage1 stage2 test-stage
+          stage-list: clean-stage stage0 stage1 stage2 test-stage stage3 stage4 stage5
           verbose-output: true
           enable-noobs: true
           compression: xz
