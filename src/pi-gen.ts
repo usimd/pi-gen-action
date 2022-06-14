@@ -14,20 +14,46 @@ export class PiGen {
     'gm'
   )
 
-  constructor(private piGenDirectory: string, private config: PiGenConfig) {
-    if (!this.validatePigenDirectory()) {
-      throw new Error(`pi-gen directory at ${this.piGenDirectory} is invalid`)
+  private constructor(
+    private piGenDirectory: string,
+    private config: PiGenConfig
+  ) {
+    this.configFilePath = `${fs.realpathSync(piGenDirectory)}/config`
+  }
+
+  static async getInstance(
+    piGenDirectory: string,
+    config: PiGenConfig
+  ): Promise<PiGen> {
+    if (!PiGen.validatePigenDirectory(piGenDirectory)) {
+      throw new Error(`pi-gen directory at ${piGenDirectory} is invalid`)
     }
 
-    this.configFilePath = `${fs.realpathSync(this.piGenDirectory)}/config`
+    const instance = new PiGen(piGenDirectory, config)
+    core.debug(`Writing user config to ${instance.configFilePath}`)
+    await writeToFile(
+      instance.config,
+      instance.piGenDirectory,
+      instance.configFilePath
+    )
+    await instance.configureImageExports()
+
+    return instance
+  }
+
+  async hasExportsConfigured(): Promise<boolean> {
+    for (const stage of this.config.stageList) {
+      const exportGlob = await glob.create(`${stage}/EXPORT_*`)
+
+      if ((await exportGlob.glob()).length > 0) {
+        return true
+      }
+    }
+
+    return false
   }
 
   async build(verbose = false): Promise<exec.ExecOutput> {
-    core.debug(`Writing user config to ${this.configFilePath}`)
-    await writeToFile(this.config, this.piGenDirectory, this.configFilePath)
-
-    await this.configureImageExports()
-
     const dockerOpts = this.getStagesAsDockerMounts()
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
@@ -74,15 +100,17 @@ export class PiGen {
     return foundImages.length > 0 ? foundImages[0] : undefined
   }
 
-  private validatePigenDirectory(): boolean {
-    const dirStat = fs.statSync(this.piGenDirectory)
+  private static async validatePigenDirectory(
+    piGenDirectory: string
+  ): Promise<boolean> {
+    const dirStat = await fs.promises.stat(piGenDirectory)
 
     if (!dirStat.isDirectory()) {
-      core.debug(`Not a directory: ${this.piGenDirectory}`)
+      core.debug(`Not a directory: ${piGenDirectory}`)
       return false
     }
 
-    const piGenDirContent = fs.readdirSync(this.piGenDirectory, {
+    const piGenDirContent = await fs.promises.readdir(piGenDirectory, {
       withFileTypes: true
     })
     const requiredFiles = ['build-docker.sh', 'Dockerfile']

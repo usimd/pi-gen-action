@@ -13,7 +13,14 @@ export async function build(
 
     const verbose = core.getBooleanInput('verbose-output')
 
-    const piGen = new PiGen(piGenDir, userConfig)
+    const piGen = await PiGen.getInstance(piGenDir, userConfig)
+
+    if (!(await piGen.hasExportsConfigured())) {
+      throw new Error(
+        'No NOOBS/image exports are configured, check your config.'
+      )
+    }
+
     execOutput = await piGen.build(verbose)
 
     core.setOutput('image-path', await piGen.getLastImagePath())
