@@ -6,6 +6,7 @@ import * as io from '@actions/io'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
 import path from 'path'
+import * as colors from 'ansi-colors'
 
 export class PiGen {
   private configFilePath: string
@@ -157,7 +158,9 @@ export class PiGen {
     verbose: boolean,
     stream: 'info' | 'warning'
   ): void {
-    if (verbose || this.piGenBuildLogPattern.test(line)) {
+    const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
+    if (verbose || isPiGenStatusMessage) {
+      line = isPiGenStatusMessage ? colors.bold(line) : line
       stream === 'info' ? core.info(line) : core.warning(line)
     }
   }

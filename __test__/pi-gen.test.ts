@@ -52,16 +52,14 @@ describe('PiGen', () => {
     jest
       .spyOn(fs.promises, 'stat')
       .mockResolvedValue({isDirectory: () => true} as fs.Stats)
-    jest
-      .spyOn(fs.promises, 'readdir')
-      .mockResolvedValue([
-        {
-          name: 'Dockerfile',
-          isFile: () => true,
-          isDirectory: () => false
-        } as Dirent,
-        {name: 'stage0', isDirectory: () => true, isFile: () => false} as Dirent
-      ])
+    jest.spyOn(fs.promises, 'readdir').mockResolvedValue([
+      {
+        name: 'Dockerfile',
+        isFile: () => true,
+        isDirectory: () => false
+      } as Dirent,
+      {name: 'stage0', isDirectory: () => true, isFile: () => false} as Dirent
+    ])
 
     await expect(
       async () => await PiGen.getInstance('pi-gen-dir', DEFAULT_CONFIG)
@@ -99,11 +97,9 @@ describe('PiGen', () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
     jest.spyOn(fs, 'realpathSync').mockReturnValueOnce(`/${piGenDir}`)
-    jest
-      .spyOn(glob, 'create')
-      .mockResolvedValue({
-        glob: () => Promise.resolve([] as string[])
-      } as glob.Globber)
+    jest.spyOn(glob, 'create').mockResolvedValue({
+      glob: () => Promise.resolve([] as string[])
+    } as glob.Globber)
 
     const piGen = await PiGen.getInstance(piGenDir, {
       stageList: ['/pi-gen/stage0', '/pi-gen-stage1']
