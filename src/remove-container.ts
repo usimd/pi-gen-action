@@ -20,8 +20,6 @@ export async function removeContainer(containerName: string): Promise<void> {
     if (execOutput.exitCode === 0) {
       core.info(`Successfully removed container ${containerName}`)
     }
-  } catch (error) {
-    throw new Error(execOutput?.stderr ?? (error as Error)?.message ?? error)
   } finally {
     core.endGroup()
   }

@@ -2,11 +2,6 @@ import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import {installHostDependencies} from '../src/install-dependencies'
 
-/*
-jest.mock('@actions/exec', () => ({
-    getExecOutput: jest.fn().mockResolvedValue({exitCode: 0} as exec.ExecOutput)
-  }))
-*/
 describe('Install host dependencies', () => {
   it('respects additional user packages and modules', async () => {
     jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
