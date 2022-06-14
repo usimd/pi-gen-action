@@ -56,9 +56,8 @@ jobs:
           username: pi-gen
           wpa-essid: foo
           wpa-password: '1234567890'
-
-          # System timezone.
           timezone: Europe/London
+          export-last-stage-only: false
 
       - run: tree 
       
