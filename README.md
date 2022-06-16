@@ -1,4 +1,4 @@
-[![CI](https://github.com/usimd/pi-gen-action/actions/workflows/unit-test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/unit-test.yml)
+[![CI](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml)
 
 # pi-gen-action
 
