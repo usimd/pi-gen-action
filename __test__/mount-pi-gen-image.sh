@@ -13,12 +13,7 @@ if ! command -v losetup &> /dev/null; then
     exit 2
 fi
 
-LODEV=$(sudo losetup --show -f -P "$IMAGE")
-
-if [[ $? != 0 ]]; then
-    echo "Creating loopback device for image failed"
-    exit 3
-fi
+LODEV=$(sudo losetup --show -f -P "$IMAGE") || { echo "Creating loopback device for image failed"; exit 3; }
 
 if [[ ! -e "${LODEV}p1" || ! -e "${LODEV}p2" ]]; then
     echo "Mounted image does not contain two partitions"

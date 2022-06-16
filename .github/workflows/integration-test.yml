@@ -2,10 +2,16 @@ name: pi-gen-action-integration-test
 on:
   workflow_dispatch:
   push:
+    branches:
+      - master
 
 env:
   MOUNT_DIR: /mnt
   ROOTFS_DIR: /mnt/root
+  CONFIG_TIMEZONE: Europe/Berlin
+  CONFIG_LOCALE: de_DE.UTF-8
+  CONFIG_USERNAME: pi-gen
+  CONFIG_HOSTNAME: pi-gen-test
 
 jobs:
 
@@ -21,19 +27,19 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          stage-list: stage0 stage1 ./__test__/it-test-stage
+          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage
           verbose-output: true
           enable-noobs: true
           compression: xz
-          compression-level: 9
-          locale: de_DE.UTF-8
-          hostname: pi-gen-test
+          compression-level: 1
+          locale: ${{ env.CONFIG_LOCALE }}
+          hostname: ${{ env.CONFIG_HOSTNAME }}
           keyboard-keymap: de
           keyboard-layout: German - no dead keys
-          username: pi-gen
+          username: ${{ env.CONFIG_USERNAME }}
           wpa-essid: foo
           wpa-password: '1234567890'
-          timezone: Europe/Berlin
+          timezone: ${{ env.CONFIG_TIMEZONE }}
 
       - name: List working directory
         run: tree 
@@ -49,10 +55,10 @@ jobs:
         run: |
           set -ex
           test -x ${ROOTFS_DIR}/usr/bin/node
-          test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "pi-gen-test"
-          grep pi-gen ${ROOTFS_DIR}/etc/passwd
+          test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "$CONFIG_HOSTNAME"
+          grep $CONFIG_USERNAME ${ROOTFS_DIR}/etc/passwd
           source ${ROOTFS_DIR}/etc/default/locale
-          test "$LANG" = "de_DE.UTF-8"
-          test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "Europe/Berlin"
+          test "$LANG" = "$CONFIG_LOCALE"
+          test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
 
           
