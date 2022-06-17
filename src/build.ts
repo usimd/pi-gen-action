@@ -23,6 +23,12 @@ export async function build(
 
     execOutput = await piGen.build(verbose)
 
+    if (execOutput.exitCode != 0) {
+      throw new Error(
+        `pi-gen build failed with exit code ${execOutput.exitCode}`
+      )
+    }
+
     core.setOutput('image-path', await piGen.getLastImagePath())
 
     if (userConfig.enableNoobs === 'true') {
@@ -30,9 +36,10 @@ export async function build(
     }
   } catch (error) {
     throw new Error(
-      execOutput?.stderr.split('\n').slice(-10).join('\n') ??
-        (error as Error)?.message ??
-        error
+      `${(error as Error)?.message ?? error}\n${execOutput?.stderr
+        .split('\n')
+        .slice(-10)
+        .join('\n')}`
     )
   } finally {
     core.endGroup()

@@ -74,7 +74,8 @@ export class PiGen {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
           errline: (line: string) => this.logOutput(line, verbose, 'warning')
         },
-        silent: true
+        silent: true,
+        ignoreReturnCode: true
       }
     )
   }
@@ -94,11 +95,10 @@ export class PiGen {
 
   async getLastNoobsImagePath(): Promise<string | undefined> {
     const imageGlob = await glob.create(
-      `${this.piGenDirectory}/deploy/${this.config.imgName}-`,
-      {matchDirectories: true}
+      `${this.piGenDirectory}/deploy/${this.config.imgName}*/os.json`
     )
     const foundImages = await imageGlob.glob()
-    return foundImages.length > 0 ? foundImages[0] : undefined
+    return foundImages.length > 0 ? path.dirname(foundImages[0]) : undefined
   }
 
   private static async validatePigenDirectory(

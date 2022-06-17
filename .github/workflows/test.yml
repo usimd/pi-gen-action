@@ -4,6 +4,7 @@ on:
     paths-ignore:
       - '**.md'
   pull_request:
+    types: [opened, reopened]
     paths-ignore:
       - '**.md'
 
@@ -27,6 +28,14 @@ jobs:
     - run: npm run lint
 
     - run: npm run format-check
+
+    - run: npm run update-readme
+
+    - name: Ensure no Git diff
+      run: |
+        GIT_STATUS=$(git status -s)
+        echo $GIT_STATUS
+        test -z "$GIT_STATUS"
 
   shellcheck:
     runs-on: ubuntu-latest

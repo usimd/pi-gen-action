@@ -9,7 +9,7 @@
     "lint": "eslint src/**/*.ts",
     "package": "ncc build -m --no-source-map-register --license licenses.txt",
     "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm test && npm run package",
+    "all": "npm run build && npm run format && npm run lint && npm test && npm run package && npm run update-readme",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "update-readme": "ts-node src/misc/update-readme.ts"
@@ -51,6 +51,7 @@
     "eslint-plugin-jest": "^26.2.2",
     "eslint-plugin-workspaces": "^0.7.0",
     "jest": "^28.1.0",
+    "jest-mock-extended": "^2.0.6",
     "js-yaml": "^4.1.0",
     "markdown-replace-section": "^0.4.0",
     "prettier": "^2.6.2",
