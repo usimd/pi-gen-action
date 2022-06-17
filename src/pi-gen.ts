@@ -74,7 +74,8 @@ export class PiGen {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
           errline: (line: string) => this.logOutput(line, verbose, 'warning')
         },
-        silent: true
+        silent: true,
+        ignoreReturnCode: true
       }
     )
   }
