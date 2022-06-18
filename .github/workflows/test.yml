@@ -25,6 +25,12 @@ jobs:
 
     - run: npm test
 
+    - uses: codecov/codecov-action@v2
+      with:
+        files: coverage/clover.xml
+        flags: unittests
+        verbose: true
+
     - run: npm run lint
 
     - run: npm run format-check
