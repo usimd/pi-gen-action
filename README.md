@@ -1,4 +1,6 @@
-[![CI](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml)
+[![unit-tests](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/test.yml)
+[![integration-tests](https://github.com/usimd/pi-gen-action/actions/workflows/integration-test.yml/badge.svg)](https://github.com/usimd/pi-gen-action/actions/workflows/integration-test.yml)
+[![codecov](https://codecov.io/gh/usimd/pi-gen-action/branch/master/graph/badge.svg?token=4O680QXTOC)](https://codecov.io/gh/usimd/pi-gen-action)
 
 # pi-gen-action
 
