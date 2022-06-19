@@ -2,7 +2,6 @@ import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
-import * as io from '@actions/io'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
 import path from 'path'
@@ -15,10 +14,7 @@ export class PiGen {
     'gm'
   )
 
-  private constructor(
-    private piGenDirectory: string,
-    private config: PiGenConfig
-  ) {
+  constructor(private piGenDirectory: string, private config: PiGenConfig) {
     this.configFilePath = `${fs.realpathSync(piGenDirectory)}/config`
   }
 
@@ -104,10 +100,14 @@ export class PiGen {
   private static async validatePigenDirectory(
     piGenDirectory: string
   ): Promise<boolean> {
-    const dirStat = await fs.promises.stat(piGenDirectory)
+    try {
+      const dirStat = await fs.promises.stat(piGenDirectory)
 
-    if (!dirStat.isDirectory()) {
-      core.debug(`Not a directory: ${piGenDirectory}`)
+      if (!dirStat.isDirectory()) {
+        core.debug(`Not a directory: ${piGenDirectory}`)
+        return false
+      }
+    } catch (error) {
       return false
     }
 
@@ -153,11 +153,7 @@ export class PiGen {
       .join(' ')
   }
 
-  private logOutput(
-    line: string,
-    verbose: boolean,
-    stream: 'info' | 'warning'
-  ): void {
+  logOutput(line: string, verbose: boolean, stream: 'info' | 'warning'): void {
     const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
     if (verbose || isPiGenStatusMessage) {
       line = isPiGenStatusMessage ? colors.bold(line) : line
@@ -175,7 +171,11 @@ export class PiGen {
     const configPath = `${stageDir}/${exportFileName}`
 
     if (!targetState) {
-      await io.rmRF(configPath)
+      try {
+        fs.unlinkSync(configPath)
+      } catch (error) {
+        if ((error as any).code !== 'ENOENT') throw error
+      }
     } else if (!fs.existsSync(configPath)) {
       fs.writeFileSync(configPath, '')
     }
@@ -188,7 +188,7 @@ export class PiGen {
       throw new Error('stage list is empty')
     }
 
-    if (this.config.exportLastStageOnly) {
+    if (this.config.exportLastStageOnly === 'true') {
       for (const stage of this.config.stageList.slice(0, -1)) {
         await this.configureStageExport(stage, 'image', false)
         await this.configureStageExport(stage, 'noobs', false)
@@ -196,7 +196,7 @@ export class PiGen {
 
       await this.configureStageExport(lastStage, 'image', true)
 
-      if (this.config.enableNoobs) {
+      if (this.config.enableNoobs === 'true') {
         await this.configureStageExport(lastStage, 'noobs', true)
       }
     } else {
@@ -223,7 +223,7 @@ export class PiGen {
           exportDirectives.some(p => p.endsWith('EXPORT_IMAGE')) &&
           exportDirectives.length === 1
         ) {
-          fs.writeFileSync(`${stage}/EXPORT_NOOBS`, '')
+          await this.configureStageExport(stage, 'noobs', true)
           core.notice(`Created NOOBS export directive in ${stage}`)
         }
       }
