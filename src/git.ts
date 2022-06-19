@@ -64,24 +64,27 @@ export class Git {
 
     await this.execGit(['init', this.repoPath])
     await this.execGit(['config', '--local', 'gc.auto', '0'])
-    await this.execGit([
-      'config',
-      '--local',
-      `http.https://github.com/.extraheader`,
-      'AUTHORIZATION: basic ***'
-    ])
 
-    const basicCredential = Buffer.from(
-      `x-access-token:${token}`,
-      'utf8'
-    ).toString('base64')
-    const configPath = path.join(this.repoPath, '.git', 'config')
-    let content = (await fs.promises.readFile(configPath)).toString()
-    content = content.replace(
-      'AUTHORIZATION: basic ***',
-      `AUTHORIZATION: basic ${basicCredential}`
-    )
-    await fs.promises.writeFile(configPath, content)
+    if (token) {
+      await this.execGit([
+        'config',
+        '--local',
+        `http.https://github.com/.extraheader`,
+        'AUTHORIZATION: basic ***'
+      ])
+
+      const basicCredential = Buffer.from(
+        `x-access-token:${token}`,
+        'utf8'
+      ).toString('base64')
+      const configPath = path.join(this.repoPath, '.git', 'config')
+      let content = (await fs.promises.readFile(configPath)).toString()
+      content = content.replace(
+        'AUTHORIZATION: basic ***',
+        `AUTHORIZATION: basic ${basicCredential}`
+      )
+      await fs.promises.writeFile(configPath, content)
+    }
   }
 
   private async execGit(args: string[]): Promise<exec.ExecOutput> {
@@ -100,7 +103,7 @@ export class Git {
     return execOutput
   }
 
-  private async branchExists(branchName: string): Promise<boolean> {
+  async branchExists(branchName: string): Promise<boolean> {
     const branchList = await this.execGit([
       'branch',
       '--list',
@@ -110,7 +113,7 @@ export class Git {
     return !!branchList.stdout.trim()
   }
 
-  private async tagExists(tagName: string): Promise<boolean> {
+  async tagExists(tagName: string): Promise<boolean> {
     const tagList = await this.execGit(['tag', '--list', tagName])
     return !!tagList.stdout.trim()
   }
