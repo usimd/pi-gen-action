@@ -3,13 +3,14 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/misc/update-readme.ts'],
   coverageThreshold: {
     global: {
-      statements: 52,
-      branches: 32,
-      functions: 58,
-      lines: 52
+      statements: 73,
+      branches: 52,
+      functions: 84,
+      lines: 73
     }
   },
   clearMocks: true,
+  restoreMocks: true,
   moduleFileExtensions: ['js', 'ts'],
   testMatch: ['**/*.test.ts'],
   transform: {
