@@ -31,7 +31,6 @@ jobs:
       with:
         files: coverage/clover.xml
         flags: unittests
-        verbose: true
 
     - run: npm run lint
 

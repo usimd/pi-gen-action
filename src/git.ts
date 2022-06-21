@@ -43,9 +43,9 @@ export class Git {
     ])
 
     if (await this.tagExists(ref)) {
-      checkoutArgs = [ref]
+      checkoutArgs.push(ref)
     } else if (await this.branchExists(ref)) {
-      checkoutArgs = ['-B', ref, `refs/remotes/origin/${ref}`]
+      checkoutArgs.push('-B', ref, `refs/remotes/origin/${ref}`)
     } else {
       throw new Error(`No ref ${ref} found in ${repository}`)
     }
