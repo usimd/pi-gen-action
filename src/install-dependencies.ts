@@ -25,6 +25,11 @@ export async function installHostDependencies(
     core.debug(`Loading additional host modules '${hostModules.join(' ')}'`)
 
     const sudoPath = await io.which('sudo', true)
+
+    execOutput = await exec.getExecOutput(sudoPath, ['apt-get', 'update'], {
+      silent: !verbose
+    })
+
     execOutput = await exec.getExecOutput(
       sudoPath,
       [
