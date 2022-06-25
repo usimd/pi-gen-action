@@ -55,23 +55,6 @@ tries to make sure the stage is respected and its changes are included in the fi
 ```yaml
 - uses: usimd/pi-gen-action@v1
   with:
-    # Final image name.
-    image-name: ''
-
-    # Use qcow2 images to reduce space and runtime requirements.
-    use-qcow2: 1
-
-    # List of stage name to execute in given order. Relative and absolute paths to 
-    # custom stage directories are allowed here. Note that by default pi-gen exports 
-    # images in stage2 (lite), stage4 and stage5. You probably want to hook in custom 
-    # stages before one of the exported stages. Otherwise, the action will make sure 
-    # any custom stage will include an image export directive.
-    stage-list: stage0 stage1 stage2
-
-    # The release version to build images against. Valid values are jessie, stretch, 
-    # buster, bullseye, and testing.
-    release: bullseye
-
     # Compression to apply on final image (either "none", "zip", "xz" or "gz").
     compression: zip
 
@@ -80,35 +63,10 @@ tries to make sure the stage is respected and its changes are included in the fi
     # best compression but very slow).
     compression-level: 6
 
-    # Default locale of the system image.
-    locale: en_GB.UTF-8
-
-    # Host name of the image.
-    hostname: raspberrypi
-
-    # Default keyboard keymap.
-    keyboard-keymap: gb
-
-    # Default keyboard layout.
-    keyboard-layout: English (UK)
-
-    # System timezone.
-    timezone: Europe/London
-
-    # Name of the initial user account.
-    username: pi
-
-    # Password of the intial user account, locked if empty.
-    password: ''
-
-    # SSID of a default wifi network to connect to.
-    wpa-essid: ''
-
-    # Password of default wifi network to connect to.
-    wpa-password: ''
-
-    # Wifi country code of default network to connect to.
-    wpa-country: ''
+    # Set whether a NOOBS image should be built as well. If enabled, the output 
+    # directory containing the NOOBS files will be saved as output variable 
+    # 'image-noobs-path'.
+    enable-noobs: false
 
     # Enable SSH access to Pi.
     enable-ssh: 0
@@ -119,15 +77,6 @@ tries to make sure the stage is respected and its changes are included in the fi
     # lite/server and full-blown desktop image), since it speeds up the build process 
     # significantly.
     export-last-stage-only: true
-
-    # Release version of pi-gen to use. This can both be a branch or tag name known in 
-    # the pi-gen repository.
-    pi-gen-version: arm64
-
-    # Set whether a NOOBS image should be built as well. If enabled, the output 
-    # directory containing the NOOBS files will be saved as output variable 
-    # 'image-noobs-path'.
-    enable-noobs: false
 
     # Comma or whitespace separated list of additional packages to install on host 
     # before running pi-gen. Use this list to add any packages your custom stages may 
@@ -142,15 +91,66 @@ tries to make sure the stage is respected and its changes are included in the fi
     # modules to be loaded in the target image.
     extra-host-modules: ''
 
+    # Token to use for checking out pi-gen repo.
+    github-token: ${{ github.token }}
+
+    # Host name of the image.
+    hostname: raspberrypi
+
+    # Final image name.
+    image-name: ''
+
+    # Default keyboard keymap.
+    keyboard-keymap: gb
+
+    # Default keyboard layout.
+    keyboard-layout: English (UK)
+
+    # Default locale of the system image.
+    locale: en_GB.UTF-8
+
+    # Password of the intial user account, locked if empty.
+    password: ''
+
     # Path where selected pi-gen ref will be checked out to. If the path does not yet 
     # exist, it will be created (including its parents).
     pi-gen-dir: pi-gen
 
+    # Release version of pi-gen to use. This can both be a branch or tag name known in 
+    # the pi-gen repository.
+    pi-gen-version: arm64
+
+    # The release version to build images against. Valid values are jessie, stretch, 
+    # buster, bullseye, and testing.
+    release: bullseye
+
+    # List of stage name to execute in given order. Relative and absolute paths to 
+    # custom stage directories are allowed here. Note that by default pi-gen exports 
+    # images in stage2 (lite), stage4 and stage5. You probably want to hook in custom 
+    # stages before one of the exported stages. Otherwise, the action will make sure 
+    # any custom stage will include an image export directive.
+    stage-list: stage0 stage1 stage2
+
+    # System timezone.
+    timezone: Europe/London
+
+    # Use qcow2 images to reduce space and runtime requirements.
+    use-qcow2: 1
+
+    # Name of the initial user account.
+    username: pi
+
     # Print all output from pi-gen.
     verbose-output: false
 
-    # Token to use for checking out pi-gen repo.
-    github-token: ${{ github.token }}
+    # Wifi country code of default network to connect to.
+    wpa-country: ''
+
+    # SSID of a default wifi network to connect to.
+    wpa-essid: ''
+
+    # Password of default wifi network to connect to.
+    wpa-password: ''
 ```
 
 ## Scenarios

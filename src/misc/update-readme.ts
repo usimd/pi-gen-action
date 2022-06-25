@@ -28,7 +28,9 @@ function buildUsageSection(actionYaml: any, actionVersion: number): string {
     '  with:'
   ]
 
-  for (const key of Object.keys(actionYaml.inputs)) {
+  for (const key of Object.keys(actionYaml.inputs).sort((a, b) =>
+    a.localeCompare(b)
+  )) {
     const input = actionYaml.inputs[key]
     const description = (input.description as string).replace(/\s+/g, ' ')
     usageSection.push(
