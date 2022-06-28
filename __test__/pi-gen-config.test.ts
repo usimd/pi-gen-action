@@ -70,6 +70,7 @@ describe('PiGenConfig', () => {
     ['keyboardLayout', undefined],
     ['timezoneDefault', 'Europe/Munich'],
     ['firstUserName', ''],
+    ['wpaEssid', '0'.repeat(33)],
     ['wpaPassword', '12345'],
     ['wpaPassword', '0'.repeat(64)],
     ['stageList', []],
