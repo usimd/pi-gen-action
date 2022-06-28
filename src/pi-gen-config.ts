@@ -133,6 +133,10 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error('username must not be empty')
   }
 
+  if (config.wpaEssid && config.wpaEssid.length > 32) {
+    throw new Error('wpa-essid must not be longer than 32 characters')
+  }
+
   if (
     config.wpaPassword &&
     (config.wpaPassword?.length < 8 || config.wpaPassword?.length > 63)
