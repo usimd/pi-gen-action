@@ -116,6 +116,9 @@ tries to make sure the stage is respected and its changes are included in the fi
     # exist, it will be created (including its parents).
     pi-gen-dir: pi-gen
 
+    # GitHub repository to fetch pi-gen from, must be a fork from RPi-Distro/pi-gen.
+    pi-gen-repository: RPi-Distro/pi-gen
+
     # Release version of pi-gen to use. This can both be a branch or tag name known in 
     # the pi-gen repository.
     pi-gen-version: arm64

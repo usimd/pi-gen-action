@@ -6,6 +6,8 @@ on:
       - '**.md'
     branches:
       - master
+  pull_request:
+    types: [ labeled, opened, synchronize, reopened ]
 
 env:
   MOUNT_DIR: /mnt
@@ -19,6 +21,7 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
+    if: github.head_ref == 'master' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test'))
 
     steps:
       - name: Check out repository
@@ -62,5 +65,11 @@ jobs:
           source ${ROOTFS_DIR}/etc/default/locale
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
+
+      - name: Remove test label from PR
+        uses: actions-ecosystem/action-remove-labels@v1
+        if: always()
+        with:
+          labels: test
 
           
