@@ -16,8 +16,11 @@ export async function piGen(): Promise<void> {
     const piGenDirectory = core.getInput('pi-gen-dir')
     core.debug(`Using pi-gen directory: ${piGenDirectory}`)
 
+    const piGenRepo = core.getInput('pi-gen-repository')
+    core.debug(`Using pi-gen repository ${piGenRepo}`)
+
     const userConfig = await configure()
-    await clonePigen(piGenDirectory, core.getInput('pi-gen-version'))
+    await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
     await installHostDependencies(
       core.getInput('extra-host-dependencies'),
       core.getInput('extra-host-modules')

@@ -74,6 +74,10 @@ inputs:
 
   # action variables
 
+  pi-gen-repository:
+    description: GitHub repository to fetch pi-gen from, must be a fork from RPi-Distro/pi-gen.
+    required: false
+    default: RPi-Distro/pi-gen
   export-last-stage-only:
     description: |
       If this feature is enabled, the action will configure pi-gen to not export any stage as image but the last one
