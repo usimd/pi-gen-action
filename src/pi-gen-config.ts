@@ -25,7 +25,8 @@ export interface PiGenConfig {
   stageList: string[]
   useQcow2: string
   enableNoobs: string
-  exportLastStageOnly: string
+  exportLastStageOnly: string,
+  dockerOpts: string
 }
 
 export const DEFAULT_CONFIG: PiGenConfig = {
@@ -44,7 +45,8 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   stageList: ['stage*'],
   useQcow2: '1',
   enableNoobs: 'false',
-  exportLastStageOnly: 'true'
+  exportLastStageOnly: 'true',
+  dockerOpts: ''
 }
 
 export async function writeToFile(

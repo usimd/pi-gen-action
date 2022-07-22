@@ -44,6 +44,7 @@ export async function configure(): Promise<PiGenConfig> {
     userConfig.exportLastStageOnly =
       core.getBooleanInput('export-last-stage-only').toString() ??
       DEFAULT_CONFIG.exportLastStageOnly
+    userConfig.dockerOpts = core.getInput('docker-opts') ?? DEFAULT_CONFIG.dockerOpts
 
     await validateConfig(userConfig)
 

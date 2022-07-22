@@ -63,6 +63,9 @@ tries to make sure the stage is respected and its changes are included in the fi
     # best compression but very slow).
     compression-level: 6
 
+    # Additional options to include in PIGEN_DOCKER_OPTS
+    docker-opts: ''
+
     # Set whether a NOOBS image should be built as well. If enabled, the output 
     # directory containing the NOOBS files will be saved as output variable 
     # 'image-noobs-path'.
