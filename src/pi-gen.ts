@@ -51,7 +51,10 @@ export class PiGen {
   }
 
   async build(verbose = false): Promise<exec.ExecOutput> {
-    const dockerOpts = this.getStagesAsDockerMounts()
+    let dockerOpts = this.getStagesAsDockerMounts()
+    if (this.config.dockerOpts !== undefined && this.config.dockerOpts !== '') {
+      dockerOpts = `${this.config.dockerOpts} ${dockerOpts}`
+    }
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
         this.config

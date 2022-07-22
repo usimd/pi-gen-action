@@ -78,6 +78,10 @@ inputs:
     description: Enable SSH access to Pi.
     required: false
     default: 0
+  docker-opts:
+    description: Additional options to include in PIGEN_DOCKER_OPTS
+    required: false
+    default: ""
 
   # action variables
 

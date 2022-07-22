@@ -19,7 +19,7 @@ The minimum input to the action will be the `image-name` and the `stage-list` co
 and/or custom stages. This will build all stages and export the last stage (including all previous changes) as an
 image.
 
-If multiple images should be exported, disable the `export-last-stage-only` property and configure `pi-gen`'s 
+If multiple images should be exported, disable the `export-last-stage-only` property and configure `pi-gen`'s
 [`EXPORT_IMAGE`](https://github.com/RPi-Distro/pi-gen#how-the-build-process-works) in the respective stages accordingly.
 This will keep the default `pi-gen` export directives unchanged. If changes in the `pi-gen` internal stages are
 required, a custom stage at first position in the list could [perform the changes](#modify-pi-gen-internal-stages)
@@ -35,7 +35,7 @@ in `${{ inputs.pi-gen-dir }}/deploy`.
 ### `image-noobs-path`
 
 If NOOBS build is enabled by setting `${{ inputs.enable-noobs }}` to `true`, the property will point to the directory
-in `pi-gen`'s output directory containing the build result.  
+in `pi-gen`'s output directory containing the build result.
 
 ## How it works
 
@@ -46,7 +46,7 @@ If user config seems valid, the action will check out the configured ref of `pi-
 host dependencies for the build.
 
 Custom user stages (present as directories) are mounted to the build container and resolved in `pi-gen`'s stage
-configuration. The custom stage should follow `pi-gen`'s 
+configuration. The custom stage should follow `pi-gen`'s
 [conventions](https://github.com/RPi-Distro/pi-gen#how-the-build-process-works) to be executed properly. The action
 tries to make sure the stage is respected and its changes are included in the final image.
 
@@ -68,6 +68,9 @@ tries to make sure the stage is respected and its changes are included in the fi
     # aware of the implied security risk of defining a default username and password 
     # for your devices.
     disable-first-boot-user-rename: 0
+
+    # Additional options to include in PIGEN_DOCKER_OPTS
+    docker-opts: ''
 
     # Set whether a NOOBS image should be built as well. If enabled, the output 
     # directory containing the NOOBS files will be saved as output variable 
@@ -234,7 +237,7 @@ jobs:
 ### Modify `pi-gen` internal stages
 
 In this scenario, a dummy preparation stage `clean-stage` is prepended to the list of stages which will remove
-export directives of `stage4` and `stage5` in the internally mounted stage volumes. 
+export directives of `stage4` and `stage5` in the internally mounted stage volumes.
 
 ```yaml
 jobs:
