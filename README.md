@@ -63,6 +63,12 @@ tries to make sure the stage is respected and its changes are included in the fi
     # best compression but very slow).
     compression-level: 6
 
+    # Disable the renaming of the first user during the first boot. This make it so 
+    # 'username' stays activated. 'username' must be set for this to work. Please be 
+    # aware of the implied security risk of defining a default username and password 
+    # for your devices.
+    disable-first-boot-user-rename: 0
+
     # Set whether a NOOBS image should be built as well. If enabled, the output 
     # directory containing the NOOBS files will be saved as output variable 
     # 'image-noobs-path'.
