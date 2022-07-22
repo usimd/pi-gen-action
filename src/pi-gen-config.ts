@@ -27,6 +27,7 @@ export interface PiGenConfig {
   useQcow2: string
   enableNoobs: string
   exportLastStageOnly: string
+  dockerOpts?: string
 }
 
 export const DEFAULT_CONFIG: PiGenConfig = {

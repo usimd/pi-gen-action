@@ -78,7 +78,8 @@ describe('PiGen', () => {
       .mockReturnValueOnce('/pi-gen/stage0')
 
     const piGen = await PiGen.getInstance(piGenDir, {
-      stageList: ['/any/stage/path', '/pi-gen/stage0']
+      stageList: ['/any/stage/path', '/pi-gen/stage0'],
+      dockerOpts: ''
     } as PiGenConfig)
     await piGen.build()
 
@@ -90,6 +91,28 @@ describe('PiGen', () => {
         env: {
           PIGEN_DOCKER_OPTS:
             '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'
+        }
+      })
+    )
+  })
+
+  it('passes custom docker opts', async () => {
+    const piGenDir = 'pi-gen'
+    mockPiGenDependencies()
+    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+
+    const piGen = await PiGen.getInstance(piGenDir, {
+      stageList: ['/pi-gen/stage0']
+    } as PiGenConfig)
+    await piGen.build()
+
+    expect(exec.getExecOutput).toBeCalledWith(
+      '"./build-docker.sh"',
+      ['-c', `/${piGenDir}/config`],
+      expect.objectContaining({
+        cwd: piGenDir,
+        env: {
+          PIGEN_DOCKER_OPTS: '-v /foo:/bar -v /pi-gen/stage0:/pi-gen/stage0'
         }
       })
     )
