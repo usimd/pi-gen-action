@@ -58,6 +58,13 @@ inputs:
   password:
     description: Password of the intial user account, locked if empty.
     required: false
+  disable-first-boot-user-rename:
+    description: |
+      Disable the renaming of the first user during the first boot. This make it so 'username' stays activated. 
+      'username' must be set for this to work. Please be aware of the implied security risk of defining a default 
+      username and password for your devices.
+    required: false
+    default: 0
   wpa-essid:
     description: SSID of a default wifi network to connect to.
     required: false
