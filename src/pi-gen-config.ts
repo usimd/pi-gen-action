@@ -16,6 +16,7 @@ export interface PiGenConfig {
   timezoneDefault: string
   firstUserName: string
   firstUserPass?: string
+  disableFirstBootUserRename?: string
   wpaEssid?: string
   wpaPassword?: string
   wpaCountry?: string

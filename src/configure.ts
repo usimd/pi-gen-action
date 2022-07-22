@@ -30,6 +30,9 @@ export async function configure(): Promise<PiGenConfig> {
       core.getInput('username') ?? DEFAULT_CONFIG.firstUserName
     userConfig.firstUserPass =
       core.getInput('password') ?? DEFAULT_CONFIG.firstUserPass
+    userConfig.disableFirstBootUserRename =
+      core.getInput('disable-first-boot-user-rename') ??
+      DEFAULT_CONFIG.disableFirstBootUserRename
     userConfig.wpaEssid = core.getInput('wpa-essid') ?? DEFAULT_CONFIG.wpaEssid
     userConfig.wpaPassword =
       core.getInput('wpa-password') ?? DEFAULT_CONFIG.wpaPassword
