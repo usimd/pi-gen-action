@@ -23,7 +23,7 @@ jobs:
 
     - run: npm test
 
-    - uses: codecov/codecov-action@v2
+    - uses: codecov/codecov-action@v3
       with:
         files: coverage/clover.xml,coverage/lcov.info
         flags: unittests
