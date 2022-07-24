@@ -21,7 +21,7 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
-    if: github.head_ref == 'master' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test'))
+    if: github.ref_name == 'master' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test'))
 
     steps:
       - name: Check out repository
