@@ -9,6 +9,7 @@
   "major": {
     "masterIssueApproval": true
   },
+  "labels": ["test"],
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],

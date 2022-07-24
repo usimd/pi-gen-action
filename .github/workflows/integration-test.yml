@@ -4,6 +4,7 @@ on:
   push:
     paths-ignore:
       - '**.md'
+      - 'renovate.json'
     branches:
       - master
   pull_request:
