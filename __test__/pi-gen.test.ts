@@ -102,7 +102,8 @@ describe('PiGen', () => {
     jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
 
     const piGen = await PiGen.getInstance(piGenDir, {
-      stageList: ['/pi-gen/stage0']
+      stageList: ['/pi-gen/stage0'],
+      dockerOpts: '-v /foo:/bar'
     } as PiGenConfig)
     await piGen.build()
 
