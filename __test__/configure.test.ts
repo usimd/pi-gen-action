@@ -45,6 +45,8 @@ describe('Configure', () => {
 
     await configure()
 
-    expect(core.info).toBeCalledWith(expect.not.stringContaining('secretpassword'))
+    expect(core.info).toBeCalledWith(
+      expect.not.stringContaining('secretpassword')
+    )
   })
 })
