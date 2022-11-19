@@ -23,6 +23,7 @@ export interface PiGenConfig {
   enableSsh: string
   pubkeySshFirstUser?: string
   pubkeyOnlySsh: string
+  setfcap?: string
   stageList: string[]
   useQcow2: string
   enableNoobs: string
@@ -137,6 +138,10 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
 
   if (config.wpaEssid && config.wpaEssid.length > 32) {
     throw new Error('wpa-essid must not be longer than 32 characters')
+  }
+
+  if (config.setfcap && config.setfcap != '1') {
+    throw new Error('setfcap should only be set to "1", nothing else')
   }
 
   if (

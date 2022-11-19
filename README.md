@@ -136,6 +136,12 @@ tries to make sure the stage is respected and its changes are included in the fi
     # buster, bullseye, and testing.
     release: bullseye
 
+    # Setting to `1` will prevent pi-gen from dropping the "capabilities" feature. 
+    # Generating the root filesystem with capabilities enabled and running it from a 
+    # filesystem that does not support capabilities (like NFS) can cause issues. Only 
+    # enable this if you understand what it is.
+    setfcap: ''
+
     # List of stage name to execute in given order. Relative and absolute paths to 
     # custom stage directories are allowed here. Note that by default pi-gen exports 
     # images in stage2 (lite), stage4 and stage5. You probably want to hook in custom 
