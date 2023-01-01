@@ -51,7 +51,7 @@ export class PiGen {
   }
 
   async build(verbose = false): Promise<exec.ExecOutput> {
-    let dockerOpts = this.getStagesAsDockerMounts()
+    let dockerOpts = '-e SHELLOPTS=xtrace ' + this.getStagesAsDockerMounts()
     if (this.config.dockerOpts !== undefined && this.config.dockerOpts !== '') {
       dockerOpts = `${this.config.dockerOpts} ${dockerOpts}`
     }
@@ -157,10 +157,16 @@ export class PiGen {
   }
 
   logOutput(line: string, verbose: boolean, stream: 'info' | 'warning'): void {
-    const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
-    if (verbose || isPiGenStatusMessage) {
-      line = isPiGenStatusMessage ? colors.bold(line) : line
-      stream === 'info' ? core.info(line) : core.warning(line)
+    if (line.startsWith('+')) {
+      if (core.isDebug() && stream === 'warning') {
+        core.debug(line)
+      }
+    } else {
+      const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
+      if (verbose || isPiGenStatusMessage) {
+        line = isPiGenStatusMessage ? colors.bold(line) : line
+        stream === 'info' ? core.info(line) : core.warning(line)
+      }
     }
   }
 
