@@ -132,8 +132,8 @@ tries to make sure the stage is respected and its changes are included in the fi
     # the pi-gen repository.
     pi-gen-version: arm64
 
-    # The release version to build images against. Valid values are jessie, stretch, 
-    # buster, bullseye, and testing.
+    # The release version to build images against. Valid values are bullseye, buster,
+    # stretch, jessie, and wheezy. 
     release: bullseye
 
     # Setting to `1` will prevent pi-gen from dropping the "capabilities" feature. 
