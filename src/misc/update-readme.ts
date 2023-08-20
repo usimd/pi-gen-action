@@ -2,14 +2,14 @@ import * as fs from 'fs'
 import {major} from 'semver'
 import * as yaml from 'js-yaml'
 import wrap from 'word-wrap'
-// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
 const replaceSection = require('markdown-replace-section')
 
 function getTagVersion(packageJson: string): number {
   const packageDesc = JSON.parse(
     fs.readFileSync(packageJson, {encoding: 'utf-8'})
-  )
-  return major(packageDesc['version'])
+  ) as {version: string}
+  return major(packageDesc.version)
 }
 
 function replaceUsageSection(
@@ -17,28 +17,35 @@ function replaceUsageSection(
   sectionTitle: string,
   content: string
 ): string {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
   return replaceSection(readme, sectionTitle, content, true)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildUsageSection(actionYaml: any, actionVersion: number): string {
+function buildUsageSection(
+  actionYaml: Record<string, unknown>,
+  actionVersion: number
+): string {
   const usageSection = [
     '```yaml',
     `- uses: usimd/pi-gen-action@v${actionVersion}`,
     '  with:'
   ]
 
-  for (const key of Object.keys(actionYaml.inputs).sort((a, b) =>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  for (const key of Object.keys(actionYaml.inputs as {}).sort((a, b) =>
     a.localeCompare(b)
   )) {
-    const input = actionYaml.inputs[key]
-    const description = (input.description as string).replace(/\s+/g, ' ')
+    const input = (actionYaml.inputs as Record<string, unknown>)[key] as {
+      description: string
+      default: string | number
+    }
+    const description = input.description.replace(/\s+/g, ' ')
     usageSection.push(
       wrap(description, {indent: '    # ', width: 80}).trimEnd()
     )
 
     let defaultValue
-    if (input.default !== undefined && input.default.toString()) {
+    if (input.default?.toString()) {
       defaultValue =
         typeof input.default === 'string' ? `${input.default}` : input.default
     } else {
@@ -57,7 +64,9 @@ function updateUsage(
   actionYamlPath: string,
   packageJsonPath: string
 ): void {
-  const actionYaml = yaml.load(fs.readFileSync(actionYamlPath).toString())
+  const actionYaml = yaml.load(
+    fs.readFileSync(actionYamlPath).toString()
+  ) as Record<string, unknown>
   const originalReadme = fs.readFileSync(readmePath).toString()
   const actionVersion = getTagVersion(packageJsonPath)
 
