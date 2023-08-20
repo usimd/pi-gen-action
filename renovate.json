@@ -3,7 +3,7 @@
   "extends": [
     "config:base",
     "group:allNonMajor",
-    "schedule:weekly"
+    "schedule:monthly"
   ],
   "masterIssue": true,
   "major": {
