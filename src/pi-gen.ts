@@ -14,7 +14,10 @@ export class PiGen {
     'gm'
   )
 
-  constructor(private piGenDirectory: string, private config: PiGenConfig) {
+  constructor(
+    private piGenDirectory: string,
+    private config: PiGenConfig
+  ) {
     this.configFilePath = `${fs.realpathSync(piGenDirectory)}/config`
   }
 
