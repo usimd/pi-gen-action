@@ -1,11 +1,16 @@
 {
   "plugins": ["jest", "@typescript-eslint"],
-  "extends": ["plugin:workspaces/recommended", "plugin:github/recommended"],
+  "extends": [
+    "plugin:workspaces/recommended",
+    "plugin:github/recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:@typescript-eslint/stylistic-type-checked"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 9,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": true
   },
   "rules": {
     "i18n-text/no-en": "off",
