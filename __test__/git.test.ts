@@ -37,7 +37,7 @@ describe('Git', () => {
     jest
       .spyOn(exec, 'getExecOutput')
       .mockImplementation(
-        async commandLine => ({exitCode: 0} as exec.ExecOutput)
+        async commandLine => ({exitCode: 0}) as exec.ExecOutput
       )
     jest
       .spyOn(fs.promises, 'readFile')
@@ -80,7 +80,7 @@ describe('Git', () => {
                 : ['branch', '--list'].every(a => args?.includes(a))
                 ? 'arm64'
                 : ''
-          } as exec.ExecOutput)
+          }) as exec.ExecOutput
       )
 
       const git = await Git.getInstance('.', '', verbose)
@@ -110,7 +110,7 @@ describe('Git', () => {
     jest
       .spyOn(exec, 'getExecOutput')
       .mockImplementation(
-        async commandLine => ({exitCode: 0, stdout: ''} as exec.ExecOutput)
+        async commandLine => ({exitCode: 0, stdout: ''}) as exec.ExecOutput
       )
 
     const git = await Git.getInstance('.', '')
