@@ -134,7 +134,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 
     # The release version to build images against. Valid values are jessie, stretch, 
     # buster, bullseye, bookworm, and testing.
-    release: bullseye
+    release: bookworm
 
     # Setting to `1` will prevent pi-gen from dropping the "capabilities" feature. 
     # Generating the root filesystem with capabilities enabled and running it from a 
@@ -152,8 +152,10 @@ tries to make sure the stage is respected and its changes are included in the fi
     # System timezone.
     timezone: Europe/London
 
-    # Use qcow2 images to reduce space and runtime requirements.
-    use-qcow2: 1
+    # Use qcow2 images to reduce space and runtime requirements. _WARNING_: this is 
+    # broken on recent versions of `pi-gen` and destined to be removed entirely (see 
+    # https://github.com/RPi-Distro/pi-gen/pull/648).
+    use-qcow2: 0
 
     # Name of the initial user account.
     username: pi
