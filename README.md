@@ -125,6 +125,10 @@ tries to make sure the stage is respected and its changes are included in the fi
     # exist, it will be created (including its parents).
     pi-gen-dir: pi-gen
 
+    # The release name to use in `/etc/issue.txt`. The default should only be used for 
+    # official Raspberry Pi builds.
+    pi-gen-release: Raspberry Pi reference
+
     # GitHub repository to fetch pi-gen from, must be a fork from RPi-Distro/pi-gen.
     pi-gen-repository: RPi-Distro/pi-gen
 

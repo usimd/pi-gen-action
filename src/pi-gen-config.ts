@@ -6,6 +6,7 @@ import * as io from '@actions/io'
 
 export interface PiGenConfig {
   imgName: string
+  piGenRelease: string
   release: string
   deployCompression: string
   compressionLevel: string
@@ -33,6 +34,7 @@ export interface PiGenConfig {
 
 export const DEFAULT_CONFIG: PiGenConfig = {
   imgName: 'test',
+  piGenRelease: 'Raspberry Pi reference',
   release: 'bullseye',
   deployCompression: 'zip',
   compressionLevel: '6',

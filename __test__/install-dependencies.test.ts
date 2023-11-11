@@ -11,7 +11,7 @@ describe('Install host dependencies', () => {
 
     await installHostDependencies('test-package', 'test-module')
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       expect.stringMatching(/.*sudo$/),
       expect.arrayContaining(['test-package']),
       expect.anything()

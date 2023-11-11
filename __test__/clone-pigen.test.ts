@@ -31,19 +31,22 @@ describe('Cloning pi-gen repo', () => {
     const clone = clonePigen(repo, targetDir, ref)
 
     if (!succeed) {
-      await expect(clone).rejects.toThrowError()
+      await expect(clone).rejects.toThrow()
     } else {
-      await expect(clone).resolves.not.toThrowError()
+      await expect(clone).resolves.not.toThrow()
     }
 
-    expect(githubMock.rest.repos.get).toBeCalledWith({
+    expect(githubMock.rest.repos.get).toHaveBeenCalledWith({
       owner: repo.split('/')[0],
       repo: repo.split('/')[1]
     })
 
     if (succeed) {
-      expect(Git.getInstance).toBeCalledWith(targetDir, token, verbose)
-      expect(gitMock.clone).toBeCalledWith(`https://github.com/${repo}`, ref)
+      expect(Git.getInstance).toHaveBeenCalledWith(targetDir, token, verbose)
+      expect(gitMock.clone).toHaveBeenCalledWith(
+        `https://github.com/${repo}`,
+        ref
+      )
     }
   })
 })

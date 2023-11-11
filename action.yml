@@ -8,6 +8,10 @@ inputs:
   image-name:
     description: Final image name.
     required: true
+  pi-gen-release:
+    description: The release name to use in `/etc/issue.txt`. The default should only be used for official Raspberry Pi builds.
+    required: false
+    default: Raspberry Pi reference
   use-qcow2:
     description: |
       Use qcow2 images to reduce space and runtime requirements.

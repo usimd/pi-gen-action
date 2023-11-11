@@ -86,7 +86,7 @@ describe('PiGenConfig', () => {
       piGenConfig[property as keyof PiGenConfig] = value
       await expect(
         async () => await validateConfig(piGenConfig)
-      ).rejects.toThrowError()
+      ).rejects.toThrow()
     }
   )
 })

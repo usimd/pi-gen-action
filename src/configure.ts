@@ -49,6 +49,8 @@ export async function configure(): Promise<PiGenConfig> {
       DEFAULT_CONFIG.exportLastStageOnly
     userConfig.dockerOpts = core.getInput('docker-opts')
     userConfig.setfcap = core.getInput('setfcap') ?? DEFAULT_CONFIG.setfcap
+    userConfig.piGenRelease =
+      core.getInput('pi-gen-release') ?? DEFAULT_CONFIG.piGenRelease
 
     await validateConfig(userConfig)
 

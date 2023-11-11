@@ -47,7 +47,7 @@ describe('PiGen', () => {
     async piGenPath => {
       await expect(
         async () => await PiGen.getInstance(piGenPath, DEFAULT_CONFIG)
-      ).rejects.toThrowError()
+      ).rejects.toThrow()
     }
   )
 
@@ -66,7 +66,7 @@ describe('PiGen', () => {
 
     await expect(
       async () => await PiGen.getInstance('pi-gen-dir', DEFAULT_CONFIG)
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   })
 
   it('mounts all stage paths as Docker volumes', async () => {
@@ -83,7 +83,7 @@ describe('PiGen', () => {
     } as PiGenConfig)
     await piGen.build()
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       '"./build-docker.sh"',
       ['-c', `/${piGenDir}/config`],
       expect.objectContaining({
@@ -107,7 +107,7 @@ describe('PiGen', () => {
     } as PiGenConfig)
     await piGen.build()
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       '"./build-docker.sh"',
       ['-c', `/${piGenDir}/config`],
       expect.objectContaining({
@@ -138,7 +138,7 @@ describe('PiGen', () => {
     await expect(
       async () =>
         await PiGen.getInstance('', {stageList: [] as string[]} as PiGenConfig)
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   })
 
   it('configures NOOBS export for stages that export images', async () => {

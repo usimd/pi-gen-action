@@ -15,7 +15,7 @@ describe('Configure', () => {
   })
 
   it('throws error if no image name present', async () => {
-    await expect(async () => await configure()).rejects.toThrowError()
+    await expect(async () => await configure()).rejects.toThrow()
   })
 
   it('creates a stage array from user config', async () => {
@@ -45,7 +45,7 @@ describe('Configure', () => {
 
     await configure()
 
-    expect(core.info).toBeCalledWith(
+    expect(core.info).toHaveBeenCalledWith(
       expect.not.stringContaining('secretpassword')
     )
   })
