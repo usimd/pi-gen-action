@@ -15,7 +15,9 @@ jest.mock('../src/pi-gen-config', () => ({
   writeToFile: jest.fn()
 }))
 
-const mockPiGenDependencies = () => {
+const mockPiGenDependencies = (
+  stageDirectories = Object.values(PiGenStages)
+) => {
   jest
     .spyOn(fs.promises, 'stat')
     .mockResolvedValueOnce({isDirectory: () => true} as fs.Stats)
@@ -31,7 +33,7 @@ const mockPiGenDependencies = () => {
       isFile: () => true,
       isDirectory: () => false
     } as Dirent,
-    ...(Object.values(PiGenStages).map(stage => ({
+    ...(stageDirectories.map(stage => ({
       name: stage,
       isDirectory: () => true,
       isFile: () => false
@@ -43,7 +45,7 @@ const mockPiGenDependencies = () => {
 
 describe('PiGen', () => {
   it.each(['invalid-pi-gen-path', tmp.fileSync().name])(
-    'should fail on invalid pi-gen path',
+    'should fail on invalid pi-gen path = %s',
     async piGenPath => {
       await expect(
         async () => await PiGen.getInstance(piGenPath, DEFAULT_CONFIG)
@@ -69,6 +71,17 @@ describe('PiGen', () => {
     ).rejects.toThrow()
   })
 
+  it('should fail on missing required stage entries at pi-gen path', async () => {
+    mockPiGenDependencies(['stage0', 'stage1'])
+    jest
+      .spyOn(fs.promises, 'stat')
+      .mockResolvedValue({isDirectory: () => true} as fs.Stats)
+
+    await expect(
+      async () => await PiGen.getInstance('pi-gen-dir', DEFAULT_CONFIG)
+    ).rejects.toThrow()
+  })
+
   it('mounts all stage paths as Docker volumes', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
@@ -88,10 +101,10 @@ describe('PiGen', () => {
       ['-c', `/${piGenDir}/config`],
       expect.objectContaining({
         cwd: piGenDir,
-        env: {
+        env: expect.objectContaining({
           PIGEN_DOCKER_OPTS:
-            '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'
-        }
+            '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0 -e DEBIAN_FRONTEND=noninteractive'
+        })
       })
     )
   })
@@ -112,9 +125,10 @@ describe('PiGen', () => {
       ['-c', `/${piGenDir}/config`],
       expect.objectContaining({
         cwd: piGenDir,
-        env: {
-          PIGEN_DOCKER_OPTS: '-v /foo:/bar -v /pi-gen/stage0:/pi-gen/stage0'
-        }
+        env: expect.objectContaining({
+          PIGEN_DOCKER_OPTS:
+            '-v /foo:/bar -v /pi-gen/stage0:/pi-gen/stage0 -e DEBIAN_FRONTEND=noninteractive'
+        })
       })
     )
   })
@@ -142,10 +156,14 @@ describe('PiGen', () => {
   })
 
   it('configures NOOBS export for stages that export images', async () => {
-    let stageList = [tmp.dirSync().name, tmp.dirSync().name]
+    const piGenDir = 'pi-gen'
+    mockPiGenDependencies()
+    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+
+    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
     fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
 
-    await PiGen.getInstance('', {
+    await PiGen.getInstance(piGenDir, {
       stageList: stageList,
       enableNoobs: 'true'
     } as PiGenConfig)
@@ -189,7 +207,11 @@ describe('PiGen', () => {
     [false, 'no stage message', 'info', 0],
     [true, 'no stage message', 'info', 1],
     [false, '[00:00:00] stage message', 'info', 1],
-    [true, 'warning message', 'warning', 1]
+    [true, 'warning message', 'warning', 1],
+    [false, '#6 [1/3] FROM docker.io', 'warning', 0],
+    [true, '#7 [2/3] RUN', 'warning', 0],
+    [false, ' #6 [1/3] FROM docker.io', 'info', 0],
+    [true, '   #7 [2/3] RUN', 'info', 1]
   ])(
     'handles log messages if verbose = %s',
     (verbose, line, stream, nCalls) => {

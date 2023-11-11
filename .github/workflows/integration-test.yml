@@ -67,9 +67,9 @@ jobs:
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
 
-      - name: Remove test label from PR
+      - name: Remove test label from PR (if set)
         uses: actions-ecosystem/action-remove-labels@v1
-        if: always()
+        if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test') }}
         with:
           labels: test
 

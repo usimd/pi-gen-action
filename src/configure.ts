@@ -9,48 +9,51 @@ export async function configure(): Promise<PiGenConfig> {
     const userConfig = DEFAULT_CONFIG
 
     userConfig.imgName = core.getInput('image-name', {required: true})
+
+    const stageList = core.getInput('stage-list').split(/\s+/)
     userConfig.stageList =
-      core.getInput('stage-list').split(/\s+/) ?? DEFAULT_CONFIG.stageList
-    userConfig.release = core.getInput('release') ?? DEFAULT_CONFIG.release
+      stageList.length > 0 ? stageList : DEFAULT_CONFIG.stageList
+
+    userConfig.release = core.getInput('release') || DEFAULT_CONFIG.release
     userConfig.deployCompression =
-      core.getInput('compression') ?? DEFAULT_CONFIG.deployCompression
+      core.getInput('compression') || DEFAULT_CONFIG.deployCompression
     userConfig.compressionLevel =
-      core.getInput('compression-level') ?? DEFAULT_CONFIG.compressionLevel
+      core.getInput('compression-level') || DEFAULT_CONFIG.compressionLevel
     userConfig.localeDefault =
-      core.getInput('locale') ?? DEFAULT_CONFIG.localeDefault
+      core.getInput('locale') || DEFAULT_CONFIG.localeDefault
     userConfig.targetHostname =
-      core.getInput('hostname') ?? DEFAULT_CONFIG.targetHostname
+      core.getInput('hostname') || DEFAULT_CONFIG.targetHostname
     userConfig.keyboardKeymap =
-      core.getInput('keyboard-keymap') ?? DEFAULT_CONFIG.keyboardKeymap
+      core.getInput('keyboard-keymap') || DEFAULT_CONFIG.keyboardKeymap
     userConfig.keyboardLayout =
-      core.getInput('keyboard-layout') ?? DEFAULT_CONFIG.keyboardLayout
+      core.getInput('keyboard-layout') || DEFAULT_CONFIG.keyboardLayout
     userConfig.timezoneDefault =
-      core.getInput('timezone') ?? DEFAULT_CONFIG.timezoneDefault
+      core.getInput('timezone') || DEFAULT_CONFIG.timezoneDefault
     userConfig.firstUserName =
-      core.getInput('username') ?? DEFAULT_CONFIG.firstUserName
+      core.getInput('username') || DEFAULT_CONFIG.firstUserName
     userConfig.firstUserPass =
-      core.getInput('password') ?? DEFAULT_CONFIG.firstUserPass
+      core.getInput('password') || DEFAULT_CONFIG.firstUserPass
     userConfig.disableFirstBootUserRename =
-      core.getInput('disable-first-boot-user-rename') ??
+      core.getInput('disable-first-boot-user-rename') ||
       DEFAULT_CONFIG.disableFirstBootUserRename
-    userConfig.wpaEssid = core.getInput('wpa-essid') ?? DEFAULT_CONFIG.wpaEssid
+    userConfig.wpaEssid = core.getInput('wpa-essid') || DEFAULT_CONFIG.wpaEssid
     userConfig.wpaPassword =
-      core.getInput('wpa-password') ?? DEFAULT_CONFIG.wpaPassword
+      core.getInput('wpa-password') || DEFAULT_CONFIG.wpaPassword
     userConfig.wpaCountry =
-      core.getInput('wpa-country') ?? DEFAULT_CONFIG.wpaCountry
+      core.getInput('wpa-country') || DEFAULT_CONFIG.wpaCountry
     userConfig.enableSsh =
-      core.getInput('enable-ssh') ?? DEFAULT_CONFIG.enableSsh
-    userConfig.useQcow2 = core.getInput('use-qcow2') ?? DEFAULT_CONFIG.useQcow2
+      core.getInput('enable-ssh') || DEFAULT_CONFIG.enableSsh
+    userConfig.useQcow2 = core.getInput('use-qcow2') || DEFAULT_CONFIG.useQcow2
     userConfig.enableNoobs =
-      core.getBooleanInput('enable-noobs').toString() ??
+      core.getBooleanInput('enable-noobs')?.toString() ||
       DEFAULT_CONFIG.enableNoobs
     userConfig.exportLastStageOnly =
-      core.getBooleanInput('export-last-stage-only').toString() ??
+      core.getBooleanInput('export-last-stage-only')?.toString() ||
       DEFAULT_CONFIG.exportLastStageOnly
     userConfig.dockerOpts = core.getInput('docker-opts')
-    userConfig.setfcap = core.getInput('setfcap') ?? DEFAULT_CONFIG.setfcap
+    userConfig.setfcap = core.getInput('setfcap') || DEFAULT_CONFIG.setfcap
     userConfig.piGenRelease =
-      core.getInput('pi-gen-release') ?? DEFAULT_CONFIG.piGenRelease
+      core.getInput('pi-gen-release') || DEFAULT_CONFIG.piGenRelease
 
     await validateConfig(userConfig)
 
