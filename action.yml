@@ -9,9 +9,11 @@ inputs:
     description: Final image name.
     required: true
   use-qcow2:
-    description: Use qcow2 images to reduce space and runtime requirements.
+    description: |
+      Use qcow2 images to reduce space and runtime requirements.
+      _WARNING_: this is broken on recent versions of `pi-gen` and destined to be removed entirely (see https://github.com/RPi-Distro/pi-gen/pull/648).
     required: false
-    default: 1
+    default: 0
   setfcap:
     description: |
       Setting to `1` will prevent pi-gen from dropping the "capabilities" feature. Generating the root filesystem with capabilities enabled and running
@@ -28,7 +30,7 @@ inputs:
   release:
     description: The release version to build images against. Valid values are jessie, stretch, buster, bullseye, bookworm, and testing.
     required: false
-    default: bullseye
+    default: bookworm
   compression:
     description: Compression to apply on final image (either "none", "zip", "xz" or "gz").
     required: false
