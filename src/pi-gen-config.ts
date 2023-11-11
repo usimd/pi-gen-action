@@ -35,7 +35,7 @@ export interface PiGenConfig {
 export const DEFAULT_CONFIG: PiGenConfig = {
   imgName: 'test',
   piGenRelease: 'Raspberry Pi reference',
-  release: 'bullseye',
+  release: 'bookworm',
   deployCompression: 'zip',
   compressionLevel: '6',
   localeDefault: 'en_GB.UTF-8',
@@ -47,7 +47,7 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   enableSsh: '0',
   pubkeyOnlySsh: '0',
   stageList: ['stage*'],
-  useQcow2: '1',
+  useQcow2: '0',
   enableNoobs: 'false',
   exportLastStageOnly: 'true'
 }

@@ -9,10 +9,7 @@ import * as colors from 'ansi-colors'
 
 export class PiGen {
   private configFilePath: string
-  private piGenBuildLogPattern = new RegExp(
-    '^\\s*\\[(?:\\d{2}:?){3}\\].*',
-    'gm'
-  )
+  private piGenBuildLogPattern = /^\s*\[(?:\d{2}:?){3}\]/gm
 
   constructor(
     private piGenDirectory: string,
@@ -25,7 +22,7 @@ export class PiGen {
     piGenDirectory: string,
     config: PiGenConfig
   ): Promise<PiGen> {
-    if (!PiGen.validatePigenDirectory(piGenDirectory)) {
+    if (!(await PiGen.validatePigenDirectory(piGenDirectory))) {
       throw new Error(`pi-gen directory at ${piGenDirectory} is invalid`)
     }
 
@@ -54,10 +51,14 @@ export class PiGen {
   }
 
   async build(verbose = false): Promise<exec.ExecOutput> {
-    let dockerOpts = this.getStagesAsDockerMounts()
+    // By default, we'll pass all user stages as mounts to the Docker run and we'll configure
+    // apt to not report progress (which can become excessive).
+    let dockerOpts = `${this.getStagesAsDockerMounts()} -e DEBIAN_FRONTEND=noninteractive`
+
     if (this.config.dockerOpts !== undefined && this.config.dockerOpts !== '') {
       dockerOpts = `${this.config.dockerOpts} ${dockerOpts}`
     }
+
     core.debug(
       `Running pi-gen build with PIGEN_DOCKER_OPTS="${dockerOpts}" and config: ${JSON.stringify(
         this.config
@@ -70,7 +71,8 @@ export class PiGen {
       {
         cwd: this.piGenDirectory,
         env: {
-          PIGEN_DOCKER_OPTS: dockerOpts
+          PIGEN_DOCKER_OPTS: dockerOpts,
+          DEBIAN_FRONTEND: 'noninteractive'
         },
         listeners: {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
@@ -161,9 +163,15 @@ export class PiGen {
 
   logOutput(line: string, verbose: boolean, stream: 'info' | 'warning'): void {
     const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
+
     if (verbose || isPiGenStatusMessage) {
-      line = isPiGenStatusMessage ? colors.bold(line) : line
-      stream === 'info' ? core.info(line) : core.warning(line)
+      line = isPiGenStatusMessage ? colors.bold(colors.unstyle(line)) : line
+
+      // Do not issue warning annotations for Docker BuildKit progress messages.
+      // No clue how to better suppress/redirect them for now.
+      stream === 'info' || line.match(/^\s*#\d+\s/)
+        ? core.info(line)
+        : core.warning(line)
     }
   }
 

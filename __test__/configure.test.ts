@@ -49,4 +49,15 @@ describe('Configure', () => {
       expect.not.stringContaining('secretpassword')
     )
   })
+
+  it('should fall back to default configuration values if no user settings present', async () => {
+    jest.spyOn(core, 'info').mockImplementation()
+    jest.spyOn(core, 'getInput').mockReturnValue('')
+    jest.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+    jest.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
+
+    await configure()
+
+    expect(config.validateConfig).toHaveBeenCalledWith(config.DEFAULT_CONFIG)
+  })
 })
