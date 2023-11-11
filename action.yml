@@ -146,7 +146,7 @@ outputs:
     description: Path to final noobs image, if enabled
 
 runs:
-  using: node16
+  using: node18
   main: dist/index.js
   post: dist/index.js
 
