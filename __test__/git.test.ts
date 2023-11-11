@@ -46,7 +46,7 @@ describe('Git', () => {
 
     await Git.getInstance('.', token)
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       expect.stringMatching(/git$/),
       [
         'config',
@@ -56,7 +56,7 @@ describe('Git', () => {
       ],
       expect.anything()
     )
-    expect(fs.promises.writeFile).toBeCalledWith(
+    expect(fs.promises.writeFile).toHaveBeenCalledWith(
       expect.stringMatching(new RegExp('.git/config$')),
       'AUTHORIZATION: basic eC1hY2Nlc3MtdG9rZW46MTIzNDU2Nzg5MA=='
     )
@@ -116,6 +116,6 @@ describe('Git', () => {
     const git = await Git.getInstance('.', '')
     await expect(
       async () => await git.clone('any-repo', 'non-existing-ref')
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   })
 })

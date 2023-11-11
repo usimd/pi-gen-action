@@ -20,7 +20,7 @@ describe('Run pi-gen build', () => {
 
     await expect(
       async () => await build('pi-gen', DEFAULT_CONFIG)
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   })
 
   it('throws error if pi-gen build yields failed result', async () => {
@@ -57,6 +57,6 @@ describe('Run pi-gen build', () => {
     const conf = {...DEFAULT_CONFIG}
     conf.enableNoobs = 'true'
     await build('pi-gen', conf)
-    expect(core.setOutput).toBeCalledTimes(2)
+    expect(core.setOutput).toHaveBeenCalledTimes(2)
   })
 })

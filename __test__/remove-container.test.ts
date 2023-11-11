@@ -12,7 +12,7 @@ describe('Remove container', () => {
 
     await removeContainer(testContainer)
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       expect.stringMatching(/.*docker$/),
       ['rm', '-v', testContainer],
       expect.objectContaining({
@@ -32,11 +32,13 @@ describe('Remove container', () => {
 
     await removeContainer(testContainer)
 
-    expect(exec.getExecOutput).toBeCalledWith(
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
       expect.objectContaining({silent: false})
     )
-    expect(core.info).toBeCalledWith(expect.stringContaining(testContainer))
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringContaining(testContainer)
+    )
   })
 })
