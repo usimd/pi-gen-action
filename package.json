@@ -1,13 +1,13 @@
 {
   "name": "pi-gen-action",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
   "author": "Simon Domke",
-  "main": "lib/main.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build -m --no-source-map-register --license licenses.txt",
+    "package": "ncc build src/main.ts -m --no-source-map-register --license licenses.txt",
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm test && npm run package && npm run update-readme",
     "format": "prettier --write '**/*.ts'",

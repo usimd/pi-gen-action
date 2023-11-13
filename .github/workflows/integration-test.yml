@@ -28,6 +28,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Compile action code before test
+        run: npm ci && npm run package
+
       - name: Run pi-gen build
         uses: ./
         id: build
