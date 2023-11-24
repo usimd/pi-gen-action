@@ -23,7 +23,8 @@ export async function piGen(): Promise<void> {
     await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
     await installHostDependencies(
       core.getInput('extra-host-dependencies'),
-      core.getInput('extra-host-modules')
+      core.getInput('extra-host-modules'),
+      piGenDirectory
     )
 
     core.saveState(piGenBuildStartedState, true)
