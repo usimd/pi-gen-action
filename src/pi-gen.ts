@@ -169,7 +169,7 @@ export class PiGen {
 
       // Do not issue warning annotations for Docker BuildKit progress messages.
       // No clue how to better suppress/redirect them for now.
-      stream === 'info' || line.match(/^\s*#\d+\s/)
+      stream === 'info' || line.match(/^\s*#\d+\s/m)
         ? core.info(line)
         : core.warning(line)
     }

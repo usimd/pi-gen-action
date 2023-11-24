@@ -1,4 +1,5 @@
 import * as exec from '@actions/exec'
+import fs from 'fs'
 import * as core from '@actions/core'
 import {installHostDependencies} from '../src/install-dependencies'
 
@@ -9,7 +10,7 @@ describe('Install host dependencies', () => {
       .spyOn(exec, 'getExecOutput')
       .mockResolvedValue({exitCode: 0} as exec.ExecOutput)
 
-    await installHostDependencies('test-package', 'test-module')
+    await installHostDependencies('test-package', 'test-module', '')
 
     expect(exec.getExecOutput).toHaveBeenCalledWith(
       expect.stringMatching(/.*sudo$/),
@@ -34,7 +35,27 @@ describe('Install host dependencies', () => {
       )
 
     await expect(
-      async () => await installHostDependencies('', '')
+      async () => await installHostDependencies('', '', '')
     ).rejects.toThrow()
+  })
+
+  it('installs dependencies pi-gen suggests in a dependency file', async () => {
+    jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+
+    jest
+      .spyOn(fs.promises, 'stat')
+      .mockResolvedValueOnce({isFile: () => true} as fs.Stats)
+    jest.spyOn(fs.promises, 'readFile').mockResolvedValueOnce('A\nB\nC:D')
+    jest
+      .spyOn(exec, 'getExecOutput')
+      .mockResolvedValue({exitCode: 0} as exec.ExecOutput)
+
+    await installHostDependencies('', '', 'pi-gen')
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      expect.stringMatching(/.*sudo$/),
+      expect.arrayContaining(['A', 'B', 'D']),
+      expect.anything()
+    )
   })
 })
