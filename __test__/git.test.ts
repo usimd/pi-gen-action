@@ -78,8 +78,8 @@ describe('Git', () => {
               ['tag', '--list'].every(a => args?.includes(a))
                 ? 'v1'
                 : ['branch', '--list'].every(a => args?.includes(a))
-                ? 'arm64'
-                : ''
+                  ? 'arm64'
+                  : ''
           }) as exec.ExecOutput
       )
 
