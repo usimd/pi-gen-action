@@ -98,9 +98,10 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
   }
 
   if (
-    !/^[0-9]$/.test(config.compressionLevel) &&
-    deployCompression === 'xz' &&
-    config.compressionLevel !== '9e'
+    !(
+      /^[0-9]$/.test(config.compressionLevel) ||
+      (deployCompression === 'xz' && config.compressionLevel === '9e')
+    )
   ) {
     throw new Error('compression-level must be between 0 and 9 (or 9e for xz)')
   }
