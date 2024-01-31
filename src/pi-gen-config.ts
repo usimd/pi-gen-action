@@ -92,16 +92,17 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     )
   }
 
-  if (
-    !['none', 'zip', 'gz', 'xz'].includes(
-      config.deployCompression?.toLowerCase()
-    )
-  ) {
+  const deployCompression = config.deployCompression?.toLowerCase()
+  if (!['none', 'zip', 'gz', 'xz'].includes(deployCompression)) {
     throw new Error('compression must be one of ["none", "zip", "gz", "xz"]')
   }
 
-  if (!/^[0-9]$/.test(config.compressionLevel)) {
-    throw new Error('compression-level must be between 0 and 9')
+  if (
+    !/^[0-9]$/.test(config.compressionLevel) &&
+    deployCompression === 'xz' &&
+    config.compressionLevel !== '9e'
+  ) {
+    throw new Error('compression-level must be between 0 and 9 (or 9e for xz)')
   }
 
   const cutCmd = await io.which('cut', true)
