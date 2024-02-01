@@ -61,13 +61,13 @@ jobs:
 
       - run: tree 
       
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: pi-gen-image
           path: ${{ steps.build.outputs.image-path }}
           retention-days: 2
       
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: pi-gen-noobs-image
           path: ${{ steps.build.outputs.image-noobs-path }}
