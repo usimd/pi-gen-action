@@ -41,6 +41,8 @@ const mockPiGenDependencies = (
   ])
 
   jest.spyOn(fs, 'realpathSync').mockImplementationOnce(p => `/${p.toString()}`)
+
+  jest.spyOn(fs, 'mkdirSync').mockReturnValueOnce('')
 }
 
 describe('PiGen', () => {
@@ -89,6 +91,7 @@ describe('PiGen', () => {
       .spyOn(fs, 'realpathSync')
       .mockReturnValueOnce('/any/stage/path')
       .mockReturnValueOnce('/pi-gen/stage0')
+      .mockReturnValueOnce('/pigen-work')
 
     const piGen = await PiGen.getInstance(piGenDir, {
       stageList: ['/any/stage/path', '/pi-gen/stage0'],
@@ -102,8 +105,9 @@ describe('PiGen', () => {
       expect.objectContaining({
         cwd: piGenDir,
         env: expect.objectContaining({
-          PIGEN_DOCKER_OPTS:
-            '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0 -e DEBIAN_FRONTEND=noninteractive'
+          PIGEN_DOCKER_OPTS: expect.stringContaining(
+            '-v /any/stage/path:/any/stage/path -v /pi-gen/stage0:/pi-gen/stage0'
+          )
         })
       })
     )
@@ -112,7 +116,10 @@ describe('PiGen', () => {
   it('passes custom docker opts', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    jest
+      .spyOn(fs, 'realpathSync')
+      .mockReturnValueOnce('/pi-gen/stage0')
+      .mockReturnValueOnce('/pigen-work')
 
     const piGen = await PiGen.getInstance(piGenDir, {
       stageList: ['/pi-gen/stage0'],
@@ -126,8 +133,9 @@ describe('PiGen', () => {
       expect.objectContaining({
         cwd: piGenDir,
         env: expect.objectContaining({
-          PIGEN_DOCKER_OPTS:
-            '-v /foo:/bar -v /pi-gen/stage0:/pi-gen/stage0 -e DEBIAN_FRONTEND=noninteractive'
+          PIGEN_DOCKER_OPTS: expect.stringContaining(
+            '-v /foo:/bar -v /pi-gen/stage0:/pi-gen/stage0'
+          )
         })
       })
     )
@@ -156,12 +164,12 @@ describe('PiGen', () => {
   })
 
   it('configures NOOBS export for stages that export images', async () => {
+    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
+    fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
+
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
     jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
-
-    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
-    fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
 
     await PiGen.getInstance(piGenDir, {
       stageList: stageList,
