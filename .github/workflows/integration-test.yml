@@ -57,6 +57,7 @@ jobs:
           wpa-essid: foo
           wpa-password: '1234567890'
           timezone: ${{ env.CONFIG_TIMEZONE }}
+          enable-pigen-cache: true
 
       - name: List working directory
         run: tree 

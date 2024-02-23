@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import {Cache} from './cache'
 import {configure} from './configure'
 import {installHostDependencies} from './install-dependencies'
 import {build} from './build'
@@ -6,6 +7,7 @@ import {clonePigen} from './clone-pigen'
 import {removeContainer} from './remove-container'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
+const cache = new Cache()
 
 export async function piGen(): Promise<void> {
   try {
@@ -53,4 +55,12 @@ export async function run(): Promise<void> {
     core.saveState('main-executed', true)
     await piGen()
   }
+}
+
+export async function restoreCache(): Promise<void> {
+  await cache.restoreCache()
+}
+
+export async function saveCache(): Promise<void> {
+  await cache.saveCache()
 }
