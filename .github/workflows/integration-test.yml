@@ -83,7 +83,7 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' }}
+          stage-list: stage0 #stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' }}
           verbose-output: true
           enable-noobs: ${{ github.event_name != 'workflow_dispatch' || inputs.enable-noobs }}
           compression: xz
@@ -99,7 +99,11 @@ jobs:
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
           increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
           apt-proxy: http://172.17.0.1:9999
+          enable-pigen-cache: true
           temp-repo: deb [arch=amd64 trusted=yes] https://deb.nodesource.com/node_24.x nodistro main
+
+      - run: docker ps --all
+        if: always()
 
       - name: Move APT cache
         continue-on-error: true

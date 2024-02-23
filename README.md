@@ -82,6 +82,10 @@ tries to make sure the stage is respected and its changes are included in the fi
     # 'image-noobs-path'.
     enable-noobs: false
 
+    # Enables caching of pi-gen work artifacts to GitHub action cache to speed up 
+    # repetitive builds.
+    enable-pigen-cache: false
+
     # Enable SSH access to Pi.
     enable-ssh: 0
 
