@@ -71,7 +71,9 @@ export class PiGen {
         cwd: this.piGenDirectory,
         env: {
           PIGEN_DOCKER_OPTS: dockerOpts,
-          DEBIAN_FRONTEND: 'noninteractive'
+          DEBIAN_FRONTEND: 'noninteractive',
+          PRESERVE_CONTAINER: '1',
+          CONTINUE: '1'
         },
         listeners: {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
