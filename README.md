@@ -156,11 +156,6 @@ tries to make sure the stage is respected and its changes are included in the fi
     # System timezone.
     timezone: Europe/London
 
-    # Use qcow2 images to reduce space and runtime requirements. _WARNING_: this is 
-    # broken on recent versions of `pi-gen` and destined to be removed entirely (see 
-    # https://github.com/RPi-Distro/pi-gen/pull/648).
-    use-qcow2: 0
-
     # Name of the initial user account.
     username: pi
 

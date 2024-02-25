@@ -43,7 +43,6 @@ export async function configure(): Promise<PiGenConfig> {
       core.getInput('wpa-country') || DEFAULT_CONFIG.wpaCountry
     userConfig.enableSsh =
       core.getInput('enable-ssh') || DEFAULT_CONFIG.enableSsh
-    userConfig.useQcow2 = core.getInput('use-qcow2') || DEFAULT_CONFIG.useQcow2
     userConfig.enableNoobs =
       core.getBooleanInput('enable-noobs')?.toString() ||
       DEFAULT_CONFIG.enableNoobs
