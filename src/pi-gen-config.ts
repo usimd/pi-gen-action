@@ -26,7 +26,6 @@ export interface PiGenConfig {
   pubkeyOnlySsh: string
   setfcap?: string
   stageList: string[]
-  useQcow2: string
   enableNoobs: string
   exportLastStageOnly: string
   dockerOpts?: string
@@ -47,7 +46,6 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   enableSsh: '0',
   pubkeyOnlySsh: '0',
   stageList: ['stage*'],
-  useQcow2: '0',
   enableNoobs: 'false',
   exportLastStageOnly: 'true'
 }
