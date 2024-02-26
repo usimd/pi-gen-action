@@ -124,6 +124,10 @@ inputs:
       If your custom stage requires additional software or kernel modules to be loaded, add them here. Note that this is not meant to configure modules to be loaded in the target image.
     required: false
     default: ''
+  enable-pigen-cache:
+    description: Enables caching of pi-gen work artifacts to GitHub action cache to speed up repetitive builds.
+    required: false
+    default: false
   pi-gen-dir:
     description: Path where selected pi-gen ref will be checked out to. If the path does not yet exist, it will be created (including its parents).
     required: false
@@ -145,8 +149,9 @@ outputs:
 
 runs:
   using: node20
+  pre: dist/pre.js
   main: dist/index.js
-  post: dist/index.js
+  post: dist/post.js
 
 branding:
   icon: box
