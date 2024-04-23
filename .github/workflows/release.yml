@@ -15,7 +15,7 @@ jobs:
         id: check
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: steps.check.outputs.changed == 'true'
         with:
           tag_name: v${{ steps.check.outputs.version }}
