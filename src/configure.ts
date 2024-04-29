@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {DEFAULT_CONFIG, validateConfig, PiGenConfig} from './pi-gen-config'
-import colorize from 'json-colorizer'
+import {colorize, color} from 'json-colorizer'
 
 export async function configure(): Promise<PiGenConfig> {
   try {
@@ -59,13 +59,16 @@ export async function configure(): Promise<PiGenConfig> {
     core.info(
       colorize(JSON.stringify(userConfig, filterConfigFormat, 2), {
         colors: {
-          BRACKET: 'magenta.bold',
-          BRACE: 'magenta.bold',
-          STRING_KEY: 'cyanBright',
-          BOOLEAN_LITERAL: 'blueBright',
-          NUMBER_LITERAL: 'greenBright',
-          NULL_LITERAL: 'blueBright',
-          STRING_LITERAL: 'red'
+          Bracket: color.magenta,
+          Brace: color.magenta,
+          StringKey: color.cyanBright,
+          BooleanLiteral: color.blueBright,
+          NumberLiteral: color.greenBright,
+          NullLiteral: color.blueBright,
+          StringLiteral: color.red,
+          Whitespace: color.reset,
+          Colon: color.white,
+          Comma: color.white
         }
       })
     )
