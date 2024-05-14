@@ -20,5 +20,5 @@ jobs:
         with:
           tag_name: v${{ steps.check.outputs.version }}
           generate_release_notes: true
-          prerelease: false
+          prerelease: true
           draft: false

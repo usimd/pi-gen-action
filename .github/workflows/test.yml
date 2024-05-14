@@ -1,11 +1,12 @@
 name: pi-gen-action-unit-tests
 on:
   push:
+    branches: 
+      - master
     paths-ignore:
       - '**.md'
       - 'renovate.json'
   pull_request:
-    types: [opened, reopened, synchronize]
 
 jobs:
 
