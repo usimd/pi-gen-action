@@ -4,7 +4,8 @@ export const hostDependencies = {
     'qemu-user-static',
     'qemu-utils',
     'nbd-server',
-    'nbd-client'
+    'nbd-client',
+    'openssh-client'
   ],
   modules: ['binfmt_misc', 'nbd']
 }
