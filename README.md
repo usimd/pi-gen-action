@@ -136,6 +136,17 @@ tries to make sure the stage is respected and its changes are included in the fi
     # the pi-gen repository.
     pi-gen-version: arm64
 
+    # Setting to `1` will disable password authentication for SSH and enable public 
+    # key authentication. Note that if SSH is not enabled this will take effect when 
+    # SSH becomes enabled.
+    pubkey-only-ssh: 0
+
+    # Setting this to a value will make that value the contents of the 
+    # FIRST_USER_NAME's ~/.ssh/authorized_keys. Obviously the value should therefore 
+    # be a valid authorized_keys file. Note that this does not automatically enable 
+    # SSH.
+    pubkey-ssh-first-user: ''
+
     # The release version to build images against. Valid values are jessie, stretch, 
     # buster, bullseye, bookworm, and testing.
     release: bookworm

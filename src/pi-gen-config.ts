@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises'
+import * as tmp from 'tmp'
 import {PiGenStages} from './pi-gen-stages'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
@@ -170,6 +171,35 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error(
       `export-last-stage-only must be either set to "true" or "false", was: ${config.exportLastStageOnly}`
     )
+  }
+
+  if (!/^[01]$/.test(config.enableSsh)) {
+    throw new Error(
+      `enable-ssh must be set to either "0" or "1" but was: ${config.enableSsh}`
+    )
+  }
+
+  if (!/^[01]$/.test(config.pubkeyOnlySsh)) {
+    throw new Error(
+      `pubkey-only-ssh must be set to either "0" or "1" but was: ${config.pubkeyOnlySsh}`
+    )
+  }
+
+  if (config.pubkeySshFirstUser) {
+    const tempAuthorizedKeysFile = tmp.fileSync()
+    await fs.writeFile(tempAuthorizedKeysFile.name, config.pubkeySshFirstUser)
+
+    const sshKeygenCmd = await io.which('ssh-keygen', true)
+    const sshKeygenOutput = await exec.getExecOutput(
+      sshKeygenCmd,
+      ['-l', '-f', tempAuthorizedKeysFile.name],
+      {silent: true, ignoreReturnCode: true}
+    )
+    if (sshKeygenOutput.exitCode !== 0) {
+      throw new Error(
+        `pubkey-ssh-first-user does not seem to be a valid list of public key according to "ssh-keygen -l", here's its output:\n${sshKeygenOutput.stderr}`
+      )
+    }
   }
 
   if (!config.stageList || config.stageList.length === 0) {
