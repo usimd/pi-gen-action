@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as fsWalk from '@nodelib/fs.walk'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
@@ -51,9 +52,10 @@ export class PiGen {
   }
 
   async build(verbose = false): Promise<exec.ExecOutput> {
+    fs.mkdirSync('./pigen-work')
     // By default, we'll pass all user stages as mounts to the Docker run and we'll configure
     // apt to not report progress (which can become excessive).
-    let dockerOpts = `${this.getStagesAsDockerMounts()} -e DEBIAN_FRONTEND=noninteractive`
+    let dockerOpts = `${this.getStagesAsDockerMounts()} -e DEBIAN_FRONTEND=noninteractive -v ${fs.realpathSync('./pigen-work')}:/pi-gen/work`
 
     if (this.config.dockerOpts !== undefined && this.config.dockerOpts !== '') {
       dockerOpts = `${this.config.dockerOpts} ${dockerOpts}`
@@ -65,10 +67,8 @@ export class PiGen {
       )}`
     )
 
-    return await exec.getExecOutput(
-      '"./build-docker.sh"',
-      ['-c', this.configFilePath],
-      {
+    return await exec
+      .getExecOutput('"./build-docker.sh"', ['-c', this.configFilePath], {
         cwd: this.piGenDirectory,
         env: {
           PIGEN_DOCKER_OPTS: dockerOpts,
@@ -80,8 +80,17 @@ export class PiGen {
         },
         silent: true,
         ignoreReturnCode: true
-      }
-    )
+      })
+      .then(
+        value => {
+          fs.chmodSync('./pigen-work', 0o777)
+          fsWalk.walk('./pigen-work', (error, entries) =>
+            entries.forEach(entry => fs.chmodSync(entry.path, 0o777))
+          )
+          return value
+        },
+        value => value
+      )
   }
 
   async getLastImagePath(): Promise<string | undefined> {

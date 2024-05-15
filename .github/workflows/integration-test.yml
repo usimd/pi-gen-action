@@ -59,6 +59,7 @@ jobs:
           wpa-password: '1234567890'
           timezone: ${{ env.CONFIG_TIMEZONE }}
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
+          enable-pigen-cache: true
 
       - name: List working directory
         run: tree 
