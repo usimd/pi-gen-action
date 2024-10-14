@@ -22,11 +22,12 @@ export class PiGen {
     piGenDirectory: string,
     config: PiGenConfig
   ): Promise<PiGen> {
-    if (!(await PiGen.validatePigenDirectory(piGenDirectory))) {
+    const instance = new PiGen(piGenDirectory, config)
+
+    if (!(await instance.validatePigenDirectory())) {
       throw new Error(`pi-gen directory at ${piGenDirectory} is invalid`)
     }
 
-    const instance = new PiGen(piGenDirectory, config)
     core.debug(`Writing user config to ${instance.configFilePath}`)
     await writeToFile(
       instance.config,
@@ -105,27 +106,33 @@ export class PiGen {
     return foundImages.length > 0 ? path.dirname(foundImages[0]) : undefined
   }
 
-  private static async validatePigenDirectory(
-    piGenDirectory: string
-  ): Promise<boolean> {
+  private async validatePigenDirectory(): Promise<boolean> {
     try {
-      const dirStat = await fs.promises.stat(piGenDirectory)
+      const dirStat = await fs.promises.stat(this.piGenDirectory)
 
       if (!dirStat.isDirectory()) {
-        core.debug(`Not a directory: ${piGenDirectory}`)
+        core.debug(`Not a directory: ${this.piGenDirectory}`)
         return false
       }
     } catch (error) {
       return false
     }
 
-    const piGenDirContent = await fs.promises.readdir(piGenDirectory, {
+    const piGenDirContent = await fs.promises.readdir(this.piGenDirectory, {
       withFileTypes: true
     })
     const requiredFiles = ['build-docker.sh', 'Dockerfile']
-    const requiredDirectories = Object.values(PiGenStages).filter(
+    let requiredDirectories = Object.values(PiGenStages).filter(
       value => typeof value === 'string'
     ) as string[]
+
+    // https://github.com/usimd/pi-gen-action/issues/125
+    // It seems like RaspiOS based on Buster is lacking a `stage5` while all
+    // other versions include one.
+    if (this.config.release?.toLowerCase().trim() == 'buster') {
+      requiredDirectories = requiredDirectories.filter(dir => dir !== 'stage5')
+    }
+
     const existingFiles = piGenDirContent
       .filter(entry => entry.isFile())
       .map(entry => entry.name)
