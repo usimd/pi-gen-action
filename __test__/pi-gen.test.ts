@@ -16,23 +16,22 @@ jest.mock('../src/pi-gen-config', () => ({
 }))
 
 const mockPiGenDependencies = (
-  stageDirectories = Object.values(PiGenStages)
+  stageDirectories = Object.values(PiGenStages),
+  buildFiles = ['build-docker.sh', 'Dockerfile']
 ) => {
   jest
     .spyOn(fs.promises, 'stat')
     .mockResolvedValueOnce({isDirectory: () => true} as fs.Stats)
 
   jest.spyOn(fs.promises, 'readdir').mockResolvedValueOnce([
-    {
-      name: 'Dockerfile',
-      isFile: () => true,
-      isDirectory: () => false
-    } as Dirent,
-    {
-      name: 'build-docker.sh',
-      isFile: () => true,
-      isDirectory: () => false
-    } as Dirent,
+    ...buildFiles.map(
+      fileName =>
+        ({
+          name: fileName,
+          isFile: () => true,
+          isDirectory: () => false
+        }) as Dirent
+    ),
     ...(stageDirectories.map(stage => ({
       name: stage,
       isDirectory: () => true,
@@ -53,23 +52,20 @@ describe('PiGen', () => {
     }
   )
 
-  it('should fail on missing entries at pi-gen path', async () => {
-    jest
-      .spyOn(fs.promises, 'stat')
-      .mockResolvedValue({isDirectory: () => true} as fs.Stats)
-    jest.spyOn(fs.promises, 'readdir').mockResolvedValue([
-      {
-        name: 'Dockerfile',
-        isFile: () => true,
-        isDirectory: () => false
-      } as Dirent,
-      {name: 'stage0', isDirectory: () => true, isFile: () => false} as Dirent
-    ])
+  it.each(['build-docker.sh', 'Dockerfile'])(
+    'should fail if only pi-gen core build file %s is present and others missing',
+    async buildFile => {
+      mockPiGenDependencies(Object.values(PiGenStages), [buildFile])
 
-    await expect(
-      async () => await PiGen.getInstance('pi-gen-dir', DEFAULT_CONFIG)
-    ).rejects.toThrow()
-  })
+      await expect(
+        async () =>
+          await PiGen.getInstance('pi-gen-dir', {
+            ...DEFAULT_CONFIG,
+            stageList: ['stage0']
+          })
+      ).rejects.toThrow()
+    }
+  )
 
   it('should fail on missing required stage entries at pi-gen path', async () => {
     mockPiGenDependencies(['stage0', 'stage1'])
@@ -78,7 +74,11 @@ describe('PiGen', () => {
       .mockResolvedValue({isDirectory: () => true} as fs.Stats)
 
     await expect(
-      async () => await PiGen.getInstance('pi-gen-dir', DEFAULT_CONFIG)
+      async () =>
+        await PiGen.getInstance('pi-gen-dir', {
+          ...DEFAULT_CONFIG,
+          stageList: ['stage0', 'stage1', 'stage2']
+        })
     ).rejects.toThrow()
   })
 
@@ -172,6 +172,23 @@ describe('PiGen', () => {
     expect(fs.existsSync(`${stageList[1]}/EXPORT_NOOBS`)).toBeFalsy()
   })
 
+  it('does not require a stage5 directory for Buster', async () => {
+    const piGenDir = 'pi-gen'
+    const busterStages = ['stage0', 'stage1', 'stage2', 'stage3', 'stage4']
+    mockPiGenDependencies(busterStages)
+    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    // If user added a 'stage5', don't fail
+    let config = {
+      ...DEFAULT_CONFIG,
+      release: 'buster',
+      stageList: [...busterStages, 'stage5']
+    } as PiGenConfig
+
+    const pigen = PiGen.getInstance(piGenDir, config)
+
+    await expect(pigen).resolves.not.toThrow()
+  })
+
   it.each([
     [
       false,
@@ -219,7 +236,10 @@ describe('PiGen', () => {
       jest.spyOn(core, 'warning').mockImplementation(s => {})
       mockPiGenDependencies()
 
-      const piGenSut = new PiGen('pi-gen', DEFAULT_CONFIG)
+      const piGenSut = new PiGen('pi-gen', {
+        ...DEFAULT_CONFIG,
+        stageList: ['stage0']
+      })
       piGenSut.logOutput(line, verbose, stream as 'info' | 'warning')
 
       expect(
