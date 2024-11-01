@@ -39,9 +39,9 @@
     "tmp": "0.2.3"
   },
   "devDependencies": {
-    "@types/jest": "29.5.13",
+    "@types/jest": "29.5.14",
     "@types/js-yaml": "4.0.9",
-    "@types/node": "20.16.10",
+    "@types/node": "20.17.5",
     "@types/semver": "7.5.8",
     "@types/tmp": "0.2.6",
     "@typescript-eslint/eslint-plugin": "7.18.0",
@@ -61,7 +61,7 @@
     "semver": "7.6.3",
     "ts-jest": "29.2.5",
     "ts-node": "10.9.2",
-    "typescript": "5.6.2",
+    "typescript": "5.6.3",
     "typescript-eslint": "^7.0.2",
     "word-wrap": "1.2.5"
   }
