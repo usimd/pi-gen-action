@@ -56,6 +56,7 @@ export async function configure(): Promise<PiGenConfig> {
     userConfig.setfcap = core.getInput('setfcap') || DEFAULT_CONFIG.setfcap
     userConfig.piGenRelease =
       core.getInput('pi-gen-release') || DEFAULT_CONFIG.piGenRelease
+    userConfig.aptProxy = core.getInput('apt-proxy') || DEFAULT_CONFIG.aptProxy
 
     await validateConfig(userConfig)
 

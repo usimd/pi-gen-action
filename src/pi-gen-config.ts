@@ -6,6 +6,7 @@ import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 
 export interface PiGenConfig {
+  aptProxy?: string
   imgName: string
   piGenRelease: string
   release: string
@@ -218,6 +219,16 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
           'stage-list must contain valid pi-gen stage names "stage[0-5]" and/or valid directories'
         )
       }
+    }
+  }
+
+  if (config.aptProxy) {
+    try {
+      new URL(config.aptProxy)
+    } catch (error) {
+      throw new Error(
+        'apt-proxy is not a valid URL. Make it point to a correct http/https address'
+      )
     }
   }
 }
