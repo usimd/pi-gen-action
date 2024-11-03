@@ -4,6 +4,7 @@ import {installHostDependencies} from './install-dependencies'
 import {build} from './build'
 import {clonePigen} from './clone-pigen'
 import {removeContainer} from './remove-container'
+import {removeRunnerComponents} from './increase-runner-disk-size'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
 
@@ -19,7 +20,18 @@ export async function piGen(): Promise<void> {
     const piGenRepo = core.getInput('pi-gen-repository')
     core.debug(`Using pi-gen repository ${piGenRepo}`)
 
+    const increaseRunnerDiskSize = core.getBooleanInput(
+      'increase-runner-disk-size'
+    )
+    core.debug(`Increase runner disk size: ${increaseRunnerDiskSize}`)
+
     const userConfig = await configure()
+
+    if (increaseRunnerDiskSize) {
+      core.info('Removing unused runner components to increase disk space')
+      await removeRunnerComponents()
+    }
+
     await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
     await installHostDependencies(
       core.getInput('extra-host-dependencies'),

@@ -1,6 +1,27 @@
 name: pi-gen-action-integration-test
 on:
   workflow_dispatch:
+    inputs:
+      enable-noobs:
+        description: Enable NOOBS
+        default: true
+        required: false
+        type: boolean
+      compression-level:
+        description: Image compression level
+        default: 1
+        required: false
+        type: number
+      increase-runner-disk:
+        description: Increase runner root disk size
+        required: false
+        default: true
+        type: boolean
+      full-image:
+        description: Build all stages
+        default: false
+        required: false
+        type: boolean
   push:
     paths-ignore:
       - '**.md'
@@ -26,7 +47,7 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
-    if: github.ref_name == 'master' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test'))
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test')
 
     steps:
       - name: Check out repository
@@ -45,11 +66,11 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage
+          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' }}
           verbose-output: true
-          enable-noobs: true
+          enable-noobs: ${{ github.event_name != 'workflow_dispatch' || inputs.enable-noobs }}
           compression: xz
-          compression-level: 1
+          compression-level: ${{ github.event_name == 'workflow_dispatch' && inputs.compression-level || 1 }}
           locale: ${{ env.CONFIG_LOCALE }}
           hostname: ${{ env.CONFIG_HOSTNAME }}
           keyboard-keymap: de
@@ -59,6 +80,7 @@ jobs:
           wpa-password: '1234567890'
           timezone: ${{ env.CONFIG_TIMEZONE }}
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
+          increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
 
       - name: List working directory
         run: tree 
@@ -80,6 +102,9 @@ jobs:
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
           test "$(sudo cat ${ROOTFS_DIR}/home/${CONFIG_USERNAME}/.ssh/authorized_keys)" = "$CONFIG_PUBLIC_KEY"
+
+      - run: df -h
+        if: always()
 
       - name: Remove test label from PR (if set)
         uses: actions-ecosystem/action-remove-labels@v1

@@ -109,6 +109,14 @@ tries to make sure the stage is respected and its changes are included in the fi
     # Final image name.
     image-name: ''
 
+    # Enabling this option will remove plenty of components from the GitHub Actions 
+    # runner that are not mandatory pre-requisites for a (vanilla) pi-gen build. This 
+    # shall increase the available disk space so that also large images can be 
+    # compiled on a free GHA runner (benchmark is the full image including a desktop 
+    # environment). If any packages are missing during the build consider adding them 
+    # to the `extra-host-dependencies` list.
+    increase-runner-disk-size: false
+
     # Default keyboard keymap.
     keyboard-keymap: gb
 
@@ -188,6 +196,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 - [Enable detailed output from `pi-gen` build](#enable-detailed-output-from-pi-gen-build)
 - [Upload final image as artifact](#upload-final-image-as-artifact)
 - [Modify `pi-gen` internal stages](#modify-pi-gen-internal-stages)
+- [Increase GitHub Actions runner disk space](#increase-github-actions-runner-disk-space)
 
 ### Install NodeJS from Nodesource in the target image
 ```yaml
@@ -202,7 +211,7 @@ jobs:
           cat > test-stage/package-test/00-run-chroot.sh <<-EOF
           #!/bin/bash
           apt-get install -y curl
-          curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+          curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
           EOF
           } &&
           chmod +x test-stage/package-test/00-run-chroot.sh &&
@@ -277,6 +286,32 @@ jobs:
           image-name: test
           stage-list: clean-stage stage0 stage1 stage2 custom-stage stage3 stage4
           pi-gen-dir: ${{ inputs.custom-pi-gen-dir }}
+```
+
+### Increase GitHub Actions runner disk space
+
+When building large images containing plenty of additional software (or maybe just the full
+image including a desktop environment) you may hit space boundaries on the (free and public)
+GitHub Actions runners. 
+
+There is however a workaround to increase this disk space by removing components you do not
+need for your build on the runner. The implemented mechanism is heavily inspired by
+[easimon/maximize-build-space](https://github.com/easimon/maximize-build-space) but focuses
+on providing more root disk space where the Docker daemon runs the build (since this action
+runs the `pi-gen` build always inside a container). 
+
+From current experience, this will reclaim between 25 and 30 GB of additional disk space
+
+```
+jobs:
+  pi-gen-with-larger-disk-space:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: test
+          stage-list: stage0 stage1 stage2 stage3 stage4 stage5
+          increase-runner-disk-size: true
 ```
 
 ## License

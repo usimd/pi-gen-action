@@ -136,6 +136,14 @@ inputs:
       If your custom stage requires additional software or kernel modules to be loaded, add them here. Note that this is not meant to configure modules to be loaded in the target image.
     required: false
     default: ''
+  increase-runner-disk-size:
+    description: |
+      Enabling this option will remove plenty of components from the GitHub Actions runner that are not mandatory pre-requisites for a (vanilla) pi-gen build.
+      This shall increase the available disk space so that also large images can be compiled on a free GHA runner (benchmark is the full image including a 
+      desktop environment).
+      If any packages are missing during the build consider adding them to the `extra-host-dependencies` list.
+    required: false
+    default: false
   pi-gen-dir:
     description: Path where selected pi-gen ref will be checked out to. If the path does not yet exist, it will be created (including its parents).
     required: false

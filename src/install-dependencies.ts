@@ -36,7 +36,7 @@ export async function installHostDependencies(
 
     execOutput = await exec.getExecOutput(
       sudoPath,
-      ['-E', 'apt-get', '-qq', '-o', 'Dpkg::Use-Pty=0', 'update'],
+      ['-E', 'apt-get', '-y', '-qq', '-o', 'Dpkg::Use-Pty=0', 'update'],
       {
         silent: !verbose,
         env: {
