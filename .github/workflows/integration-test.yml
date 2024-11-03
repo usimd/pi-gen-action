@@ -61,6 +61,23 @@ jobs:
       - name: Compile action code before test
         run: npm ci && npm run package
 
+      - name: Restore package cache
+        uses: actions/cache@v4
+        with:
+          path: apt-cache/
+          key: ${{ runner.os }}-${{ github.job }}
+          restore-keys: |
+            ${{ runner.os }}
+
+      - name: Setup APT proxy on runner
+        run: |
+          mkdir -p apt-cache
+          sudo apt-get install -y apt-cacher-ng --no-install-suggests --no-install-recommends
+          sudo bash -c 'echo -e "Port: 9999\nDebug: 99" >> /etc/apt-cacher-ng/acng.conf'
+          sudo mv -f apt-cache/* /var/cache/apt-cacher-ng/ || true
+          sudo chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
+          sudo service apt-cacher-ng restart
+
       - name: Run pi-gen build
         uses: ./
         id: build
@@ -81,6 +98,11 @@ jobs:
           timezone: ${{ env.CONFIG_TIMEZONE }}
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
           increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
+          apt-proxy: http://172.17.0.1:9999
+
+      - name: Move APT cache
+        continue-on-error: true
+        run: rm -rf apt-cache/* && sudo mv -f /var/cache/apt-cacher-ng/* apt-cache/
 
       - name: List working directory
         run: tree 
@@ -111,5 +133,12 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test') }}
         with:
           labels: test
+
+      - name: Debug APT proxy
+        if: always()
+        run: |
+          sudo tail -n 100 /etc/apt-cacher-ng/acng.conf
+          sudo service apt-cacher-ng status
+          sudo tail -n 200 /var/log/syslog /var/log/apt-cacher-ng/* 
 
           

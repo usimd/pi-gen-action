@@ -141,6 +141,11 @@ describe('PiGenConfig', () => {
       'pubkeySshFirstUser',
       'ssh-foo vnqf493rn34xzrm234yru13ß48rnz1x034ztn== foo@bar.com',
       'pubkey-ssh-first-user does not seem to be a valid list of public key according to "ssh-keygen -l", here\'s its output'
+    ],
+    [
+      'aptProxy',
+      'this/is/not/valid',
+      'apt-proxy is not a valid URL. Make it point to a correct http/https address'
     ]
   ])(
     'rejects %s with invalid value %s',
@@ -152,9 +157,9 @@ describe('PiGenConfig', () => {
       expect(await validateConfig(piGenConfig)).toBeUndefined()
 
       piGenConfig[property as keyof PiGenConfig] = value
-      expect(async () => await validateConfig(piGenConfig)).rejects.toThrow(
-        error
-      )
+      await expect(
+        async () => await validateConfig(piGenConfig)
+      ).rejects.toThrow(error)
     }
   )
 
