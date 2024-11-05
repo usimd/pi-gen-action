@@ -221,17 +221,17 @@ describe('PiGen', () => {
   )
 
   it.each([
-    [false, 'no stage message', 'info', 0],
-    [true, 'no stage message', 'info', 1],
-    [false, '[00:00:00] stage message', 'info', 1],
-    [true, 'warning message', 'warning', 1],
-    [false, '#6 [1/3] FROM docker.io', 'warning', 0],
-    [true, '#7 [2/3] RUN', 'warning', 0],
-    [false, ' #6 [1/3] FROM docker.io', 'info', 0],
-    [true, '   #7 [2/3] RUN', 'info', 1]
+    ['no stage message', false, 'info', 0],
+    ['no stage message', true, 'info', 1],
+    ['[00:00:00] stage message', false, 'info', 0],
+    ['warning message', true, 'warning', 1],
+    ['#6 [1/3] FROM docker.io', false, 'warning', 0],
+    ['#7 [2/3] RUN', true, 'warning', 0],
+    [' #6 [1/3] FROM docker.io', false, 'info', 0],
+    ['   #7 [2/3] RUN', true, 'info', 1]
   ])(
-    'handles log messages if verbose = %s',
-    (verbose, line, stream, nCalls) => {
+    'handles log message "%s" correctly if verbose = %s',
+    (line, verbose, stream, nCalls) => {
       jest.spyOn(core, 'info').mockImplementation(s => {})
       jest.spyOn(core, 'warning').mockImplementation(s => {})
       mockPiGenDependencies()
@@ -247,6 +247,52 @@ describe('PiGen', () => {
       ).toHaveBeenCalledTimes(nCalls)
     }
   )
+
+  it.each([
+    [['no stage message'], 0, 0, null],
+    [['[00:00:00] Begin stage-name'], 1, 0, ['stage-name']],
+    [['[00:00:00] End stage-name'], 0, 1, null]
+  ])(
+    'opens and closes log groups according to pi-gen status messages',
+    (lines, startGroupCalls, endGroupCalls, startGroupValues) => {
+      jest.spyOn(core, 'startGroup').mockImplementation(_ => {})
+      jest.spyOn(core, 'endGroup').mockImplementation(() => null)
+      mockPiGenDependencies()
+
+      const piGenSut = new PiGen('pi-gen', {
+        ...DEFAULT_CONFIG,
+        stageList: ['stage0']
+      })
+      lines.forEach(line => piGenSut.logOutput(line, false, 'info'))
+
+      if (startGroupCalls > 0) {
+        expect(core.startGroup).toHaveBeenCalledTimes(startGroupCalls)
+        startGroupValues?.forEach(groupName =>
+          expect(core.startGroup).toHaveBeenCalledWith(groupName)
+        )
+      }
+
+      if (endGroupCalls > 0) {
+        expect(core.endGroup).toHaveBeenCalledTimes(endGroupCalls)
+      }
+    }
+  )
+
+  it('closes still open log groups if build crashes', async () => {
+    jest.spyOn(fs, 'realpathSync').mockReturnValue('/pi-gen/stage0')
+    jest.spyOn(core, 'endGroup')
+    jest
+      .spyOn(exec, 'getExecOutput')
+      .mockImplementationOnce((cmdLine, args) =>
+        Promise.resolve({} as exec.ExecOutput)
+      )
+
+    const piGen = new PiGen('', {...DEFAULT_CONFIG, stageList: ['stage0']})
+    piGen.openLogGroups = 2
+    await piGen.build()
+
+    expect(core.endGroup).toHaveBeenCalledTimes(2)
+  })
 
   it.each([
     ['none', [] as string[], undefined],

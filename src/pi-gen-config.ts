@@ -67,8 +67,12 @@ export async function writeToFile(
             : config[prop as keyof PiGenConfig]
         }"`
     )
-    .join('\n')
-  return fs.writeFile(file, configContent)
+
+  // We're adding this as a default to the config so that it's going to be
+  // picked up by pi-gen as well in order to reduce log volume
+  configContent.push('DEBIAN_FRONTEND=noninteractive')
+
+  return fs.writeFile(file, configContent.join('\n'))
 }
 
 export async function validateConfig(config: PiGenConfig): Promise<void> {

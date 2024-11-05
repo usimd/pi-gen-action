@@ -5,11 +5,11 @@ import * as glob from '@actions/glob'
 import {PiGenStages} from './pi-gen-stages'
 import {PiGenConfig, writeToFile} from './pi-gen-config'
 import path from 'path'
-import * as colors from 'ansi-colors'
 
 export class PiGen {
   private configFilePath: string
   private piGenBuildLogPattern = /^\s*\[(?:\d{2}:?){3}\]/gm
+  openLogGroups: number = 0
 
   constructor(
     private piGenDirectory: string,
@@ -66,10 +66,8 @@ export class PiGen {
       )}`
     )
 
-    return await exec.getExecOutput(
-      '"./build-docker.sh"',
-      ['-c', this.configFilePath],
-      {
+    return await exec
+      .getExecOutput('"./build-docker.sh"', ['-c', this.configFilePath], {
         cwd: this.piGenDirectory,
         env: {
           PIGEN_DOCKER_OPTS: dockerOpts,
@@ -81,8 +79,13 @@ export class PiGen {
         },
         silent: true,
         ignoreReturnCode: true
-      }
-    )
+      })
+      .finally(() => {
+        while (this.openLogGroups > 0) {
+          core.endGroup()
+          this.openLogGroups--
+        }
+      })
   }
 
   async getLastImagePath(): Promise<string | undefined> {
@@ -171,9 +174,23 @@ export class PiGen {
   logOutput(line: string, verbose: boolean, stream: 'info' | 'warning'): void {
     const isPiGenStatusMessage = this.piGenBuildLogPattern.test(line)
 
-    if (verbose || isPiGenStatusMessage) {
-      line = isPiGenStatusMessage ? colors.bold(colors.unstyle(line)) : line
+    if (isPiGenStatusMessage) {
+      line = line
+        .replace(this.piGenBuildLogPattern, '')
+        .replace(`${process.env.GITHUB_WORKSPACE || ''}/`, '')
+        .replace(`${this.piGenDirectory}/`, '')
+        .trim()
 
+      if (line.includes('Begin')) {
+        line = line.replace('Begin', '').trim()
+        this.openLogGroups++
+        core.startGroup(line)
+      } else if (line.includes('End')) {
+        line = line.replace('End', '').trim()
+        this.openLogGroups--
+        core.endGroup()
+      }
+    } else if (stream == 'warning' || verbose) {
       // Do not issue warning annotations for Docker BuildKit progress messages.
       // No clue how to better suppress/redirect them for now.
       stream === 'info' || line.match(/^\s*#\d+\s/m)

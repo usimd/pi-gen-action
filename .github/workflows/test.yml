@@ -28,9 +28,11 @@ jobs:
     - run: npm test
 
     - uses: codecov/codecov-action@v4
+      if: failure() || success()
       with:
         files: coverage/clover.xml,coverage/lcov.info
         flags: unittests
+        token: ${{ secrets.CODECOV_TOKEN }}
 
     - run: npm run lint
 
