@@ -1,13 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    "group:allNonMajor",
-    "schedule:monthly"
-  ],
-  "masterIssue": true,
+  "extends": ["config:recommended", "group:allNonMajor", "schedule:monthly"],
+  "dependencyDashboard": true,
   "major": {
-    "masterIssueApproval": true
+    "dependencyDashboardApproval": true
   },
   "labels": ["test"],
   "packageRules": [
