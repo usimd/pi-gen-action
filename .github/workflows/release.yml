@@ -2,7 +2,7 @@ name: Create GH release on version change
 on:
   push: 
     branches: 
-      - master
+      - main
 
 jobs:
   release:
