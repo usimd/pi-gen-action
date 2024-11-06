@@ -4,7 +4,7 @@ import * as fs from 'fs'
 
 describe('Git', () => {
   it.each([
-    ['master', true],
+    ['main', true],
     ['non-existing-branch', false]
   ])('determines correctly if branch %s exists', async (branchName, exists) => {
     const git = await Git.getInstance('.', '', false)
