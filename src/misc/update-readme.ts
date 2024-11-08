@@ -2,8 +2,7 @@ import * as fs from 'fs'
 import {major} from 'semver'
 import * as yaml from 'js-yaml'
 import wrap from 'word-wrap'
-// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-const replaceSection = require('markdown-replace-section')
+import {replaceSection} from '@pioneer10/markdown-replace-section'
 
 function getTagVersion(packageJson: string): number {
   const packageDesc = JSON.parse(
@@ -17,7 +16,6 @@ function replaceUsageSection(
   sectionTitle: string,
   content: string
 ): string {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
   return replaceSection(readme, sectionTitle, content, true)
 }
 
@@ -31,10 +29,10 @@ function buildUsageSection(
     '  with:'
   ]
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  for (const key of Object.keys(actionYaml.inputs as {}).sort((a, b) =>
-    a.localeCompare(b)
-  )) {
+  const userActionParameters = Object.keys(actionYaml.inputs as object)
+    .sort((a, b) => a.localeCompare(b))
+    .filter(paramName => !paramName.startsWith('internal-'))
+  for (const key of userActionParameters) {
     const input = (actionYaml.inputs as Record<string, unknown>)[key] as {
       description: string
       default: string | number

@@ -31,6 +31,8 @@ jobs:
           include: |-
             dist/licenses.txt
             dist/index.js
+            dist/pre.js
+            dist/post.js
             README.md
             LICENSE
             action.yml

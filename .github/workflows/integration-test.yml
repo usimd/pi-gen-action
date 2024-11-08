@@ -99,6 +99,7 @@ jobs:
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
           increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
           apt-proxy: http://172.17.0.1:9999
+          enable-pigen-cache: true
 
       - name: Move APT cache
         continue-on-error: true
