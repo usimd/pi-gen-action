@@ -1,5 +1,9 @@
 import * as exec from '@actions/exec'
-import {removeRunnerComponents} from '../src/increase-runner-disk-size'
+import * as core from '@actions/core'
+import {
+  getExecOptions,
+  removeRunnerComponents
+} from '../src/increase-runner-disk-size'
 
 jest.mock('@actions/exec')
 
@@ -14,6 +18,8 @@ describe('Increasing runner disk size', () => {
           return Promise.resolve({} as exec.ExecOutput)
         }
       })
+    jest.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
+
     await removeRunnerComponents()
 
     expect(exec.getExecOutput).toHaveBeenCalledWith(
@@ -30,13 +36,11 @@ describe('Increasing runner disk size', () => {
 
     expect(exec.getExecOutput).toHaveBeenCalledWith(
       'sudo',
-      expect.arrayContaining(['apt-get', 'autoremove']),
-      expect.anything()
-    )
-
-    expect(exec.getExecOutput).toHaveBeenCalledWith(
-      'sudo',
-      expect.arrayContaining(['apt-get', 'autoclean']),
+      expect.arrayContaining([
+        'sh',
+        '-c',
+        'apt-get autoremove && apt-get autoclean'
+      ]),
       expect.anything()
     )
 
@@ -45,5 +49,15 @@ describe('Increasing runner disk size', () => {
       expect.arrayContaining(['swapoff', '-a']),
       expect.anything()
     )
+  })
+
+  it('should invoke execution log callbacks only when verbose', async () => {
+    jest.spyOn(core, 'info')
+    const opts = getExecOptions('docker-system-prune', true)
+
+    opts.listeners?.stdline('test')
+    opts.listeners?.errline('test')
+
+    expect(core.info).toHaveBeenCalledTimes(2)
   })
 })
