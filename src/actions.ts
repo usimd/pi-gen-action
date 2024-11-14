@@ -28,8 +28,10 @@ export async function piGen(): Promise<void> {
     const userConfig = await configure()
 
     if (increaseRunnerDiskSize) {
-      core.info('Removing unused runner components to increase disk space')
-      await removeRunnerComponents()
+      await core.group(
+        'Removing runner components to increase disk build space',
+        () => removeRunnerComponents()
+      )
     }
 
     await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
