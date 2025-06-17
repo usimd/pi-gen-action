@@ -27,7 +27,7 @@ jobs:
 
     - run: npm test
 
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5
       if: failure() || success()
       with:
         files: coverage/clover.xml,coverage/lcov.info
