@@ -98,3 +98,7 @@ Thumbs.db
 __tests__/runner/*
 lib/**/*
 dist/*
+
+codecov
+codecov.SHA256SUM
+codecov.SHA256SUM.sig
