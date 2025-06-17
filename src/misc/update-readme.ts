@@ -1,13 +1,14 @@
-import * as fs from 'fs'
+// eslint-disable-next-line import/no-nodejs-modules
+import {readFileSync, writeFileSync} from 'node:fs'
 import {major} from 'semver'
-import * as yaml from 'js-yaml'
+import {load} from 'js-yaml'
 import wrap from 'word-wrap'
-// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports
 const replaceSection = require('markdown-replace-section')
 
 function getTagVersion(packageJson: string): number {
   const packageDesc = JSON.parse(
-    fs.readFileSync(packageJson, {encoding: 'utf-8'})
+    readFileSync(packageJson, {encoding: 'utf-8'})
   ) as {version: string}
   return major(packageDesc.version)
 }
@@ -17,7 +18,6 @@ function replaceUsageSection(
   sectionTitle: string,
   content: string
 ): string {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
   return replaceSection(readme, sectionTitle, content, true)
 }
 
@@ -31,7 +31,7 @@ function buildUsageSection(
     '  with:'
   ]
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   for (const key of Object.keys(actionYaml.inputs as {}).sort((a, b) =>
     a.localeCompare(b)
   )) {
@@ -64,10 +64,11 @@ function updateUsage(
   actionYamlPath: string,
   packageJsonPath: string
 ): void {
-  const actionYaml = yaml.load(
-    fs.readFileSync(actionYamlPath).toString()
-  ) as Record<string, unknown>
-  const originalReadme = fs.readFileSync(readmePath).toString()
+  const actionYaml = load(readFileSync(actionYamlPath).toString()) as Record<
+    string,
+    unknown
+  >
+  const originalReadme = readFileSync(readmePath).toString()
   const actionVersion = getTagVersion(packageJsonPath)
 
   const updatedReadme = replaceUsageSection(
@@ -75,7 +76,7 @@ function updateUsage(
     'Usage',
     buildUsageSection(actionYaml, actionVersion)
   )
-  fs.writeFileSync(readmePath, updatedReadme)
+  writeFileSync(readmePath, updatedReadme)
 }
 
 updateUsage('README.md', 'action.yml', 'package.json')
