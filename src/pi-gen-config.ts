@@ -4,6 +4,7 @@ import {PiGenStages} from './pi-gen-stages'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
+import {getAllTimezones} from 'countries-and-timezones'
 
 export interface PiGenConfig {
   aptProxy?: string
@@ -63,6 +64,7 @@ export async function writeToFile(
     .map(
       prop =>
         `${camelCaseToSnakeCase(prop)}="${
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           Array.isArray(config[prop as keyof PiGenConfig])
             ? (config[prop as keyof PiGenConfig] as string[]).join(' ')
             : config[prop as keyof PiGenConfig]
@@ -136,13 +138,9 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error('keyboard-layout must not be empty')
   }
 
-  const supportedTimezones = (
-    await exec.getExecOutput('timedatectl', ['list-timezones'], {silent: true})
-  ).stdout.split('\n')
-  if (!supportedTimezones.includes(config.timezoneDefault)) {
-    throw new Error(
-      'timezone is not included in output of "timedatectl list-timezones"'
-    )
+  const supportedTimezones = getAllTimezones()
+  if (!(config.timezoneDefault in supportedTimezones)) {
+    throw new Error('timezone is not a valid time zone definition')
   }
 
   if (!config.firstUserName) {
@@ -218,7 +216,7 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
         if (!stat.isDirectory()) {
           throw new Error()
         }
-      } catch (error) {
+      } catch {
         throw new Error(
           'stage-list must contain valid pi-gen stage names "stage[0-5]" and/or valid directories'
         )
@@ -229,7 +227,7 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
   if (config.aptProxy) {
     try {
       new URL(config.aptProxy)
-    } catch (error) {
+    } catch {
       throw new Error(
         'apt-proxy is not a valid URL. Make it point to a correct http/https address'
       )
@@ -247,7 +245,7 @@ async function absolutizePiGenStages(
 ): Promise<PiGenConfig> {
   const stages = config.stageList
   core.debug(
-    `Resolving directories to absolute paths: ${stages} using pi-gen base dir ${piGenDirectory}`
+    `Resolving directories to absolute paths: [${stages.join(', ')}] using pi-gen base dir ${piGenDirectory}`
   )
   for (let i = 0; i < stages.length; i++) {
     stages[i] = await fs.realpath(

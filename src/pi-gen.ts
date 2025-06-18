@@ -117,7 +117,7 @@ export class PiGen {
         core.debug(`Not a directory: ${this.piGenDirectory}`)
         return false
       }
-    } catch (error) {
+    } catch {
       return false
     }
 
@@ -127,7 +127,7 @@ export class PiGen {
     const requiredFiles = ['build-docker.sh', 'Dockerfile']
     let requiredDirectories = Object.values(PiGenStages).filter(
       value => typeof value === 'string'
-    ) as string[]
+    )
 
     // https://github.com/usimd/pi-gen-action/issues/125
     // It seems like RaspiOS based on Buster is lacking a `stage5` while all
@@ -193,17 +193,19 @@ export class PiGen {
     } else if (stream == 'warning' || verbose) {
       // Do not issue warning annotations for Docker BuildKit progress messages.
       // No clue how to better suppress/redirect them for now.
-      stream === 'info' || line.match(/^\s*#\d+\s/m)
-        ? core.info(line)
-        : core.warning(line)
+      if (stream === 'info' || line.match(/^\s*#\d+\s/m)) {
+        core.info(line)
+      } else {
+        core.warning(line)
+      }
     }
   }
 
-  private async configureStageExport(
+  private configureStageExport(
     stageDir: string,
     exportType: 'image' | 'noobs',
     targetState: boolean
-  ): Promise<void> {
+  ): void {
     const exportFileName =
       exportType === 'image' ? 'EXPORT_IMAGE' : 'EXPORT_NOOBS'
     const configPath = `${stageDir}/${exportFileName}`
@@ -212,7 +214,7 @@ export class PiGen {
       try {
         fs.unlinkSync(configPath)
       } catch (error) {
-        if ((error as any).code !== 'ENOENT') throw error
+        if (error.code !== 'ENOENT') throw error
       }
     } else if (!fs.existsSync(configPath)) {
       fs.writeFileSync(configPath, '')
@@ -228,14 +230,14 @@ export class PiGen {
 
     if (this.config.exportLastStageOnly === 'true') {
       for (const stage of this.config.stageList.slice(0, -1)) {
-        await this.configureStageExport(stage, 'image', false)
-        await this.configureStageExport(stage, 'noobs', false)
+        this.configureStageExport(stage, 'image', false)
+        this.configureStageExport(stage, 'noobs', false)
       }
 
-      await this.configureStageExport(lastStage, 'image', true)
+      this.configureStageExport(lastStage, 'image', true)
 
       if (this.config.enableNoobs === 'true') {
-        await this.configureStageExport(lastStage, 'noobs', true)
+        this.configureStageExport(lastStage, 'noobs', true)
       }
     } else {
       // In this case, only warn about missing export if last stage is a custom stage.
@@ -261,7 +263,7 @@ export class PiGen {
           exportDirectives.some(p => p.endsWith('EXPORT_IMAGE')) &&
           exportDirectives.length === 1
         ) {
-          await this.configureStageExport(stage, 'noobs', true)
+          this.configureStageExport(stage, 'noobs', true)
           core.notice(`Created NOOBS export directive in ${stage}`)
         }
       }

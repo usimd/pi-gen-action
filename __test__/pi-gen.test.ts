@@ -30,13 +30,16 @@ const mockPiGenDependencies = (
           name: fileName,
           isFile: () => true,
           isDirectory: () => false
-        }) as Dirent
+        }) as Dirent<any>
     ),
-    ...(stageDirectories.map(stage => ({
-      name: stage,
-      isDirectory: () => true,
-      isFile: () => false
-    })) as Dirent[])
+    ...stageDirectories.map(
+      stage =>
+        ({
+          name: stage,
+          isDirectory: () => true,
+          isFile: () => false
+        }) as Dirent<any>
+    )
   ])
 
   jest.spyOn(fs, 'realpathSync').mockImplementationOnce(p => `/${p.toString()}`)
