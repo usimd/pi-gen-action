@@ -87,7 +87,7 @@ describe('PiGenConfig', () => {
     [
       'timezoneDefault',
       'Europe/Munich',
-      'timezone is not included in output of "timedatectl list-timezones"'
+      'timezone is not a valid time zone definition'
     ],
     ['firstUserName', '', 'username must not be empty'],
     [

@@ -1,7 +1,8 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {}
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "postCreateCommand": ". ${NVM_DIR}/nvm.sh && nvm install 20"
+  "postCreateCommand": ". ${NVM_DIR}/nvm.sh && nvm install 20 && nvm use 20"
 }
