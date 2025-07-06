@@ -99,6 +99,7 @@ jobs:
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
           increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
           apt-proxy: http://172.17.0.1:9999
+          temp-repo: deb [arch=amd64 trusted=yes] https://deb.nodesource.com/node_24.x nodistro main
 
       - name: Move APT cache
         continue-on-error: true
@@ -117,6 +118,8 @@ jobs:
       - name: Test configuration values
         run: |
           set -ex
+          test -x ${ROOTFS_DIR}/usr/bin/curl
+          test "$(cat ${ROOTFS_DIR}/opt/hello)" = "world"
           test -x ${ROOTFS_DIR}/usr/bin/node
           test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "$CONFIG_HOSTNAME"
           grep $CONFIG_USERNAME ${ROOTFS_DIR}/etc/passwd
