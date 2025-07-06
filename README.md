@@ -177,6 +177,13 @@ tries to make sure the stage is respected and its changes are included in the fi
     # any custom stage will include an image export directive.
     stage-list: stage0 stage1 stage2
 
+    # An additional temporary apt repo to be used during the build process. This could 
+    # be useful if you require pre-release software to be included in the image. The 
+    # variable should contain sources in one-line-style format. "RELEASE" will be 
+    # replaced with the RELEASE variable. (see 
+    # https://manpages.debian.org/stable/apt/sources.list.5.en.html#ONE-LINE-STYLE_FORMAT)
+    temp-repo: ''
+
     # System timezone.
     timezone: Europe/London
 

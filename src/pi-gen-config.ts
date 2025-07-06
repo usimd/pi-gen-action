@@ -8,6 +8,7 @@ import {getAllTimezones} from 'countries-and-timezones'
 
 export interface PiGenConfig {
   aptProxy?: string
+  tempRepo?: string
   imgName: string
   piGenRelease: string
   release: string
@@ -232,6 +233,23 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
         'apt-proxy is not a valid URL. Make it point to a correct http/https address'
       )
     }
+  }
+
+  if (config.tempRepo) {
+    config.tempRepo
+      .split('\n')
+      .filter(line => !line.match(/^\s*#/))
+      .forEach(line => {
+        if (
+          !line.match(
+            /^(deb(-src)?)(\s+\[(\s*[\w-]+=\S+\s*)+\])?\s+((ht|f)tps?:\/\/\S+)(\s+[\w-]+)+(\s*#.*)?$/
+          )
+        ) {
+          throw new Error(
+            `temp-repo contains an invalid one-line-style format. See readme for details. Offending line: ${line}`
+          )
+        }
+      })
   }
 }
 
