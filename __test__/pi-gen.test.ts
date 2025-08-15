@@ -161,9 +161,9 @@ describe('PiGen', () => {
   it('configures NOOBS export for stages that export images', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
+    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
     jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
 
-    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
     fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
 
     await PiGen.getInstance(piGenDir, {
