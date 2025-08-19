@@ -1,6 +1,6 @@
 {
   "name": "pi-gen-action",
-  "version": "1.10.0",
+  "version": "2.0.0",
   "description": "GitHub action to build a custom Raspberry Pi image using pi-gen",
   "author": "Simon Domke",
   "main": "dist/index.js",
