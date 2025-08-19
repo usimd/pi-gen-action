@@ -20,14 +20,6 @@ export async function clonePigen(
       repo: repoName
     })
 
-    if (
-      repo !== originalPiGenRepo &&
-      (!repoInfo.data.fork ||
-        repoInfo.data.source?.full_name !== originalPiGenRepo)
-    ) {
-      throw new Error(`${repo} is not a fork from ${originalPiGenRepo}`)
-    }
-
     core.debug(`Checking out ref ${ref} into ${piGenDirectory}`)
     const verbose = core.getBooleanInput('verbose-output')
     const git = await Git.getInstance(piGenDirectory, token, verbose)

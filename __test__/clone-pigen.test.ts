@@ -9,7 +9,6 @@ describe('Cloning pi-gen repo', () => {
   it.each([
     ['RPi-Distro/pi-gen', false, true],
     ['owner/forked-repo', true, true],
-    ['another-owner/no-fork', false, false]
   ])('fetches pi-gen repository %s', async (repo, isFork, succeed) => {
     const verbose = true
     const token = '123456'
