@@ -38,7 +38,7 @@ export interface PiGenConfig {
 export const DEFAULT_CONFIG: PiGenConfig = {
   imgName: 'test',
   piGenRelease: 'Raspberry Pi reference',
-  release: 'bookworm',
+  release: 'trixie',
   deployCompression: 'zip',
   compressionLevel: '6',
   localeDefault: 'en_GB.UTF-8',
@@ -86,6 +86,7 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
 
   if (
     ![
+      'trixie',
       'bookworm',
       'bullseye',
       'jessie',
@@ -95,7 +96,7 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     ].includes(config.release?.toLowerCase())
   ) {
     throw new Error(
-      'release must be one of ["bookworm", "bullseye", "jessie", "stretch", "buster", "testing"]'
+      'release must be one of ["trixie", "bookworm", "bullseye", "jessie", "stretch", "buster", "testing"]'
     )
   }
 
