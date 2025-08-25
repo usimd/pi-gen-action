@@ -161,8 +161,8 @@ tries to make sure the stage is respected and its changes are included in the fi
     pubkey-ssh-first-user: ''
 
     # The release version to build images against. Valid values are jessie, stretch, 
-    # buster, bullseye, bookworm, and testing.
-    release: bookworm
+    # buster, bullseye, bookworm, trixie and testing.
+    release: trixie
 
     # Setting to `1` will prevent pi-gen from dropping the "capabilities" feature. 
     # Generating the root filesystem with capabilities enabled and running it from a 

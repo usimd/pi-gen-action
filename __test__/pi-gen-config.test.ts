@@ -64,7 +64,7 @@ describe('PiGenConfig', () => {
     [
       'release',
       'foo',
-      'release must be one of ["bookworm", "bullseye", "jessie", "stretch", "buster", "testing"]'
+      'release must be one of ["trixie", "bookworm", "bullseye", "jessie", "stretch", "buster", "testing"]'
     ],
     [
       'deployCompression',
