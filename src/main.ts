@@ -1,3 +1,3 @@
-import {run} from './actions'
+import {main} from './actions'
 
-run()
+main()
