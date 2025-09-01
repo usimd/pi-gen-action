@@ -1,31 +1,24 @@
 import * as core from '@actions/core'
 import {configure} from './configure'
 import {installHostDependencies} from './install-dependencies'
-import {build} from './build'
+import {build as piGenBuild} from './build'
 import {clonePigen} from './clone-pigen'
 import {removeContainer} from './remove-container'
 import {removeRunnerComponents} from './increase-runner-disk-size'
+import {Cache} from './cache'
+import {generateCacheKey} from './cache-key'
 
-const piGenBuildStartedState = 'pi-gen-build-started'
-
-export async function piGen(): Promise<void> {
+export async function main(): Promise<void> {
   try {
     // Need to force color output for chalk, until https://github.com/actions/runner/issues/241 is resolved.
     // See also https://github.com/chalk/supports-color/issues/106
     process.env['FORCE_COLOR'] = '2'
 
-    const piGenDirectory = core.getInput('pi-gen-dir')
-    core.debug(`Using pi-gen directory: ${piGenDirectory}`)
-
-    const piGenRepo = core.getInput('pi-gen-repository')
-    core.debug(`Using pi-gen repository ${piGenRepo}`)
+    const userConfig = await configure()
 
     const increaseRunnerDiskSize = core.getBooleanInput(
       'increase-runner-disk-size'
     )
-    core.debug(`Increase runner disk size: ${increaseRunnerDiskSize}`)
-
-    const userConfig = await configure()
 
     if (increaseRunnerDiskSize) {
       await core.group(
@@ -34,15 +27,28 @@ export async function piGen(): Promise<void> {
       )
     }
 
-    await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
+    const piGenDirectory = core.getInput('pi-gen-dir')
+    core.debug(`Using pi-gen directory: ${piGenDirectory}`)
+
     await installHostDependencies(
       core.getInput('extra-host-dependencies'),
       core.getInput('extra-host-modules'),
       piGenDirectory
     )
 
-    core.saveState(piGenBuildStartedState, true)
-    await build(piGenDirectory, userConfig)
+    if (core.getBooleanInput('enable-pigen-cache')) {
+      await core.group('Searching for a cache hit to reuse', async () => {
+        const cache = new Cache(generateCacheKey())
+        await cache.restoreContainer()
+      })
+    }
+
+    const piGenRepo = core.getInput('pi-gen-repository')
+    core.debug(`Using pi-gen repository ${piGenRepo}`)
+
+    await clonePigen(piGenRepo, piGenDirectory, core.getInput('pi-gen-version'))
+
+    await piGenBuild(piGenDirectory, userConfig)
   } catch (error) {
     core.setFailed((error as Error)?.message ?? error)
   }
@@ -50,21 +56,27 @@ export async function piGen(): Promise<void> {
 
 export async function cleanup(): Promise<void> {
   try {
-    if (core.getState(piGenBuildStartedState)) {
-      await removeContainer('pigen_work')
-    } else {
-      core.info('No build started, nothing to clean')
-    }
+    await removeContainer('pigen_work')
   } catch (error) {
     core.warning((error as Error)?.message ?? error)
   }
 }
 
-export async function run(): Promise<void> {
-  if (core.getState('main-executed')) {
-    await cleanup()
-  } else {
-    core.saveState('main-executed', true)
-    await piGen()
+export async function saveCache(): Promise<void> {
+  let groupOpened = false
+
+  try {
+    if (core.getBooleanInput('enable-pigen-cache')) {
+      core.startGroup('Cache pi-gen container')
+      groupOpened = true
+      const cache = new Cache(generateCacheKey())
+      await cache.cacheContainer()
+    }
+  } catch (error) {
+    core.setFailed((error as Error)?.message ?? error)
+  } finally {
+    if (groupOpened) {
+      core.endGroup
+    }
   }
 }

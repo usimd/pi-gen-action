@@ -4,5 +4,5 @@
     "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "postCreateCommand": ". ${NVM_DIR}/nvm.sh && nvm install 20 && nvm use 20"
+  "postCreateCommand": ". ${NVM_DIR}/nvm.sh && nvm install 20 && nvm use 20 && sudo apt-get update && sudo apt-get install -y lrzip"
 }
