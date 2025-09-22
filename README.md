@@ -313,7 +313,7 @@ need for your build on the runner. The implemented mechanism is heavily inspired
 on providing more root disk space where the Docker daemon runs the build (since this action
 runs the `pi-gen` build always inside a container). 
 
-From current experience, this will reclaim between 25 and 30 GB of additional disk space
+From current experience, this will reclaim about 30 GB of additional disk space
 
 ```yaml
 jobs:

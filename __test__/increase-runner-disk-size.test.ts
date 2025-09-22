@@ -30,6 +30,24 @@ describe('Increasing runner disk size', () => {
 
     expect(exec.getExecOutput).toHaveBeenCalledWith(
       'sudo',
+      expect.arrayContaining(['sh', '-c', expect.stringContaining('01_nodoc')]),
+      expect.anything()
+    )
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      'sudo',
+      expect.arrayContaining([
+        'sh',
+        '-c',
+        expect.stringContaining('update-alternatives --remove-all')
+      ]),
+      expect.anything()
+    )
+
+    // We no longer call systemctl mask; dpkg config excludes docs/man/info instead
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      'sudo',
       expect.arrayContaining(['rm', '-rf']),
       expect.anything()
     )

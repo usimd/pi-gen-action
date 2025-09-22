@@ -21,18 +21,42 @@ const HOST_PATHS_TO_REMOVE = [
   '/var/cache/snapd',
   '/var/lib/snapd',
   '/tmp/*',
-  '/usr/share/doc'
+  '/usr/share/doc',
+  '/usr/local/share/boost',
+  '/opt/ghc',
+  '/usr/share/man',
+  '/usr/local/share/man',
+  '/usr/local/go',
+  '/root/.npm',
+  '/home/runner/.npm',
+  '/root/.cache/pip',
+  '/home/runner/.cache/pip',
+  '/root/.cache/go-build',
+  '/root/.cache',
+  '/home/runner/.cache'
 ]
 
 export async function removeRunnerComponents(): Promise<void> {
   const verbose = core.getBooleanInput('verbose-output')
   const availableDiskSizeBeforeCleanup = await getAvailableDiskSize()
-  const actions = []
+  const actions: Array<Promise<exec.ExecOutput>> = []
 
   actions.push(
     exec.getExecOutput(
       'sudo',
-      ['docker', 'system', 'prune', '--all', '--force'],
+      [
+        'sh',
+        '-c',
+        "tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'\npath-exclude /usr/share/doc/*\npath-exclude /usr/share/man/*\npath-exclude /usr/share/info/*\nEOF"
+      ],
+      getExecOptions('nodoc-dpkg-config', verbose)
+    )
+  )
+
+  actions.push(
+    exec.getExecOutput(
+      'sudo',
+      ['docker', 'system', 'prune', '--all', '--force', '--volumes'],
       getExecOptions('docker-system-prune', verbose)
     )
   )
@@ -44,7 +68,7 @@ export async function removeRunnerComponents(): Promise<void> {
         ['swapoff', '-a'],
         getExecOptions('swapoff', verbose)
       )
-      .then(result => {
+      .then(() => {
         return exec.getExecOutput(
           'sudo',
           ['rm', '-rf', '/mnt/swapfile', '/swapfile'],
@@ -60,24 +84,73 @@ export async function removeRunnerComponents(): Promise<void> {
         ['rm', '-rf', ...HOST_PATHS_TO_REMOVE],
         getExecOptions('rm-host-paths', verbose)
       )
-      .then((returnValue: exec.ExecOutput) => {
+      .then(() => {
+        const purgePackages = [
+          'apache2',
+          'nginx',
+          'ant',
+          'ant-optional',
+          'azure-cli',
+          '7zip',
+          'ansible',
+          'snapd',
+          'php8*',
+          'r-base',
+          'imagemagick',
+          'gfortran',
+          'ghc*',
+          'google-cloud-cli',
+          'google-cloud-cli-anthoscli',
+          'google-chrome-stable',
+          'firefox',
+          'sphinxsearch',
+          'mysql-server',
+          'mysql-client',
+          'postgresql-client-*',
+          'swig',
+          'temurin-*'
+        ]
         return exec
           .getExecOutput(
             'sudo',
-            ['apt', 'purge', 'snapd', 'php8*', 'r-base', 'imagemagick'],
-            getExecOptions('apt-purge-packages', verbose)
+            [
+              'sh',
+              '-c',
+              'for alt in jar jarsigner java javac javadoc javap jcmd jconsole jdb jdeprscan jdeps jfr jhsdb jimage jinfo jjs jlink jmap jmod jnativescan jpackage jps jrunscript jshell jstack jstat jstatd jwebserver keytool pack200 rmic rmid rmiregistry unpack200 serialver; do update-alternatives --remove-all "$alt" || true; done'
+            ],
+            getExecOptions('remove-java-alternatives', verbose)
           )
-          .then((returnValue: exec.ExecOutput) => {
+          .then(() => {
             return exec.getExecOutput(
               'sudo',
-              ['sh', '-c', 'apt-get autoremove && apt-get autoclean'],
-              getExecOptions('apt-autoremove-autoclean', verbose)
+              ['apt', 'purge', ...purgePackages],
+              getExecOptions('apt-purge-packages', verbose)
             )
+          })
+          .then(() => {
+            return exec
+              .getExecOutput(
+                'sudo',
+                ['sh', '-c', 'apt-get autoremove && apt-get autoclean'],
+                getExecOptions('apt-autoremove-autoclean', verbose)
+              )
+              .then(() =>
+                exec.getExecOutput(
+                  'sudo',
+                  [
+                    'rm',
+                    '-rf',
+                    '/var/cache/apt/archives/*',
+                    '/var/lib/apt/lists/*'
+                  ],
+                  getExecOptions('rm-apt-cache', verbose)
+                )
+              )
           })
       })
   )
 
-  return Promise.all(actions).then(async outputs => {
+  return Promise.all(actions).then(async () => {
     core.debug(
       `Available disk space before cleanup: ${availableDiskSizeBeforeCleanup / 1024 / 1024}G`
     )
@@ -91,13 +164,16 @@ export async function removeRunnerComponents(): Promise<void> {
   })
 }
 
-const logPrefixColorTheme: Record<string, Function> = {
+const logPrefixColorTheme: Record<string, (s: string) => string> = {
+  'nodoc-dpkg-config': colors.yellowBright,
   'docker-system-prune': colors.cyan,
+  'remove-java-alternatives': colors.magentaBright,
   swapoff: colors.redBright,
   'rm-swapfile': colors.green,
   'rm-host-paths': colors.magenta,
   'apt-purge-packages': colors.yellow,
-  'apt-autoremove-autoclean': colors.blue
+  'apt-autoremove-autoclean': colors.blue,
+  'rm-apt-cache': colors.gray
 }
 
 export function getExecOptions(logPrefix: string, verbose: boolean) {
