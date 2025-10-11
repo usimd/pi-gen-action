@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint src/**/*.ts",
     "package": "ncc build src/main.ts -m --no-source-map-register --license licenses.txt",
-    "test": "jest",
+    "test": "jest --maxWorkers=2",
     "all": "npm run format && npm run lint && npm test && npm run package && npm run update-readme",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",

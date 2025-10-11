@@ -55,7 +55,6 @@ describe('Actions', () => {
   it.each([new Error(errorMessage), errorMessage])(
     'should catch errors thrown during build and set build safely as failed',
     async error => {
-      const errorMessage = 'any error'
       jest.spyOn(core, 'getInput').mockImplementation((name, options) => {
         throw error
       })

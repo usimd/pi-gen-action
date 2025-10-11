@@ -77,6 +77,13 @@ tries to make sure the stage is respected and its changes are included in the fi
     # Additional options to include in PIGEN_DOCKER_OPTS
     docker-opts: ''
 
+    # If set to `1`, cloud-init and netplan will be installed and configured. This 
+    # will allow you to configure your Raspberry Pi using cloud-init configuration 
+    # files. The cloud-init configuration files should be placed in the bootfs or by 
+    # editing the files in `stage2/04-cloud-init/files`. Cloud-init will be configured 
+    # to read them on first boot.
+    enable-cloud-init: 1
+
     # Set whether a NOOBS image should be built as well. If enabled, the output 
     # directory containing the NOOBS files will be saved as output variable 
     # 'image-noobs-path'.
