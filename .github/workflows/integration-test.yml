@@ -103,6 +103,7 @@ jobs:
           increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
           apt-proxy: http://172.17.0.1:9999
           temp-repo: deb [arch=amd64 trusted=yes] https://deb.nodesource.com/node_24.x nodistro main
+          enable-cloud-init: 0
 
       - name: Move APT cache
         continue-on-error: true
@@ -130,6 +131,7 @@ jobs:
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
           test "$(sudo cat ${ROOTFS_DIR}/home/${CONFIG_USERNAME}/.ssh/authorized_keys)" = "$CONFIG_PUBLIC_KEY"
+          ! test -f "${ROOTFS_DIR}/etc/cloud/cloud.cfg.d/99_raspberry-pi.cfg"
 
       - run: df -h
         if: always()
