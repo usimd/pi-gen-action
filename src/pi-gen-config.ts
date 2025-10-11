@@ -33,6 +33,7 @@ export interface PiGenConfig {
   enableNoobs: string
   exportLastStageOnly: string
   dockerOpts?: string
+  enableCloudInit: string
 }
 
 export const DEFAULT_CONFIG: PiGenConfig = {
@@ -49,6 +50,7 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   firstUserName: 'pi',
   enableSsh: '0',
   pubkeyOnlySsh: '0',
+  enableCloudInit: '1',
   stageList: ['stage*'],
   enableNoobs: 'false',
   exportLastStageOnly: 'true'
@@ -187,6 +189,12 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
   if (!/^[01]$/.test(config.pubkeyOnlySsh)) {
     throw new Error(
       `pubkey-only-ssh must be set to either "0" or "1" but was: ${config.pubkeyOnlySsh}`
+    )
+  }
+
+  if (!/^[01]$/.test(config.enableCloudInit)) {
+    throw new Error(
+      `enable-cloud-init must be set to either "0" or "1" but was: ${config.enableCloudInit}`
     )
   }
 

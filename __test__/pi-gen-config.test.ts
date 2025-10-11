@@ -138,6 +138,11 @@ describe('PiGenConfig', () => {
       'pubkey-only-ssh must be set to either "0" or "1" but was: yes'
     ],
     [
+      'enableCloudInit',
+      'yes',
+      'enable-cloud-init must be set to either "0" or "1" but was: yes'
+    ],
+    [
       'pubkeySshFirstUser',
       'ssh-foo vnqf493rn34xzrm234yru13ß48rnz1x034ztn== foo@bar.com',
       'pubkey-ssh-first-user does not seem to be a valid list of public key according to "ssh-keygen -l", here\'s its output'
