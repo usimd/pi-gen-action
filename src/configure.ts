@@ -46,6 +46,8 @@ export async function configure(): Promise<PiGenConfig> {
     userConfig.pubkeySshFirstUser = core.getInput('pubkey-ssh-first-user')
     userConfig.pubkeyOnlySsh =
       core.getInput('pubkey-only-ssh') || DEFAULT_CONFIG.pubkeyOnlySsh
+    userConfig.enableCloudInit =
+      core.getInput('enable-cloud-init') || DEFAULT_CONFIG.enableCloudInit
     userConfig.enableNoobs =
       core.getBooleanInput('enable-noobs')?.toString() ||
       DEFAULT_CONFIG.enableNoobs
