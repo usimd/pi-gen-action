@@ -70,6 +70,7 @@ export class PiGen {
       .getExecOutput('"./build-docker.sh"', ['-c', this.configFilePath], {
         cwd: this.piGenDirectory,
         env: {
+          ...process.env,
           PIGEN_DOCKER_OPTS: dockerOpts,
           DEBIAN_FRONTEND: 'noninteractive'
         },
