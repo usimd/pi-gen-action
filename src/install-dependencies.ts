@@ -40,6 +40,7 @@ export async function installHostDependencies(
       {
         silent: !verbose,
         env: {
+          ...process.env,
           DEBIAN_FRONTEND: 'noninteractive'
         }
       }
@@ -62,6 +63,7 @@ export async function installHostDependencies(
       {
         silent: !verbose,
         env: {
+          ...process.env,
           DEBIAN_FRONTEND: 'noninteractive'
         }
       }
