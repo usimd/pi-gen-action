@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {major} from 'semver'
 import * as yaml from 'js-yaml'
 import wrap from 'word-wrap'
-// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+// eslint-disable-next-line import/no-commonjs, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const replaceSection = require('markdown-replace-section')
 
 function getTagVersion(packageJson: string): number {
@@ -31,10 +31,9 @@ function buildUsageSection(
     '  with:'
   ]
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  for (const key of Object.keys(actionYaml.inputs as {}).sort((a, b) =>
-    a.localeCompare(b)
-  )) {
+  for (const key of Object.keys(
+    actionYaml.inputs as Record<string, unknown>
+  ).sort((a, b) => a.localeCompare(b))) {
     const input = (actionYaml.inputs as Record<string, unknown>)[key] as {
       description: string
       default: string | number
