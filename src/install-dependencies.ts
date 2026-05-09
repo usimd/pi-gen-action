@@ -17,13 +17,17 @@ export async function installHostDependencies(
 
     const piGenDependencies = await resolvePiGenDependencies(piGenDirectory)
 
+    // qemu-user-binfmt conflicts with qemu-user-static on Ubuntu; we need the
+    // static package for F-flag binfmt_misc to work inside containers
     const installPackages = [
       ...new Set([
         ...hostDependencies.packages,
         ...packages.split(/[\s,]/),
         ...piGenDependencies
       ])
-    ].filter(p => p)
+    ]
+      .filter(p => p)
+      .filter(p => p !== 'qemu-user-binfmt')
     const hostModules = [
       ...new Set([...hostDependencies.modules, ...modules.split(/[\s,]/)])
     ].filter(m => m)
@@ -71,6 +75,19 @@ export async function installHostDependencies(
     execOutput = await exec.getExecOutput(
       sudoPath,
       ['modprobe', '-a', ...hostModules],
+      {silent: !verbose}
+    )
+
+    // qemu-user-static provides qemu-aarch64-static but build-docker.sh expects
+    // "qemu-aarch64" in PATH. Create symlink so the static binary is found.
+    execOutput = await exec.getExecOutput(
+      sudoPath,
+      [
+        'ln',
+        '-sf',
+        '/usr/bin/qemu-aarch64-static',
+        '/usr/local/bin/qemu-aarch64'
+      ],
       {silent: !verbose}
     )
 
