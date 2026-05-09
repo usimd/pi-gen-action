@@ -3,12 +3,14 @@
     "target": "es2022",
     "lib": ["ES2022"],
     "module": "commonjs",
+    "types": ["node"],
     "outDir": "./lib",
     "rootDir": "./src",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "ignoreDeprecations": "6.0"
     },
   "exclude": ["node_modules", "**/*.test.ts"]
 }
