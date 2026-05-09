@@ -5,7 +5,8 @@ import {PiGenConfig} from './pi-gen-config.js'
 
 export async function build(
   piGenDir: string,
-  userConfig: PiGenConfig
+  userConfig: PiGenConfig,
+  workDirMount?: string
 ): Promise<void> {
   let execOutput: ExecOutput | undefined
   try {
@@ -13,7 +14,7 @@ export async function build(
 
     const verbose = core.getBooleanInput('verbose-output')
 
-    const piGen = await PiGen.getInstance(piGenDir, userConfig)
+    const piGen = await PiGen.getInstance(piGenDir, userConfig, workDirMount)
 
     if (!(await piGen.hasExportsConfigured())) {
       throw new Error(
