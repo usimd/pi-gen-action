@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Check if package.json version changed
-        uses: EndBug/version-check@v2
+        uses: EndBug/version-check@v3
         id: check
 
       - name: Create release
