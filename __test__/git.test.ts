@@ -1,8 +1,23 @@
-import {Git} from '../src/git'
+import {Git} from '../src/git.js'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
+import * as path from 'path'
+
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
+})
+
+const gitConfigPath = path.resolve('.git/config')
+let originalGitConfig: string
 
 describe('Git', () => {
+  beforeAll(() => {
+    originalGitConfig = fs.readFileSync(gitConfigPath, 'utf8')
+  })
+
+  afterEach(() => {
+    fs.writeFileSync(gitConfigPath, originalGitConfig)
+  })
   it.each([
     ['main', true],
     ['non-existing-branch', false]
@@ -22,7 +37,7 @@ describe('Git', () => {
   })
 
   it('throws error with Git error message', async () => {
-    jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
       exitCode: 1,
       stderr: 'this failed'
     } as exec.ExecOutput)
@@ -34,15 +49,13 @@ describe('Git', () => {
 
   it('configures authentication with given token', async () => {
     const token = '1234567890'
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockImplementation(
-        async commandLine => ({exitCode: 0}) as exec.ExecOutput
-      )
-    jest
-      .spyOn(fs.promises, 'readFile')
-      .mockResolvedValueOnce('AUTHORIZATION: basic ***')
-    jest.spyOn(fs.promises, 'writeFile').mockImplementation()
+    vi.spyOn(exec, 'getExecOutput').mockImplementation(
+      async commandLine => ({exitCode: 0}) as exec.ExecOutput
+    )
+    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(
+      'AUTHORIZATION: basic ***'
+    )
+    vi.spyOn(fs.promises, 'writeFile').mockImplementation()
 
     await Git.getInstance('.', token)
 
@@ -69,7 +82,7 @@ describe('Git', () => {
     'clones correct ref %s with verbose enabled = %s',
     async (refName, verbose) => {
       const repoName = 'https://github.com/test/repo'
-      jest.spyOn(exec, 'getExecOutput').mockImplementation(
+      vi.spyOn(exec, 'getExecOutput').mockImplementation(
         async (commandLine, args) =>
           ({
             exitCode: 0,
@@ -107,11 +120,9 @@ describe('Git', () => {
   )
 
   it('throws error on unknown ref', async () => {
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockImplementation(
-        async commandLine => ({exitCode: 0, stdout: ''}) as exec.ExecOutput
-      )
+    vi.spyOn(exec, 'getExecOutput').mockImplementation(
+      async commandLine => ({exitCode: 0, stdout: ''}) as exec.ExecOutput
+    )
 
     const git = await Git.getInstance('.', '')
     await expect(

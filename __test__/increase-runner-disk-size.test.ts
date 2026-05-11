@@ -3,22 +3,27 @@ import * as core from '@actions/core'
 import {
   getExecOptions,
   removeRunnerComponents
-} from '../src/increase-runner-disk-size'
+} from '../src/increase-runner-disk-size.js'
 
-jest.mock('@actions/exec')
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
+})
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
 
 describe('Increasing runner disk size', () => {
   it('should prune Docker system, remove defined host paths and invoke apt', async () => {
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockImplementation((commandLine, args, options) => {
+    vi.spyOn(exec, 'getExecOutput').mockImplementation(
+      (commandLine, args, options) => {
         if (commandLine === 'sh') {
           return Promise.resolve({stdout: ' 12345 '} as exec.ExecOutput)
         } else {
           return Promise.resolve({} as exec.ExecOutput)
         }
-      })
-    jest.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
+      }
+    )
+    vi.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
 
     await removeRunnerComponents()
 
@@ -70,7 +75,7 @@ describe('Increasing runner disk size', () => {
   })
 
   it('should invoke execution log callbacks only when verbose', async () => {
-    jest.spyOn(core, 'info')
+    vi.spyOn(core, 'info')
     const opts = getExecOptions('docker-system-prune', true)
 
     opts.listeners?.stdline('test')

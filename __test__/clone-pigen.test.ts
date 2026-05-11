@@ -1,9 +1,16 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {GitHub} from '@actions/github/lib/utils'
-import {clonePigen} from '../src/clone-pigen'
-import {Git} from '../src/git'
-import {mock, mockDeep} from 'jest-mock-extended'
+import {clonePigen} from '../src/clone-pigen.js'
+import {Git} from '../src/git.js'
+import {mock, mockDeep} from 'vitest-mock-extended'
+
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+vi.mock('@actions/github', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/github')>())}
+})
 
 describe('Cloning pi-gen repo', () => {
   it.each([
@@ -17,10 +24,10 @@ describe('Cloning pi-gen repo', () => {
     const targetDir = 'pi-gen-dir'
     const gitMock = mock<Git>()
     const githubMock = mockDeep<InstanceType<typeof GitHub>>()
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(verbose)
-    jest.spyOn(core, 'getInput').mockReturnValue(token)
-    jest.spyOn(github, 'getOctokit').mockReturnValueOnce(githubMock)
-    Git.getInstance = jest.fn().mockResolvedValue(gitMock)
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(verbose)
+    vi.spyOn(core, 'getInput').mockReturnValue(token)
+    vi.spyOn(github, 'getOctokit').mockReturnValueOnce(githubMock)
+    Git.getInstance = vi.fn().mockResolvedValue(gitMock)
     githubMock.rest.repos.get.mockResolvedValueOnce({
       data: {
         fork: isFork,

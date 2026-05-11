@@ -1,24 +1,27 @@
 import * as core from '@actions/core'
-import {DEFAULT_CONFIG} from '../src/pi-gen-config'
-import * as actions from '../src/actions'
-import {removeContainer} from '../src/remove-container'
-import {build} from '../src/build'
-import {removeRunnerComponents} from '../src/increase-runner-disk-size'
+import {DEFAULT_CONFIG} from '../src/pi-gen-config.js'
+import * as actions from '../src/actions.js'
+import {removeContainer} from '../src/remove-container.js'
+import {build} from '../src/build.js'
+import {removeRunnerComponents} from '../src/increase-runner-disk-size.js'
 
-jest.mock('../src/configure', () => ({
-  configure: jest.fn().mockReturnValue(DEFAULT_CONFIG)
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+vi.mock('../src/configure.js', () => ({
+  configure: vi.fn().mockReturnValue(DEFAULT_CONFIG)
 }))
-jest.mock('../src/install-dependencies')
-jest.mock('../src/build')
-jest.mock('../src/clone-pigen')
-jest.mock('../src/remove-container')
-jest.mock('../src/increase-runner-disk-size')
+vi.mock('../src/install-dependencies.js')
+vi.mock('../src/build.js')
+vi.mock('../src/clone-pigen.js')
+vi.mock('../src/remove-container.js')
+vi.mock('../src/increase-runner-disk-size.js')
 
 describe('Actions', () => {
   const OLD_ENV = process.env
 
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
     process.env = {...OLD_ENV}
   })
 
@@ -27,7 +30,7 @@ describe('Actions', () => {
   })
 
   it('should only increase disk space if requested', async () => {
-    jest.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
+    vi.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
 
     await actions.piGen()
 
@@ -35,8 +38,7 @@ describe('Actions', () => {
   })
 
   it('does not run build function twice but invokes cleanup', async () => {
-    jest
-      .spyOn(core, 'getState')
+    vi.spyOn(core, 'getState')
       .mockReturnValueOnce('')
       .mockReturnValueOnce('true')
       .mockReturnValueOnce('true')
@@ -55,10 +57,10 @@ describe('Actions', () => {
   it.each([new Error(errorMessage), errorMessage])(
     'should catch errors thrown during build and set build safely as failed',
     async error => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, options) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name, options) => {
         throw error
       })
-      jest.spyOn(core, 'setFailed')
+      vi.spyOn(core, 'setFailed')
 
       await expect(actions.piGen()).resolves.not.toThrow()
       expect(core.setFailed).toHaveBeenLastCalledWith(errorMessage)
@@ -68,10 +70,10 @@ describe('Actions', () => {
   it.each([new Error(errorMessage), errorMessage])(
     'should gracefully catch errors thrown during cleanup and emit a warning message',
     async error => {
-      jest.spyOn(core, 'getState').mockImplementation(name => {
+      vi.spyOn(core, 'getState').mockImplementation(name => {
         throw error
       })
-      jest.spyOn(core, 'warning')
+      vi.spyOn(core, 'warning')
 
       await expect(actions.cleanup()).resolves.not.toThrow()
       expect(core.warning).toHaveBeenLastCalledWith(errorMessage)
@@ -82,7 +84,7 @@ describe('Actions', () => {
     it.each(['', 'true'])(
       'tries to remove container only if build has started = %s',
       async buildStarted => {
-        jest.spyOn(core, 'getState').mockReturnValueOnce(buildStarted)
+        vi.spyOn(core, 'getState').mockReturnValueOnce(buildStarted)
         await actions.cleanup()
         expect(removeContainer).toHaveBeenCalledTimes(buildStarted ? 1 : 0)
       }

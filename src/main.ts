@@ -1,3 +1,3 @@
-import {run} from './actions'
+import {run} from './actions.js'
 
 run()

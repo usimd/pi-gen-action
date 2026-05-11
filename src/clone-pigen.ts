@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {Git} from './git'
+import {Git} from './git.js'
 
 export async function clonePigen(
   repo: string,

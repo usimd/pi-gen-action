@@ -1,14 +1,24 @@
 import * as exec from '@actions/exec'
-import fs from 'fs'
+import * as fsPromises from 'fs/promises'
 import * as core from '@actions/core'
-import {installHostDependencies} from '../src/install-dependencies'
+import {installHostDependencies} from '../src/install-dependencies.js'
+
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
+})
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+vi.mock('fs/promises', async importOriginal => {
+  return {...(await importOriginal<typeof import('fs/promises')>())}
+})
 
 describe('Install host dependencies', () => {
   it('respects additional user packages and modules', async () => {
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockResolvedValue({exitCode: 0} as exec.ExecOutput)
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0
+    } as exec.ExecOutput)
 
     await installHostDependencies('test-package', 'test-module', '')
 
@@ -25,14 +35,12 @@ describe('Install host dependencies', () => {
   })
 
   it('re-throws errors returned from command executions', async () => {
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockImplementation(
-        (cmdLine: string, args?: string[], options?: exec.ExecOptions) => {
-          throw new Error()
-        }
-      )
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(exec, 'getExecOutput').mockImplementation(
+      (cmdLine: string, args?: string[], options?: exec.ExecOptions) => {
+        throw new Error()
+      }
+    )
 
     await expect(
       async () => await installHostDependencies('', '', '')
@@ -40,15 +48,15 @@ describe('Install host dependencies', () => {
   })
 
   it('installs dependencies pi-gen suggests in a dependency file', async () => {
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
 
-    jest
-      .spyOn(fs.promises, 'stat')
-      .mockResolvedValueOnce({isFile: () => true} as fs.Stats)
-    jest.spyOn(fs.promises, 'readFile').mockResolvedValueOnce('A\nB\nC:D')
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockResolvedValue({exitCode: 0} as exec.ExecOutput)
+    vi.spyOn(fsPromises, 'stat').mockResolvedValueOnce({
+      isFile: () => true
+    } as any)
+    vi.spyOn(fsPromises, 'readFile').mockResolvedValueOnce('A\nB\nC:D' as any)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0
+    } as exec.ExecOutput)
 
     await installHostDependencies('', '', 'pi-gen')
 
