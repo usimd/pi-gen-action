@@ -113,20 +113,27 @@ export async function saveCache(): Promise<void> {
       return
     }
 
-    if (core.getBooleanInput('enable-pigen-cache')) {
-      await core.group('Saving work directory cache', async () => {
-        const workDirCache = new WorkDirCache(generateCacheKey())
-        await workDirCache.save()
-      })
-
-      await core.group('Saving APT cache', async () => {
-        const aptCache = new AptCache(
-          core.getInput('release') || 'bookworm',
-          core.getInput('pi-gen-version')
-        )
-        await aptCache.save()
-      })
+    if (!core.getBooleanInput('enable-pigen-cache')) {
+      return
     }
+
+    if (core.getBooleanInput('cache-read-only')) {
+      core.info('Cache is read-only, skipping cache save')
+      return
+    }
+
+    await core.group('Saving work directory cache', async () => {
+      const workDirCache = new WorkDirCache(generateCacheKey())
+      await workDirCache.save()
+    })
+
+    await core.group('Saving APT cache', async () => {
+      const aptCache = new AptCache(
+        core.getInput('release') || 'bookworm',
+        core.getInput('pi-gen-version')
+      )
+      await aptCache.save()
+    })
   } catch (error) {
     core.setFailed((error as Error)?.message ?? error)
   }

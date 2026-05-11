@@ -188,7 +188,9 @@ describe('Actions', () => {
       })
 
       vi.spyOn(core, 'getState').mockReturnValue('true')
-      vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(
+        (name: string) => name === 'enable-pigen-cache'
+      )
       vi.spyOn(core, 'getInput').mockReturnValue('pi-gen')
       vi.spyOn(core, 'group').mockImplementation(async (_name: any, fn: any) =>
         fn()
@@ -208,6 +210,23 @@ describe('Actions', () => {
 
       expect(MockedWorkDirCache).not.toHaveBeenCalled()
       expect(MockedAptCache).not.toHaveBeenCalled()
+    })
+
+    it('should skip save when cache-read-only is true', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(name => {
+        if (name === 'enable-pigen-cache') return true
+        if (name === 'cache-read-only') return true
+        return false
+      })
+      vi.spyOn(core, 'info')
+
+      await actions.saveCache()
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Cache is read-only, skipping cache save'
+      )
+      expect(MockedWorkDirCache).not.toHaveBeenCalled()
     })
 
     it('should skip cache save when build did not succeed', async () => {

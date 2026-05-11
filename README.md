@@ -60,6 +60,12 @@ tries to make sure the stage is respected and its changes are included in the fi
     # for development.
     apt-proxy: ''
 
+    # When true, restores caches but never saves them. Use this on feature branches 
+    # and PRs to benefit from caches created on your default branch without polluting 
+    # the cache with branch-specific entries. Only effective when 'enable-pigen-cache' 
+    # is true.
+    cache-read-only: false
+
     # Compression to apply on final image (either "none", "zip", "xz" or "gz").
     compression: zip
 
