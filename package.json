@@ -30,7 +30,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.1",
+    "@actions/github": "^9.0.0",
     "@actions/glob": "^0.5.1",
     "@actions/io": "^2.0.0",
     "ansi-colors": "^4.1.3",
