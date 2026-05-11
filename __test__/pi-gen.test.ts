@@ -130,6 +130,38 @@ describe('PiGen', () => {
     )
   })
 
+  it('mounts cached work directory when workDirMount is set', async () => {
+    const piGenDir = 'pi-gen'
+    mockPiGenDependencies()
+    jest
+      .spyOn(fs, 'realpathSync')
+      .mockReturnValueOnce('/pi-gen/stage0')
+      .mockReturnValueOnce('/pigen-work')
+
+    const piGen = await PiGen.getInstance(
+      piGenDir,
+      {
+        stageList: ['/pi-gen/stage0'],
+        dockerOpts: ''
+      } as PiGenConfig,
+      '/tmp/pi-gen-work'
+    )
+    await piGen.build()
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      '"./build-docker.sh"',
+      ['-c', `/${piGenDir}/config`],
+      expect.objectContaining({
+        cwd: piGenDir,
+        env: expect.objectContaining({
+          PIGEN_DOCKER_OPTS: expect.stringContaining(
+            '-v /tmp/pi-gen-work:/pi-gen/work'
+          )
+        })
+      })
+    )
+  })
+
   it('passes custom docker opts', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
