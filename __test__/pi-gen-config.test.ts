@@ -3,10 +3,14 @@ import {
   writeToFile,
   DEFAULT_CONFIG,
   validateConfig
-} from '../src/pi-gen-config'
-import fs from 'fs/promises'
+} from '../src/pi-gen-config.js'
+import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as tmp from 'tmp'
+
+vi.mock('fs/promises', async importOriginal => {
+  return {...(await importOriginal<typeof import('fs/promises')>())}
+})
 
 describe('PiGenConfig', () => {
   it('instance should write config to file', async () => {
@@ -16,12 +20,10 @@ describe('PiGenConfig', () => {
     config.firstUserName = 'test'
     config.stageList = ['stage0', 'stage1']
 
-    jest.spyOn(fs, 'writeFile').mockImplementation(() => Promise.resolve())
-    jest
-      .spyOn(fs, 'realpath')
-      .mockImplementation(p =>
-        Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
-      )
+    vi.spyOn(fs, 'writeFile').mockImplementation(() => Promise.resolve())
+    vi.spyOn(fs, 'realpath').mockImplementation(p =>
+      Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
+    )
 
     const fileName = 'test-file'
     await writeToFile(config, 'pi-gen', fileName)
@@ -38,12 +40,10 @@ describe('PiGenConfig', () => {
   })
 
   it('skips undefined config values when writing to file', async () => {
-    jest.spyOn(fs, 'writeFile').mockImplementation(() => Promise.resolve())
-    jest
-      .spyOn(fs, 'realpath')
-      .mockImplementation(p =>
-        Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
-      )
+    vi.spyOn(fs, 'writeFile').mockImplementation(() => Promise.resolve())
+    vi.spyOn(fs, 'realpath').mockImplementation(p =>
+      Promise.resolve(`/pi-gen/${path.basename(p.toString())}`)
+    )
 
     const fileName = 'test-file'
     await writeToFile(DEFAULT_CONFIG, 'pi-gen', fileName)

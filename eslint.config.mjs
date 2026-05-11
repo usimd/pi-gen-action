@@ -1,13 +1,18 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
-import jest from 'eslint-plugin-jest';
+import vitest from '@vitest/eslint-plugin';
 
 export default tseslint.config(
   eslint.configs.recommended,  
   tseslint.configs.recommendedTypeChecked,
   prettierConfig,
-  jest.configs['flat/recommended'],
+  {
+    plugins: {vitest},
+    rules: {
+      ...vitest.configs.recommended.rules,
+    },
+  },
   {
     languageOptions: {
       parserOptions: {
@@ -17,6 +22,6 @@ export default tseslint.config(
       },
     },
     files: ['src/**/*.ts'],
-    ignores: ['dist/', 'lib/', 'node_modules/', 'jest.config.js'],
+    ignores: ['dist/', 'lib/', 'node_modules/'],
   },
 );

@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import {ExecOutput} from '@actions/exec'
-import {PiGen} from './pi-gen'
-import {PiGenConfig} from './pi-gen-config'
+import {PiGen} from './pi-gen.js'
+import {PiGenConfig} from './pi-gen-config.js'
 
 export async function build(
   piGenDir: string,

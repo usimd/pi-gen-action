@@ -2,8 +2,8 @@ import * as fs from 'fs'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
-import {PiGenStages} from './pi-gen-stages'
-import {PiGenConfig, writeToFile} from './pi-gen-config'
+import {PiGenStages} from './pi-gen-stages.js'
+import {PiGenConfig, writeToFile} from './pi-gen-config.js'
 import path from 'path'
 
 export class PiGen {

@@ -1,14 +1,21 @@
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
-import {removeContainer} from '../src/remove-container'
+import {removeContainer} from '../src/remove-container.js'
+
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
+})
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
 
 describe('Remove container', () => {
   it('does not fail on non-successful error', async () => {
     const testContainer = 'test-container'
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(false)
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockResolvedValue({exitCode: 1} as exec.ExecOutput)
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 1
+    } as exec.ExecOutput)
 
     await removeContainer(testContainer)
 
@@ -24,11 +31,11 @@ describe('Remove container', () => {
 
   it('logs info message upon successful removal', async () => {
     const testContainer = 'test-container'
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockResolvedValue({exitCode: 0} as exec.ExecOutput)
-    jest.spyOn(core, 'info')
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0
+    } as exec.ExecOutput)
+    vi.spyOn(core, 'info')
 
     await removeContainer(testContainer)
 
