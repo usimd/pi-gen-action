@@ -46,12 +46,16 @@ export class AptCache {
 
   async start(): Promise<void> {
     const docker = await io.which('docker', true)
+    const sudo = await io.which('sudo', true)
 
     // Stop any existing container
     await exec.exec(docker, ['rm', '-f', APT_CACHE_CONTAINER], {
       ignoreReturnCode: true,
       silent: true
     })
+
+    // Ensure cache dir is writable by apt-cacher-ng (runs as uid 100 in container)
+    await exec.exec(sudo, ['chmod', '777', APT_CACHE_DIR], {silent: true})
 
     core.info('Starting apt-cacher-ng container')
 
@@ -99,6 +103,18 @@ export class AptCache {
   async save(): Promise<void> {
     try {
       await this.stop()
+
+      // Log the cache directory size for debugging
+      const sudo = await io.which('sudo', true)
+      const duResult = await exec.getExecOutput(
+        sudo,
+        ['du', '-sh', APT_CACHE_DIR],
+        {silent: true, ignoreReturnCode: true}
+      )
+      if (duResult.exitCode === 0) {
+        core.info(`APT cache directory size: ${duResult.stdout.trim()}`)
+      }
+
       await cache.saveCache([APT_CACHE_DIR], this.cacheKey)
       core.info('APT cache saved successfully')
     } catch (error) {
