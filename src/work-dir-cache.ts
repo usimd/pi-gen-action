@@ -53,9 +53,7 @@ export class WorkDirCache {
       await cache.saveCache([WORK_DIR_ARCHIVE], this.cacheKey.key)
       core.info(`Work directory cached with key: ${this.cacheKey.key}`)
     } finally {
-      if (fs.existsSync(WORK_DIR_ARCHIVE)) {
-        fs.unlinkSync(WORK_DIR_ARCHIVE)
-      }
+      await WorkDirCache.removeArchive()
     }
   }
 
@@ -118,9 +116,14 @@ export class WorkDirCache {
       return false
     } finally {
       // Always clean up the archive
-      if (fs.existsSync(WORK_DIR_ARCHIVE)) {
-        fs.unlinkSync(WORK_DIR_ARCHIVE)
-      }
+      await WorkDirCache.removeArchive()
+    }
+  }
+
+  private static async removeArchive(): Promise<void> {
+    if (fs.existsSync(WORK_DIR_ARCHIVE)) {
+      const sudo = await io.which('sudo', true)
+      await exec.exec(sudo, ['rm', '-f', WORK_DIR_ARCHIVE], {silent: true})
     }
   }
 

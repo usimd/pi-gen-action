@@ -13,7 +13,6 @@ vi.mock('fs', async importOriginal => ({
   ...(await importOriginal<typeof import('fs')>()),
   existsSync: vi.fn(),
   mkdirSync: vi.fn(),
-  unlinkSync: vi.fn(),
   statSync: vi.fn()
 }))
 
@@ -38,9 +37,9 @@ describe('WorkDirCache', () => {
     vi.spyOn(core, 'warning').mockImplementation()
     vi.spyOn(core, 'debug').mockImplementation()
     mockedFs.existsSync.mockReturnValue(false)
-    mockedFs.unlinkSync.mockImplementation()
     mockedFs.mkdirSync.mockImplementation()
     mockedIo.which.mockResolvedValue('/usr/bin/sudo')
+    mockedExec.exec.mockResolvedValue(0)
   })
 
   it('should expose workDirMountPath', () => {
@@ -109,8 +108,10 @@ describe('WorkDirCache', () => {
       const wdc = new WorkDirCache(cacheKey)
       await wdc.save()
 
-      expect(mockedFs.unlinkSync).toHaveBeenCalledWith(
-        '/tmp/pi-gen-work.tar.zst'
+      expect(mockedExec.exec).toHaveBeenCalledWith(
+        '/usr/bin/sudo',
+        ['rm', '-f', '/tmp/pi-gen-work.tar.zst'],
+        {silent: true}
       )
     })
   })
