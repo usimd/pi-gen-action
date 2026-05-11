@@ -26,7 +26,7 @@ export class WorkDirCache {
         sudo,
         [
           'tar',
-          '--use-compress-program=zstd -T0 -3',
+          '--use-compress-program=zstd -T0 -19 --long=31',
           '--exclude=./*/rootfs/proc',
           '--exclude=./*/rootfs/sys',
           '--exclude=./*/rootfs/dev',
@@ -91,7 +91,7 @@ export class WorkDirCache {
         sudo,
         [
           'tar',
-          '--use-compress-program=zstd -T0',
+          '--use-compress-program=zstd -T0 --long=31',
           '-xf',
           WORK_DIR_ARCHIVE,
           '-C',

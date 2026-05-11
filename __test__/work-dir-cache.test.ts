@@ -66,7 +66,7 @@ describe('WorkDirCache', () => {
         '/usr/bin/sudo',
         expect.arrayContaining([
           'tar',
-          '--use-compress-program=zstd -T0 -3',
+          '--use-compress-program=zstd -T0 -19 --long=31',
           '-cf',
           '/tmp/pi-gen-work.tar.zst'
         ]),
@@ -145,7 +145,7 @@ describe('WorkDirCache', () => {
         '/usr/bin/sudo',
         expect.arrayContaining([
           'tar',
-          '--use-compress-program=zstd -T0',
+          '--use-compress-program=zstd -T0 --long=31',
           '-xf',
           '/tmp/pi-gen-work.tar.zst'
         ]),
