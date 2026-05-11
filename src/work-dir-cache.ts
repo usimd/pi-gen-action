@@ -27,9 +27,9 @@ export class WorkDirCache {
         [
           'tar',
           '--use-compress-program=zstd -T0 -19 --long=31',
-          '--exclude=./*/rootfs/proc',
-          '--exclude=./*/rootfs/sys',
-          '--exclude=./*/rootfs/dev',
+          '--exclude=./*/rootfs/proc/*',
+          '--exclude=./*/rootfs/sys/*',
+          '--exclude=./*/rootfs/dev/*',
           '-cf',
           WORK_DIR_ARCHIVE,
           '-C',
