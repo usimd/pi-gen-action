@@ -187,6 +187,7 @@ describe('Actions', () => {
         return {save: mockAptSave} as any
       })
 
+      vi.spyOn(core, 'getState').mockReturnValue('true')
       vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
       vi.spyOn(core, 'getInput').mockReturnValue('pi-gen')
       vi.spyOn(core, 'group').mockImplementation(async (_name: any, fn: any) =>
@@ -200,6 +201,7 @@ describe('Actions', () => {
     })
 
     it('should not save cache when caching disabled', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
       vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
 
       await actions.saveCache()
@@ -208,7 +210,20 @@ describe('Actions', () => {
       expect(MockedAptCache).not.toHaveBeenCalled()
     })
 
+    it('should skip cache save when build did not succeed', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('')
+      vi.spyOn(core, 'info')
+
+      await actions.saveCache()
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Build did not succeed, skipping cache save'
+      )
+      expect(MockedWorkDirCache).not.toHaveBeenCalled()
+    })
+
     it('should set failed on error', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
       vi.spyOn(core, 'getBooleanInput').mockImplementation(() => {
         throw new Error('save error')
       })
@@ -220,6 +235,7 @@ describe('Actions', () => {
     })
 
     it('should handle non-Error thrown values', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
       vi.spyOn(core, 'getBooleanInput').mockImplementation(() => {
         // eslint-disable-next-line no-throw-literal
         throw 'string error' as unknown

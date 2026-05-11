@@ -10,6 +10,7 @@ import {AptCache} from './apt-cache.js'
 import {generateCacheKey} from './cache-key.js'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
+const piGenBuildSuccessState = 'pi-gen-build-success'
 
 export async function piGen(): Promise<void> {
   try {
@@ -87,6 +88,7 @@ export async function piGen(): Promise<void> {
 
     core.saveState(piGenBuildStartedState, true)
     await build(piGenDirectory, userConfig, workDirMount)
+    core.saveState(piGenBuildSuccessState, true)
   } catch (error) {
     core.setFailed((error as Error)?.message ?? error)
   }
@@ -106,6 +108,11 @@ export async function cleanup(): Promise<void> {
 
 export async function saveCache(): Promise<void> {
   try {
+    if (!core.getState(piGenBuildSuccessState)) {
+      core.info('Build did not succeed, skipping cache save')
+      return
+    }
+
     if (core.getBooleanInput('enable-pigen-cache')) {
       await core.group('Saving work directory cache', async () => {
         const workDirCache = new WorkDirCache(generateCacheKey())
