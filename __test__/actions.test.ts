@@ -57,20 +57,21 @@ describe('Actions', () => {
 
   it('should setup caching when enable-pigen-cache is true', async () => {
     const mockRestore = vi.fn().mockResolvedValue(true)
-    MockedWorkDirCache.mockImplementation(
-      () =>
-        ({restore: mockRestore, workDirMountPath: '/tmp/pi-gen-work'}) as any
-    )
+    MockedWorkDirCache.mockImplementation(function () {
+      return {
+        restore: mockRestore,
+        workDirMountPath: '/tmp/pi-gen-work'
+      } as any
+    })
     const mockAptRestore = vi.fn().mockResolvedValue(true)
     const mockAptStart = vi.fn().mockResolvedValue(undefined)
-    MockedAptCache.mockImplementation(
-      () =>
-        ({
-          restore: mockAptRestore,
-          start: mockAptStart,
-          proxyUrl: 'http://172.17.0.1:3142'
-        }) as any
-    )
+    MockedAptCache.mockImplementation(function () {
+      return {
+        restore: mockAptRestore,
+        start: mockAptStart,
+        proxyUrl: 'http://172.17.0.1:3142'
+      } as any
+    })
 
     vi.spyOn(core, 'getBooleanInput')
       .mockReturnValueOnce(false) // increase-runner-disk-size
@@ -94,20 +95,21 @@ describe('Actions', () => {
     } as any)
 
     const mockRestore = vi.fn().mockResolvedValue(false)
-    MockedWorkDirCache.mockImplementation(
-      () =>
-        ({restore: mockRestore, workDirMountPath: '/tmp/pi-gen-work'}) as any
-    )
+    MockedWorkDirCache.mockImplementation(function () {
+      return {
+        restore: mockRestore,
+        workDirMountPath: '/tmp/pi-gen-work'
+      } as any
+    })
     const mockAptRestore = vi.fn().mockResolvedValue(true)
     const mockAptStart = vi.fn().mockResolvedValue(undefined)
-    MockedAptCache.mockImplementation(
-      () =>
-        ({
-          restore: mockAptRestore,
-          start: mockAptStart,
-          proxyUrl: 'http://172.17.0.1:3142'
-        }) as any
-    )
+    MockedAptCache.mockImplementation(function () {
+      return {
+        restore: mockAptRestore,
+        start: mockAptStart,
+        proxyUrl: 'http://172.17.0.1:3142'
+      } as any
+    })
 
     vi.spyOn(core, 'getBooleanInput')
       .mockReturnValueOnce(false) // increase-runner-disk-size
@@ -123,11 +125,11 @@ describe('Actions', () => {
   })
 
   it('does not run build function twice but invokes cleanup', async () => {
-    vi.spyOn(core, 'getState')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce('true')
-      .mockReturnValueOnce('true')
-    process.env['INPUT_INCREASE-RUNNER-DISK-SIZE'] = 'false'
+    vi.spyOn(core, 'getState').mockImplementation(name => {
+      if (name === 'main-executed') return 'true'
+      if (name === 'pi-gen-build-started') return 'true'
+      return ''
+    })
     process.env['INPUT_ENABLE-PIGEN-CACHE'] = 'false'
 
     await actions.run()
@@ -176,16 +178,20 @@ describe('Actions', () => {
 
   describe('saveCache', () => {
     it('should save work dir and apt cache when caching enabled', async () => {
+      const mockSave = vi.fn().mockResolvedValue(undefined)
+      vi.mocked(WorkDirCache).mockImplementation(function () {
+        return {save: mockSave} as any
+      })
+      const mockAptSave = vi.fn().mockResolvedValue(undefined)
+      vi.mocked(AptCache).mockImplementation(function () {
+        return {save: mockAptSave} as any
+      })
+
       vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
       vi.spyOn(core, 'getInput').mockReturnValue('pi-gen')
-      vi.spyOn(core, 'group').mockImplementation(
-        async (_name, fn) => await fn()
+      vi.spyOn(core, 'group').mockImplementation(async (_name: any, fn: any) =>
+        fn()
       )
-
-      const mockSave = vi.fn().mockResolvedValue(undefined)
-      MockedWorkDirCache.mockImplementation(() => ({save: mockSave}) as any)
-      const mockAptSave = vi.fn().mockResolvedValue(undefined)
-      MockedAptCache.mockImplementation(() => ({save: mockAptSave}) as any)
 
       await actions.saveCache()
 

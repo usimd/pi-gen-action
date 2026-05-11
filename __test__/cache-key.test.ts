@@ -2,6 +2,12 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {CacheKey, generateCacheKey} from '../src/cache-key.js'
 
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+vi.mock('@actions/github', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/github')>())}
+})
 vi.mock('object-hash', () => ({
   sha1: vi.fn().mockReturnValue('abc123hash')
 }))

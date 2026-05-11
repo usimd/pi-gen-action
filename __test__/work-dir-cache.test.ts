@@ -9,6 +9,9 @@ import {CacheKey} from '../src/cache-key.js'
 vi.mock('@actions/cache')
 vi.mock('@actions/exec')
 vi.mock('@actions/io')
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
 vi.mock('fs', async importOriginal => ({
   ...(await importOriginal<typeof import('fs')>()),
   existsSync: vi.fn(),

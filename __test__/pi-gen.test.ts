@@ -133,8 +133,7 @@ describe('PiGen', () => {
   it('mounts cached work directory when workDirMount is set', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    jest
-      .spyOn(fs, 'realpathSync')
+    vi.spyOn(fs, 'realpathSync')
       .mockReturnValueOnce('/pi-gen/stage0')
       .mockReturnValueOnce('/pigen-work')
 
@@ -215,7 +214,6 @@ describe('PiGen', () => {
 
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
     vi.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
 
     await PiGen.getInstance(piGenDir, {
