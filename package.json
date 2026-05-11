@@ -29,7 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
+    "@actions/exec": "^3.0.0",
     "@actions/github": "^6.0.1",
     "@actions/glob": "^0.5.1",
     "@actions/io": "^2.0.0",
