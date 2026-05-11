@@ -2,7 +2,7 @@ import * as fs from 'fs/promises'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
-import {hostDependencies} from './host-dependencies'
+import {hostDependencies} from './host-dependencies.js'
 
 export async function installHostDependencies(
   packages: string,

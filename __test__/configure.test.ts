@@ -1,12 +1,16 @@
-import {configure} from '../src/configure'
-import * as config from '../src/pi-gen-config'
+import {configure} from '../src/configure.js'
+import * as config from '../src/pi-gen-config.js'
 import * as core from '@actions/core'
+
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
 
 describe('Configure', () => {
   const OLD_ENV = process.env
 
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
     process.env = {...OLD_ENV}
   })
 
@@ -19,7 +23,7 @@ describe('Configure', () => {
   })
 
   it('creates a stage array from user config', async () => {
-    jest.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
+    vi.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
     process.env['INPUT_IMAGE-NAME'] = 'test'
     process.env['INPUT_STAGE-LIST'] = 'stage0 stage1'
     process.env['INPUT_ENABLE-NOOBS'] = 'false'
@@ -34,8 +38,8 @@ describe('Configure', () => {
   })
 
   it('masks sensitive user input', async () => {
-    jest.spyOn(core, 'info').mockImplementation()
-    jest.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
+    vi.spyOn(core, 'info').mockImplementation()
+    vi.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
 
     process.env['INPUT_IMAGE-NAME'] = 'test'
     process.env['INPUT_ENABLE-NOOBS'] = 'false'
@@ -51,10 +55,10 @@ describe('Configure', () => {
   })
 
   it('should fall back to default configuration values if no user settings present', async () => {
-    jest.spyOn(core, 'info').mockImplementation()
-    jest.spyOn(core, 'getInput').mockReturnValue('')
-    jest.spyOn(core, 'getBooleanInput').mockReturnValue(false)
-    jest.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
+    vi.spyOn(core, 'info').mockImplementation()
+    vi.spyOn(core, 'getInput').mockReturnValue('')
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+    vi.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
 
     await configure()
 

@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {DEFAULT_CONFIG, validateConfig, PiGenConfig} from './pi-gen-config'
+import {DEFAULT_CONFIG, validateConfig, PiGenConfig} from './pi-gen-config.js'
 import {colorize, color} from 'json-colorizer'
 
 export async function configure(): Promise<PiGenConfig> {

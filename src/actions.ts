@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
-import {configure} from './configure'
-import {installHostDependencies} from './install-dependencies'
-import {build} from './build'
-import {clonePigen} from './clone-pigen'
-import {removeContainer} from './remove-container'
-import {removeRunnerComponents} from './increase-runner-disk-size'
+import {configure} from './configure.js'
+import {installHostDependencies} from './install-dependencies.js'
+import {build} from './build.js'
+import {clonePigen} from './clone-pigen.js'
+import {removeContainer} from './remove-container.js'
+import {removeRunnerComponents} from './increase-runner-disk-size.js'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
 

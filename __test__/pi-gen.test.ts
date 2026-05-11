@@ -1,29 +1,46 @@
-import {PiGen} from '../src/pi-gen'
-import fs, {Dirent} from 'fs'
-import {DEFAULT_CONFIG, PiGenConfig} from '../src/pi-gen-config'
-import {PiGenStages} from '../src/pi-gen-stages'
+import {PiGen} from '../src/pi-gen.js'
+import * as fs from 'fs'
+import type {Dirent} from 'fs'
+import {DEFAULT_CONFIG, PiGenConfig} from '../src/pi-gen-config.js'
+import {PiGenStages} from '../src/pi-gen-stages.js'
 import * as exec from '@actions/exec'
 import * as glob from '@actions/glob'
 import * as core from '@actions/core'
 import * as tmp from 'tmp'
 
-jest.mock('@actions/exec', () => ({
-  getExecOutput: jest.fn().mockResolvedValue({exitCode: 0} as exec.ExecOutput)
+vi.mock('fs', async importOriginal => {
+  return {...(await importOriginal<typeof import('fs')>())}
+})
+
+vi.mock('@actions/exec', () => ({
+  getExecOutput: vi.fn().mockResolvedValue({exitCode: 0} as exec.ExecOutput)
 }))
 
-jest.mock('../src/pi-gen-config', () => ({
-  writeToFile: jest.fn()
-}))
+vi.mock('@actions/glob', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/glob')>())}
+})
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+
+vi.mock('../src/pi-gen-config.js', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('../src/pi-gen-config.js')>()
+  return {
+    ...actual,
+    writeToFile: vi.fn()
+  }
+})
 
 const mockPiGenDependencies = (
   stageDirectories = Object.values(PiGenStages),
   buildFiles = ['build-docker.sh', 'Dockerfile']
 ) => {
-  jest
-    .spyOn(fs.promises, 'stat')
-    .mockResolvedValueOnce({isDirectory: () => true} as fs.Stats)
+  vi.spyOn(fs.promises, 'stat').mockResolvedValueOnce({
+    isDirectory: () => true
+  } as fs.Stats)
 
-  jest.spyOn(fs.promises, 'readdir').mockResolvedValueOnce([
+  vi.spyOn(fs.promises, 'readdir').mockResolvedValueOnce([
     ...buildFiles.map(
       fileName =>
         ({
@@ -42,7 +59,7 @@ const mockPiGenDependencies = (
     )
   ])
 
-  jest.spyOn(fs, 'realpathSync').mockImplementationOnce(p => `/${p.toString()}`)
+  vi.spyOn(fs, 'realpathSync').mockImplementationOnce(p => `/${p.toString()}`)
 }
 
 describe('PiGen', () => {
@@ -72,9 +89,9 @@ describe('PiGen', () => {
 
   it('should fail on missing required stage entries at pi-gen path', async () => {
     mockPiGenDependencies(['stage0', 'stage1'])
-    jest
-      .spyOn(fs.promises, 'stat')
-      .mockResolvedValue({isDirectory: () => true} as fs.Stats)
+    vi.spyOn(fs.promises, 'stat').mockResolvedValue({
+      isDirectory: () => true
+    } as fs.Stats)
 
     await expect(
       async () =>
@@ -88,8 +105,7 @@ describe('PiGen', () => {
   it('mounts all stage paths as Docker volumes', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    jest
-      .spyOn(fs, 'realpathSync')
+    vi.spyOn(fs, 'realpathSync')
       .mockReturnValueOnce('/any/stage/path')
       .mockReturnValueOnce('/pi-gen/stage0')
 
@@ -115,7 +131,7 @@ describe('PiGen', () => {
   it('passes custom docker opts', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    vi.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
 
     const piGen = await PiGen.getInstance(piGenDir, {
       stageList: ['/pi-gen/stage0'],
@@ -139,7 +155,7 @@ describe('PiGen', () => {
   it('finds no exported images', async () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
-    jest.spyOn(glob, 'create').mockResolvedValue({
+    vi.spyOn(glob, 'create').mockResolvedValue({
       glob: () => Promise.resolve([] as string[])
     } as glob.Globber)
 
@@ -162,7 +178,7 @@ describe('PiGen', () => {
     const piGenDir = 'pi-gen'
     mockPiGenDependencies()
     const stageList = [tmp.dirSync().name, tmp.dirSync().name]
-    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    vi.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
 
     fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
 
@@ -179,7 +195,9 @@ describe('PiGen', () => {
     const piGenDir = 'pi-gen'
     const busterStages = ['stage0', 'stage1', 'stage2', 'stage3', 'stage4']
     mockPiGenDependencies(busterStages)
-    jest.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    vi.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+    vi.spyOn(fs, 'unlinkSync').mockReturnValue(undefined)
     // If user added a 'stage5', don't fail
     let config = {
       ...DEFAULT_CONFIG,
@@ -235,8 +253,8 @@ describe('PiGen', () => {
   ])(
     'handles log message "%s" correctly if verbose = %s',
     (line, verbose, stream, nCalls) => {
-      jest.spyOn(core, 'info').mockImplementation(s => {})
-      jest.spyOn(core, 'warning').mockImplementation(s => {})
+      vi.spyOn(core, 'info').mockImplementation(s => {})
+      vi.spyOn(core, 'warning').mockImplementation(s => {})
       mockPiGenDependencies()
 
       const piGenSut = new PiGen('pi-gen', {
@@ -258,8 +276,8 @@ describe('PiGen', () => {
   ])(
     'opens and closes log groups according to pi-gen status messages',
     (lines, startGroupCalls, endGroupCalls, startGroupValues) => {
-      jest.spyOn(core, 'startGroup').mockImplementation(_ => {})
-      jest.spyOn(core, 'endGroup').mockImplementation(() => null)
+      vi.spyOn(core, 'startGroup').mockImplementation(_ => {})
+      vi.spyOn(core, 'endGroup').mockImplementation(() => null)
       mockPiGenDependencies()
 
       const piGenSut = new PiGen('pi-gen', {
@@ -282,13 +300,11 @@ describe('PiGen', () => {
   )
 
   it('closes still open log groups if build crashes', async () => {
-    jest.spyOn(fs, 'realpathSync').mockReturnValue('/pi-gen/stage0')
-    jest.spyOn(core, 'endGroup')
-    jest
-      .spyOn(exec, 'getExecOutput')
-      .mockImplementationOnce((cmdLine, args) =>
-        Promise.resolve({} as exec.ExecOutput)
-      )
+    vi.spyOn(fs, 'realpathSync').mockReturnValue('/pi-gen/stage0')
+    vi.spyOn(core, 'endGroup')
+    vi.spyOn(exec, 'getExecOutput').mockImplementationOnce((cmdLine, args) =>
+      Promise.resolve({} as exec.ExecOutput)
+    )
 
     const piGen = new PiGen('', {...DEFAULT_CONFIG, stageList: ['stage0']})
     piGen.openLogGroups = 2
@@ -304,9 +320,9 @@ describe('PiGen', () => {
     'resolves path to created image',
     async (compressionType, globResults, expectedResult) => {
       mockPiGenDependencies()
-      jest
-        .spyOn(glob, 'create')
-        .mockResolvedValue({glob: async () => globResults} as glob.Globber)
+      vi.spyOn(glob, 'create').mockResolvedValue({
+        glob: async () => globResults
+      } as glob.Globber)
 
       const piGen = await PiGen.getInstance('pi-gen-dir', {
         deployCompression: compressionType,
@@ -337,9 +353,9 @@ describe('PiGen', () => {
     'resolves path to created NOOBS directory',
     async (imageName, globResults, expectedResult) => {
       mockPiGenDependencies()
-      jest
-        .spyOn(glob, 'create')
-        .mockResolvedValue({glob: async () => globResults} as glob.Globber)
+      vi.spyOn(glob, 'create').mockResolvedValue({
+        glob: async () => globResults
+      } as glob.Globber)
 
       const piGen = await PiGen.getInstance('pi-gen-dir', {
         imgName: imageName,

@@ -2,7 +2,7 @@ import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 import * as core from '@actions/core'
 import path from 'path'
-import fs from 'fs'
+import * as fs from 'fs'
 
 export class Git {
   private gitCmd = ''

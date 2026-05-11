@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises'
 import * as tmp from 'tmp'
-import {PiGenStages} from './pi-gen-stages'
+import {PiGenStages} from './pi-gen-stages.js'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
