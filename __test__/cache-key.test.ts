@@ -45,11 +45,13 @@ describe('CacheKey', () => {
   it('should generate cache key containing environment, job and sha', () => {
     const cacheKey = generateCacheKey()
 
-    expect(cacheKey.key).toBe('pi-gen-Linux-X64|build-job[abc123hash]-deadbeef')
+    expect(cacheKey.key).toBe(
+      'pi-gen-v2-Linux-X64|build-job[abc123hash]-deadbeef'
+    )
     expect(cacheKey.restoreKeys).toEqual([
-      'pi-gen-Linux-X64|build-job[abc123hash]',
-      'pi-gen-Linux-X64|build-job',
-      'pi-gen-Linux-X64'
+      'pi-gen-v2-Linux-X64|build-job[abc123hash]',
+      'pi-gen-v2-Linux-X64|build-job',
+      'pi-gen-v2-Linux-X64'
     ])
   })
 

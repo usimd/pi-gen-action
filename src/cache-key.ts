@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import {sha1} from 'object-hash'
 
-const CACHE_PREFIX = 'pi-gen'
+const CACHE_PREFIX = 'pi-gen-v2'
 
 export class CacheKey {
   key: string
