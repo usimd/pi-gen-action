@@ -70,6 +70,11 @@ export class AptCache {
         `${APT_CACHE_PORT}:3142`,
         '-v',
         `${APT_CACHE_DIR}:/var/cache/apt-cacher-ng`,
+        '--health-cmd',
+        'curl -sf http://localhost:3142 || exit 1',
+        '--health-interval=2s',
+        '--health-start-period=5s',
+        '--health-retries=3',
         'sameersbn/apt-cacher-ng:latest'
       ],
       {silent: true, ignoreReturnCode: true}
@@ -81,8 +86,8 @@ export class AptCache {
       )
     }
 
-    // Wait for the proxy to become available
-    await this.waitForProxy()
+    // Wait for Docker health check to report healthy
+    await this.waitForHealthy(docker)
 
     core.info(`APT proxy running at ${this.proxyUrl}`)
   }
@@ -143,28 +148,30 @@ export class AptCache {
     }
   }
 
-  private async waitForProxy(
+  private async waitForHealthy(
+    docker: string,
     timeoutMs: number = 30000,
     intervalMs: number = 1000
   ): Promise<void> {
     const start = Date.now()
     while (Date.now() - start < timeoutMs) {
-      try {
-        const result = await exec.getExecOutput(
-          'curl',
-          ['--silent', '--fail', '--max-time', '2', this.proxyUrl],
-          {silent: true, ignoreReturnCode: true}
-        )
-        if (result.exitCode === 0) {
-          return
-        }
-      } catch {
-        // ignore, retry
+      const result = await exec.getExecOutput(
+        docker,
+        [
+          'inspect',
+          '--format',
+          '{{.State.Health.Status}}',
+          APT_CACHE_CONTAINER
+        ],
+        {silent: true, ignoreReturnCode: true}
+      )
+      if (result.exitCode === 0 && result.stdout.trim() === 'healthy') {
+        return
       }
       await new Promise(resolve => setTimeout(resolve, intervalMs))
     }
     core.warning(
-      'apt-cacher-ng did not become ready in time, continuing without proxy verification'
+      'apt-cacher-ng did not become healthy in time, continuing without proxy verification'
     )
   }
 }

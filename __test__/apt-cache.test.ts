@@ -79,11 +79,17 @@ describe('AptCache', () => {
   describe('start', () => {
     it('should remove existing container and start new one', async () => {
       mockedExec.exec.mockResolvedValue(0)
-      mockedExec.getExecOutput.mockResolvedValue({
-        exitCode: 0,
-        stdout: 'container-id',
-        stderr: ''
-      })
+      mockedExec.getExecOutput
+        .mockResolvedValueOnce({
+          exitCode: 0,
+          stdout: 'container-id',
+          stderr: ''
+        })
+        .mockResolvedValueOnce({
+          exitCode: 0,
+          stdout: 'healthy\n',
+          stderr: ''
+        })
 
       const apt = new AptCache('bookworm', 'abc1234')
       await apt.start()
@@ -95,7 +101,13 @@ describe('AptCache', () => {
       )
       expect(mockedExec.getExecOutput).toHaveBeenCalledWith(
         '/usr/bin/docker',
-        expect.arrayContaining(['run', '-d', '--name', 'pi-gen-apt-cache']),
+        expect.arrayContaining([
+          'run',
+          '-d',
+          '--name',
+          'pi-gen-apt-cache',
+          '--health-cmd'
+        ]),
         expect.any(Object)
       )
     })
@@ -112,21 +124,22 @@ describe('AptCache', () => {
       await expect(apt.start()).rejects.toThrow('port already in use')
     })
 
-    it('should warn when proxy does not become ready in time', async () => {
-      // curl always fails (proxy never ready)
+    it('should warn when proxy does not become healthy in time', async () => {
+      // docker inspect returns "starting" (never healthy)
+      mockedIo.which.mockResolvedValue('/usr/bin/docker')
       mockedExec.getExecOutput.mockResolvedValue({
-        exitCode: 7,
-        stdout: '',
-        stderr: 'Connection refused'
+        exitCode: 0,
+        stdout: 'starting\n',
+        stderr: ''
       })
       vi.spyOn(core, 'warning').mockImplementation()
 
       const apt = new AptCache('bookworm', 'abc1234')
       // Use short timeout to avoid slow test
-      await (apt as any).waitForProxy(50, 10)
+      await (apt as any).waitForHealthy('/usr/bin/docker', 50, 10)
 
       expect(core.warning).toHaveBeenCalledWith(
-        expect.stringContaining('did not become ready')
+        expect.stringContaining('did not become healthy')
       )
     })
   })
