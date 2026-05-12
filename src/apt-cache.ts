@@ -10,14 +10,14 @@ const APT_CACHE_CONTAINER = 'pi-gen-apt-cache'
 const APT_CACHE_PORT = 3142
 const APT_CACHE_CONF_DIR = '/tmp/apt-cacher-ng-conf'
 
-// Add Remap rules for RPi mirrors that aren't in apt-cacher-ng's built-in
-// backends. Standard Debian repos (deb.debian.org etc.) are already cached
-// by the default Remap-debrep rule. Remap rules are checked BEFORE
-// PassThroughPattern, so matched repos get cached while unrecognized
-// URLs safely pass through (no 403, no crash).
+// apt-cacher-ng config: Add RPi mirrors to known backends so they get cached.
+// The default config caches deb.debian.org (via Remap-debrep + deb_mirrors.gz),
+// but RPi mirrors fall through to PassThroughPattern (tunnel, no caching).
+// Adding Remap rules maps them into the cache.
+// Format: Remap-name: MergingURLs /VirtualPath
 const APT_CACHE_CONF = [
-  'Remap-rpirepo: /raspbian ; http://raspbian.raspberrypi.com/raspbian',
-  'Remap-rpiarc: /rpiarc ; http://archive.raspberrypi.com/debian',
+  'Remap-rpirepo: http://raspbian.raspberrypi.com/raspbian /raspbian',
+  'Remap-rpiarc: http://archive.raspberrypi.com/debian /rpiarc',
   ''
 ].join('\n')
 
