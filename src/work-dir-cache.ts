@@ -18,6 +18,20 @@ export class WorkDirCache {
         return
       }
 
+      // Check if cache key already exists before expensive compression
+      const existing = await cache.restoreCache(
+        [WORK_DIR_ARCHIVE],
+        this.cacheKey.key,
+        [],
+        {lookupOnly: true}
+      )
+      if (existing) {
+        core.info(
+          `Cache already exists for key ${this.cacheKey.key}, skipping save`
+        )
+        return
+      }
+
       core.info('Compressing work directory with zstd')
 
       const sudo = await io.which('sudo', true)

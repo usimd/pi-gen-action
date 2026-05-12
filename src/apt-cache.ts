@@ -104,6 +104,20 @@ export class AptCache {
     try {
       await this.stop()
 
+      // Check if cache key already exists before uploading
+      const existing = await cache.restoreCache(
+        [APT_CACHE_DIR],
+        this.cacheKey,
+        [],
+        {lookupOnly: true}
+      )
+      if (existing) {
+        core.info(
+          `APT cache already exists for key ${this.cacheKey}, skipping save`
+        )
+        return
+      }
+
       // Log the cache directory size for debugging
       const sudo = await io.which('sudo', true)
       const duResult = await exec.getExecOutput(
@@ -115,8 +129,14 @@ export class AptCache {
         core.info(`APT cache directory size: ${duResult.stdout.trim()}`)
       }
 
-      await cache.saveCache([APT_CACHE_DIR], this.cacheKey)
-      core.info('APT cache saved successfully')
+      const cacheId = await cache.saveCache([APT_CACHE_DIR], this.cacheKey)
+      if (cacheId !== -1) {
+        core.info('APT cache saved successfully')
+      } else {
+        core.warning(
+          'APT cache save returned -1, cache may not have been saved'
+        )
+      }
     } catch (error) {
       // Cache save can fail if key already exists; that's fine
       core.warning(`Failed to save APT cache: ${(error as Error).message}`)

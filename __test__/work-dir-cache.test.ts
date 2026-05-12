@@ -100,6 +100,19 @@ describe('WorkDirCache', () => {
       await expect(wdc.save()).rejects.toThrow('compression failed')
     })
 
+    it('should skip save when cache key already exists', async () => {
+      mockedFs.existsSync.mockReturnValueOnce(true) // work dir exists
+      mockedCache.restoreCache.mockResolvedValueOnce('test-key')
+
+      const wdc = new WorkDirCache(cacheKey)
+      await wdc.save()
+
+      expect(mockedExec.getExecOutput).not.toHaveBeenCalled()
+      expect(core.info).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      )
+    })
+
     it('should clean up archive in finally block', async () => {
       mockedFs.existsSync
         .mockReturnValueOnce(true) // work dir exists

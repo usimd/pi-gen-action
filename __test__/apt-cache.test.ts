@@ -153,6 +153,11 @@ describe('AptCache', () => {
   describe('save', () => {
     it('should stop container and save cache', async () => {
       mockedExec.exec.mockResolvedValue(0)
+      mockedExec.getExecOutput.mockResolvedValue({
+        exitCode: 0,
+        stdout: '100M\t/tmp/apt-cacher-ng',
+        stderr: ''
+      })
       mockedCache.saveCache.mockResolvedValue(1)
 
       const apt = new AptCache('bookworm', 'arm64')
@@ -164,8 +169,45 @@ describe('AptCache', () => {
       )
     })
 
+    it('should skip save when cache key already exists', async () => {
+      mockedExec.exec.mockResolvedValue(0)
+      mockedCache.restoreCache.mockResolvedValueOnce(
+        'pi-gen-apt-bookworm-arm64-Linux'
+      )
+
+      const apt = new AptCache('bookworm', 'arm64')
+      await apt.save()
+
+      expect(mockedCache.saveCache).not.toHaveBeenCalled()
+      expect(core.info).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      )
+    })
+
+    it('should warn when saveCache returns -1', async () => {
+      mockedExec.exec.mockResolvedValue(0)
+      mockedExec.getExecOutput.mockResolvedValue({
+        exitCode: 0,
+        stdout: '50M\t/tmp/apt-cacher-ng',
+        stderr: ''
+      })
+      mockedCache.saveCache.mockResolvedValue(-1)
+
+      const apt = new AptCache('bookworm', 'arm64')
+      await apt.save()
+
+      expect(core.warning).toHaveBeenCalledWith(
+        expect.stringContaining('may not have been saved')
+      )
+    })
+
     it('should warn on save failure without throwing', async () => {
       mockedExec.exec.mockResolvedValue(0)
+      mockedExec.getExecOutput.mockResolvedValue({
+        exitCode: 0,
+        stdout: '0\t/tmp/apt-cacher-ng',
+        stderr: ''
+      })
       mockedCache.saveCache.mockRejectedValue(new Error('key exists'))
 
       const apt = new AptCache('bookworm', 'arm64')

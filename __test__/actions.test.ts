@@ -138,6 +138,17 @@ describe('Actions', () => {
     expect(removeContainer).toHaveBeenCalledTimes(1)
   })
 
+  it('runs piGen on first invocation and saves main-executed state', async () => {
+    vi.spyOn(core, 'getState').mockReturnValue('')
+    vi.spyOn(core, 'saveState')
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+
+    await actions.run()
+
+    expect(core.saveState).toHaveBeenCalledWith('main-executed', true)
+    expect(build).toHaveBeenCalledTimes(1)
+  })
+
   const errorMessage = 'any error'
   it.each([new Error(errorMessage), errorMessage])(
     'should catch errors thrown during build and set build safely as failed',
