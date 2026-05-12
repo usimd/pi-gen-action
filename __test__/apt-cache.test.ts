@@ -26,7 +26,7 @@ describe('AptCache', () => {
   const OLD_ENV = process.env
 
   beforeEach(() => {
-    process.env = {...OLD_ENV, RUNNER_OS: 'Linux'}
+    process.env = {...OLD_ENV, RUNNER_OS: 'Linux', RUNNER_ARCH: 'X64'}
     mockedIo.which.mockResolvedValue('/usr/bin/docker')
     vi.spyOn(core, 'info').mockImplementation()
     vi.spyOn(core, 'warning').mockImplementation()
@@ -37,14 +37,15 @@ describe('AptCache', () => {
     process.env = OLD_ENV
   })
 
-  it('should construct cache key from release and pi-gen version', () => {
-    const apt = new AptCache('bookworm', 'arm64')
+  it('should construct cache key from release and pi-gen SHA', () => {
+    const apt = new AptCache('bookworm', 'abc1234')
     expect(apt.proxyUrl).toBe('http://172.17.0.1:3142')
   })
 
-  it('should fallback to Linux when RUNNER_OS is not set', () => {
+  it('should fallback to Linux/X64 when env vars are not set', () => {
     delete process.env['RUNNER_OS']
-    const apt = new AptCache('bookworm', 'arm64')
+    delete process.env['RUNNER_ARCH']
+    const apt = new AptCache('bookworm', 'abc1234')
     // Cache key should still contain Linux
     expect(apt.proxyUrl).toBe('http://172.17.0.1:3142')
   })
@@ -54,7 +55,7 @@ describe('AptCache', () => {
       mockedFs.existsSync.mockReturnValue(false)
       mockedCache.restoreCache.mockResolvedValue('some-key')
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       const result = await apt.restore()
 
       expect(result).toBe(true)
@@ -68,7 +69,7 @@ describe('AptCache', () => {
       mockedFs.existsSync.mockReturnValue(true)
       mockedCache.restoreCache.mockResolvedValue(undefined)
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       const result = await apt.restore()
 
       expect(result).toBe(false)
@@ -84,7 +85,7 @@ describe('AptCache', () => {
         stderr: ''
       })
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.start()
 
       expect(mockedExec.exec).toHaveBeenCalledWith(
@@ -107,7 +108,7 @@ describe('AptCache', () => {
         stderr: 'port already in use'
       })
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await expect(apt.start()).rejects.toThrow('port already in use')
     })
 
@@ -120,7 +121,7 @@ describe('AptCache', () => {
       })
       vi.spyOn(core, 'warning').mockImplementation()
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       // Use short timeout to avoid slow test
       await (apt as any).waitForProxy(50, 10)
 
@@ -134,7 +135,7 @@ describe('AptCache', () => {
     it('should stop and remove container', async () => {
       mockedExec.exec.mockResolvedValue(0)
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.stop()
 
       expect(mockedExec.exec).toHaveBeenCalledWith(
@@ -160,22 +161,22 @@ describe('AptCache', () => {
       })
       mockedCache.saveCache.mockResolvedValue(1)
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.save()
 
       expect(mockedCache.saveCache).toHaveBeenCalledWith(
         ['/tmp/apt-cacher-ng'],
-        expect.stringContaining('pi-gen-apt-bookworm-arm64')
+        'pi-gen-apt-v1-Linux-X64-bookworm-abc1234'
       )
     })
 
     it('should skip save when cache key already exists', async () => {
       mockedExec.exec.mockResolvedValue(0)
       mockedCache.restoreCache.mockResolvedValueOnce(
-        'pi-gen-apt-bookworm-arm64-Linux'
+        'pi-gen-apt-v1-Linux-X64-bookworm-abc1234'
       )
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.save()
 
       expect(mockedCache.saveCache).not.toHaveBeenCalled()
@@ -193,7 +194,7 @@ describe('AptCache', () => {
       })
       mockedCache.saveCache.mockResolvedValue(-1)
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.save()
 
       expect(core.warning).toHaveBeenCalledWith(
@@ -210,7 +211,7 @@ describe('AptCache', () => {
       })
       mockedCache.saveCache.mockRejectedValue(new Error('key exists'))
 
-      const apt = new AptCache('bookworm', 'arm64')
+      const apt = new AptCache('bookworm', 'abc1234')
       await apt.save()
 
       expect(core.warning).toHaveBeenCalledWith(

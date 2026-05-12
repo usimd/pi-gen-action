@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 import {DEFAULT_CONFIG} from '../src/pi-gen-config.js'
 import * as actions from '../src/actions.js'
 import {removeContainer} from '../src/remove-container.js'
@@ -9,6 +10,9 @@ import {AptCache} from '../src/apt-cache.js'
 
 vi.mock('@actions/core', async importOriginal => {
   return {...(await importOriginal<typeof import('@actions/core')>())}
+})
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
 })
 vi.mock('../src/configure.js', () => ({
   configure: vi.fn().mockReturnValue({...DEFAULT_CONFIG})
@@ -39,6 +43,12 @@ describe('Actions', () => {
     process.env = {...OLD_ENV}
     MockedWorkDirCache.mockClear()
     MockedAptCache.mockClear()
+    // Stub getPiGenSha (git rev-parse)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0,
+      stdout: 'abc1234\n',
+      stderr: ''
+    })
   })
 
   afterAll(() => {

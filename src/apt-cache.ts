@@ -12,12 +12,12 @@ export class AptCache {
   private cacheKey: string
   private restoreKeys: string[]
 
-  constructor(release: string, piGenVersion: string) {
-    this.cacheKey = `pi-gen-apt-${release}-${piGenVersion}-${process.env['RUNNER_OS'] || 'Linux'}`
-    this.restoreKeys = [
-      `pi-gen-apt-${release}-${piGenVersion}-`,
-      `pi-gen-apt-${release}-`
-    ]
+  constructor(release: string, piGenSha: string) {
+    const os = process.env['RUNNER_OS'] || 'Linux'
+    const arch = process.env['RUNNER_ARCH'] || 'X64'
+    const prefix = `pi-gen-apt-v1-${os}-${arch}-${release}`
+    this.cacheKey = `${prefix}-${piGenSha}`
+    this.restoreKeys = [`${prefix}-`]
   }
 
   get proxyUrl(): string {

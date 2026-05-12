@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 import {configure} from './configure.js'
 import {installHostDependencies} from './install-dependencies.js'
 import {build} from './build.js'
@@ -11,6 +12,16 @@ import {generateCacheKey} from './cache-key.js'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
 const piGenBuildSuccessState = 'pi-gen-build-success'
+const piGenShaState = 'pi-gen-sha'
+
+async function getPiGenSha(piGenDirectory: string): Promise<string> {
+  const result = await exec.getExecOutput(
+    'git',
+    ['rev-parse', '--short', 'HEAD'],
+    {cwd: piGenDirectory, silent: true}
+  )
+  return result.stdout.trim()
+}
 
 export async function piGen(): Promise<void> {
   try {
@@ -45,6 +56,10 @@ export async function piGen(): Promise<void> {
       piGenDirectory
     )
 
+    const piGenSha = await getPiGenSha(piGenDirectory)
+    core.info(`pi-gen checkout: ${piGenSha}`)
+    core.saveState(piGenShaState, piGenSha)
+
     const cacheEnabled = core.getBooleanInput('enable-pigen-cache')
     let workDirMount: string | undefined
 
@@ -63,10 +78,7 @@ export async function piGen(): Promise<void> {
       const aptCache = await core.group(
         'Setting up APT proxy cache',
         async () => {
-          const apt = new AptCache(
-            userConfig.release,
-            core.getInput('pi-gen-version')
-          )
+          const apt = new AptCache(userConfig.release, piGenSha)
           await apt.restore()
           await apt.start()
           return apt
@@ -128,9 +140,10 @@ export async function saveCache(): Promise<void> {
     })
 
     await core.group('Saving APT cache', async () => {
+      const piGenSha = core.getState(piGenShaState)
       const aptCache = new AptCache(
         core.getInput('release') || 'bookworm',
-        core.getInput('pi-gen-version')
+        piGenSha
       )
       await aptCache.save()
     })
