@@ -13,6 +13,7 @@ import {generateCacheKey} from './cache-key.js'
 const piGenBuildStartedState = 'pi-gen-build-started'
 const piGenBuildSuccessState = 'pi-gen-build-success'
 const piGenShaState = 'pi-gen-sha'
+const piGenReleaseState = 'pi-gen-release'
 
 async function getPiGenSha(piGenDirectory: string): Promise<string> {
   const result = await exec.getExecOutput(
@@ -59,6 +60,7 @@ export async function piGen(): Promise<void> {
     const piGenSha = await getPiGenSha(piGenDirectory)
     core.info(`pi-gen checkout: ${piGenSha}`)
     core.saveState(piGenShaState, piGenSha)
+    core.saveState(piGenReleaseState, userConfig.release)
 
     const cacheEnabled = core.getBooleanInput('enable-pigen-cache')
     let workDirMount: string | undefined
@@ -141,10 +143,8 @@ export async function saveCache(): Promise<void> {
 
     await core.group('Saving APT cache', async () => {
       const piGenSha = core.getState(piGenShaState)
-      const aptCache = new AptCache(
-        core.getInput('release') || 'bookworm',
-        piGenSha
-      )
+      const release = core.getState(piGenReleaseState)
+      const aptCache = new AptCache(release, piGenSha)
       await aptCache.save()
     })
   } catch (error) {
