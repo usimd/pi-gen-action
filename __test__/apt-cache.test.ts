@@ -14,7 +14,8 @@ vi.mock('@actions/core', async importOriginal => {
 vi.mock('fs', async importOriginal => ({
   ...(await importOriginal<typeof import('fs')>()),
   existsSync: vi.fn(),
-  mkdirSync: vi.fn()
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn()
 }))
 
 const mockedCache = vi.mocked(cache)
@@ -94,6 +95,16 @@ describe('AptCache', () => {
       const apt = new AptCache('bookworm', 'abc1234')
       await apt.start()
 
+      // Writes cache-all config
+      expect(mockedFs.mkdirSync).toHaveBeenCalledWith(
+        '/tmp/apt-cacher-ng-conf',
+        {recursive: true}
+      )
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
+        '/tmp/apt-cacher-ng-conf/zz_cache_all.conf',
+        expect.stringContaining('Remap-rpirepo')
+      )
+
       expect(mockedExec.exec).toHaveBeenCalledWith(
         '/usr/bin/docker',
         ['rm', '-f', 'pi-gen-apt-cache'],
@@ -106,7 +117,9 @@ describe('AptCache', () => {
           '-d',
           '--name',
           'pi-gen-apt-cache',
-          '--health-cmd'
+          '--health-cmd',
+          '-v',
+          '/tmp/apt-cacher-ng-conf/zz_cache_all.conf:/etc/apt-cacher-ng/zz_cache_all.conf:ro'
         ]),
         expect.any(Object)
       )

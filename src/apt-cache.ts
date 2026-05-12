@@ -3,10 +3,23 @@ import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 import * as core from '@actions/core'
 import * as fs from 'fs'
+import path from 'path'
 
 const APT_CACHE_DIR = '/tmp/apt-cacher-ng'
 const APT_CACHE_CONTAINER = 'pi-gen-apt-cache'
 const APT_CACHE_PORT = 3142
+const APT_CACHE_CONF_DIR = '/tmp/apt-cacher-ng-conf'
+
+// Add Remap rules for RPi mirrors that aren't in apt-cacher-ng's built-in
+// backends. Standard Debian repos (deb.debian.org etc.) are already cached
+// by the default Remap-debrep rule. Remap rules are checked BEFORE
+// PassThroughPattern, so matched repos get cached while unrecognized
+// URLs safely pass through (no 403, no crash).
+const APT_CACHE_CONF = [
+  'Remap-rpirepo: /raspbian ; http://raspbian.raspberrypi.com/raspbian',
+  'Remap-rpiarc: /rpiarc ; http://archive.raspberrypi.com/debian',
+  ''
+].join('\n')
 
 export class AptCache {
   private cacheKey: string
@@ -57,6 +70,13 @@ export class AptCache {
     // Ensure cache dir is writable by apt-cacher-ng (runs as uid 100 in container)
     await exec.exec(sudo, ['chmod', '777', APT_CACHE_DIR], {silent: true})
 
+    // Write cache-all config so apt-cacher-ng caches all proxy traffic
+    fs.mkdirSync(APT_CACHE_CONF_DIR, {recursive: true})
+    fs.writeFileSync(
+      path.join(APT_CACHE_CONF_DIR, 'zz_cache_all.conf'),
+      APT_CACHE_CONF
+    )
+
     core.info('Starting apt-cacher-ng container')
 
     const result = await exec.getExecOutput(
@@ -70,8 +90,10 @@ export class AptCache {
         `${APT_CACHE_PORT}:3142`,
         '-v',
         `${APT_CACHE_DIR}:/var/cache/apt-cacher-ng`,
+        '-v',
+        `${path.join(APT_CACHE_CONF_DIR, 'zz_cache_all.conf')}:/etc/apt-cacher-ng/zz_cache_all.conf:ro`,
         '--health-cmd',
-        'curl -sf http://localhost:3142 || exit 1',
+        'wget -q -t1 -O /dev/null http://localhost:3142/acng-report.html || exit 1',
         '--health-interval=2s',
         '--health-start-period=5s',
         '--health-retries=3',
