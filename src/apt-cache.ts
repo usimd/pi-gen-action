@@ -16,6 +16,7 @@ const APT_CACHE_CONF_DIR = '/tmp/apt-cacher-ng-conf'
 // Adding Remap rules maps them into the cache.
 // Format: Remap-name: MergingURLs /VirtualPath
 const APT_CACHE_CONF = [
+  'Debug:3',
   'Remap-rpirepo: http://raspbian.raspberrypi.com/raspbian /raspbian',
   'Remap-rpiarc: http://archive.raspberrypi.com/debian /rpiarc',
   ''
@@ -129,6 +130,8 @@ export class AptCache {
 
   async save(): Promise<void> {
     try {
+      // Dump acng logs before stopping for debugging
+      await this.dumpLogs()
       await this.stop()
 
       // Check if cache key already exists before uploading
@@ -195,5 +198,37 @@ export class AptCache {
     core.warning(
       'apt-cacher-ng did not become healthy in time, continuing without proxy verification'
     )
+  }
+
+  private async dumpLogs(): Promise<void> {
+    try {
+      const docker = await io.which('docker', true)
+      const result = await exec.getExecOutput(
+        docker,
+        ['logs', '--tail', '200', APT_CACHE_CONTAINER],
+        {silent: true, ignoreReturnCode: true}
+      )
+      if (result.stdout.trim()) {
+        core.info(`apt-cacher-ng stdout:\n${result.stdout}`)
+      }
+      if (result.stderr.trim()) {
+        core.info(`apt-cacher-ng logs:\n${result.stderr}`)
+      }
+
+      // Also list the cache directory structure
+      const sudo = await io.which('sudo', true)
+      const lsResult = await exec.getExecOutput(
+        sudo,
+        ['find', APT_CACHE_DIR, '-type', 'f', '-name', '*.deb'],
+        {silent: true, ignoreReturnCode: true}
+      )
+      if (lsResult.stdout.trim()) {
+        core.info(`Cached .deb files:\n${lsResult.stdout}`)
+      } else {
+        core.info('No .deb files found in cache directory')
+      }
+    } catch {
+      core.debug('Failed to dump apt-cacher-ng logs')
+    }
   }
 }
