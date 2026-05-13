@@ -122,9 +122,6 @@ jobs:
       
       - name: Test configuration values
         run: |
-          cat /etc/sudoers
-          echo
-          echo
           set -ex
           test -x ${ROOTFS_DIR}/usr/bin/curl
           test "$(cat ${ROOTFS_DIR}/opt/hello)" = "world"
@@ -135,8 +132,8 @@ jobs:
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
           test "$(sudo cat ${ROOTFS_DIR}/home/${CONFIG_USERNAME}/.ssh/authorized_keys)" = "$CONFIG_PUBLIC_KEY"
-          test -x /etc/sudoers
-          grep pi /etc/sudoers
+          test -f ${ROOTFS_DIR}/etc/sudoers
+          sudo grep -R -q "^${CONFIG_USERNAME} ALL=(ALL) NOPASSWD: ALL$" ${ROOTFS_DIR}/etc/sudoers*
           ! test -f ${ROOTFS_DIR}/lib/netplan/00-network-manager-all.yaml
 
       - run: df -h
