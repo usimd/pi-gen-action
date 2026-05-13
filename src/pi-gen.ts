@@ -80,9 +80,7 @@ export class PiGen {
         env: {
           ...process.env,
           PIGEN_DOCKER_OPTS: dockerOpts,
-          DEBIAN_FRONTEND: 'noninteractive',
-          PRESERVE_CONTAINER: '1',
-          CONTINUE: '1'
+          DEBIAN_FRONTEND: 'noninteractive'
         },
         listeners: {
           stdline: (line: string) => this.logOutput(line, verbose, 'info'),
