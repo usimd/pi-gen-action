@@ -40,7 +40,7 @@ export class WorkDirCache {
         sudo,
         [
           'tar',
-          '--use-compress-program=zstd -T0 -6 --long=31',
+          '--use-compress-program=zstd -T0 -10 --long=31',
           '--exclude=./*/rootfs/proc/*',
           '--exclude=./*/rootfs/sys/*',
           '--exclude=./*/rootfs/dev/*',
