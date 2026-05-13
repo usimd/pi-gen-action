@@ -17,8 +17,8 @@ const APT_CACHE_CONF_DIR = '/tmp/apt-cacher-ng-conf'
 // Format: Remap-name: MergingURLs /VirtualPath
 const APT_CACHE_CONF = [
   'Debug:3',
-  'Remap-rpirepo: http://raspbian.raspberrypi.com/raspbian /raspbian',
-  'Remap-rpiarc: http://archive.raspberrypi.com/debian /rpiarc',
+  'Remap-rpirepo: http://raspbian.raspberrypi.com/raspbian/ /raspbian',
+  'Remap-rpiarc: http://archive.raspberrypi.com/debian/ /rpiarc',
   ''
 ].join('\n')
 
@@ -203,29 +203,38 @@ export class AptCache {
   private async dumpLogs(): Promise<void> {
     try {
       const docker = await io.which('docker', true)
-      const result = await exec.getExecOutput(
+
+      // acng writes to log files, not stdout - read its error log
+      const logResult = await exec.getExecOutput(
         docker,
-        ['logs', '--tail', '200', APT_CACHE_CONTAINER],
+        [
+          'exec',
+          APT_CACHE_CONTAINER,
+          'tail',
+          '-200',
+          '/var/log/apt-cacher-ng/apt-cacher.err'
+        ],
         {silent: true, ignoreReturnCode: true}
       )
-      if (result.stdout.trim()) {
-        core.info(`apt-cacher-ng stdout:\n${result.stdout}`)
-      }
-      if (result.stderr.trim()) {
-        core.info(`apt-cacher-ng logs:\n${result.stderr}`)
+      if (logResult.stdout.trim()) {
+        core.info(`apt-cacher-ng log:\n${logResult.stdout}`)
       }
 
-      // Also list the cache directory structure
+      // List ALL cached files (not just .deb) to understand cache structure
       const sudo = await io.which('sudo', true)
       const lsResult = await exec.getExecOutput(
         sudo,
-        ['find', APT_CACHE_DIR, '-type', 'f', '-name', '*.deb'],
+        ['find', APT_CACHE_DIR, '-type', 'f'],
         {silent: true, ignoreReturnCode: true}
       )
       if (lsResult.stdout.trim()) {
-        core.info(`Cached .deb files:\n${lsResult.stdout}`)
+        const files = lsResult.stdout.trim().split('\n')
+        const debs = files.filter(f => f.endsWith('.deb'))
+        core.info(
+          `Cache contains ${files.length} files (${debs.length} .deb). Total listing:\n${lsResult.stdout}`
+        )
       } else {
-        core.info('No .deb files found in cache directory')
+        core.info('Cache directory is empty')
       }
     } catch {
       core.debug('Failed to dump apt-cacher-ng logs')
