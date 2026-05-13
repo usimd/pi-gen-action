@@ -351,6 +351,56 @@ jobs:
           increase-runner-disk-size: true
 ```
 
+### Use APT proxy for `pi-gen`
+
+There might be scenarios where you need to specifically select the package
+mirror to pull from:
+* custom runners with limited network access
+* improved download speed when selecting a fast mirror via CDN does not suffice
+* speed up build by caching pulled packages on the runner
+
+The latter is sketched below by adding `apt-cacher-ng` to the runner where its
+cache directory is stored as a GitHub Actions cache. If you want to set up such
+a scenario, remember to tweak the caching behavior of `apt-cacher-ng` so it
+can make best use of the restored cache.
+
+```yaml
+jobs:
+  pi-gen-with-apt-proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore package cache
+        uses: actions/cache@v4
+        with:
+          # Unpacking directly into /var/cache would result in permission errors
+          # so we need to work around this a bit.
+          path: apt-cache/
+          key: ${{ runner.os }}-${{ github.job }}
+          restore-keys:
+            - ${{ runner.os }}
+
+      - name: Setup APT proxy on runner
+        run: |
+          mkdir -p apt-cache
+          sudo apt-get install -y apt-cacher-ng --no-install-suggests --no-install-recommends
+          sudo bash -c 'echo "Port: 9999" >> /etc/apt-cacher-ng/acng.conf'
+          sudo mv -f apt-cache/* /var/cache/apt-cacher-ng/ || true
+          sudo chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
+          sudo service apt-cacher-ng restart
+
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: test
+          stage-list: stage0 stage1 stage2 custom-stage
+          # Instead of referring to the runner's container IP directly, you could also add
+          # a new host entry to the pi-gen container:
+          # docker-opts: --add-host=host.docker.internal:host-gateway
+          apt-proxy: http://172.17.0.1:9999
+
+      - name: Move packages to temp location for caching
+        run: sudo mv -f /var/cache/apt-cache-ng/* apt-cache/
+```
+
 ## License
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE)
