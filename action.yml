@@ -84,6 +84,13 @@ inputs:
       username and password for your devices.
     required: false
     default: 0
+  passwordless-sudo:
+    description: |
+      Setting to `1` will enable passwordless sudo for the first user. This allows the user to run commands with
+      sudo without entering a password. Note that this is a security risk and should only be enabled if you
+      understand the implications. The user will still be able to use sudo with a password even when this is set
+      to `0`.
+    default: 0
   wpa-essid:
     description: SSID of a default wifi network to connect to.
     required: false
