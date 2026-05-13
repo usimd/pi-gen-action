@@ -6,7 +6,6 @@ import {removeContainer} from '../src/remove-container.js'
 import {build} from '../src/build.js'
 import {removeRunnerComponents} from '../src/increase-runner-disk-size.js'
 import {WorkDirCache} from '../src/work-dir-cache.js'
-import {AptCache} from '../src/apt-cache.js'
 
 vi.mock('@actions/core', async importOriginal => {
   return {...(await importOriginal<typeof import('@actions/core')>())}
@@ -23,7 +22,6 @@ vi.mock('../src/clone-pigen.js')
 vi.mock('../src/remove-container.js')
 vi.mock('../src/increase-runner-disk-size.js')
 vi.mock('../src/work-dir-cache.js')
-vi.mock('../src/apt-cache.js')
 vi.mock('../src/cache-key.js', () => ({
   generateCacheKey: vi.fn().mockReturnValue({
     key: 'test-key',
@@ -33,7 +31,6 @@ vi.mock('../src/cache-key.js', () => ({
 }))
 
 const MockedWorkDirCache = vi.mocked(WorkDirCache)
-const MockedAptCache = vi.mocked(AptCache)
 
 describe('Actions', () => {
   const OLD_ENV = process.env
@@ -42,7 +39,6 @@ describe('Actions', () => {
     vi.resetModules()
     process.env = {...OLD_ENV}
     MockedWorkDirCache.mockClear()
-    MockedAptCache.mockClear()
     // Stub getPiGenSha (git rev-parse)
     vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
       exitCode: 0,
@@ -73,15 +69,6 @@ describe('Actions', () => {
         workDirMountPath: '/tmp/pi-gen-work'
       } as any
     })
-    const mockAptRestore = vi.fn().mockResolvedValue(true)
-    const mockAptStart = vi.fn().mockResolvedValue(undefined)
-    MockedAptCache.mockImplementation(function () {
-      return {
-        restore: mockAptRestore,
-        start: mockAptStart,
-        proxyUrl: 'http://172.17.0.1:3142'
-      } as any
-    })
 
     vi.spyOn(core, 'getBooleanInput')
       .mockReturnValueOnce(false) // increase-runner-disk-size
@@ -92,12 +79,9 @@ describe('Actions', () => {
 
     expect(MockedWorkDirCache).toHaveBeenCalled()
     expect(mockRestore).toHaveBeenCalled()
-    expect(MockedAptCache).toHaveBeenCalled()
-    expect(mockAptRestore).toHaveBeenCalled()
-    expect(mockAptStart).toHaveBeenCalled()
   })
 
-  it('should warn when apt-proxy is set with caching enabled', async () => {
+  it('should not override user apt-proxy when caching enabled', async () => {
     const {configure} = await import('../src/configure.js')
     vi.mocked(configure).mockReturnValue({
       ...DEFAULT_CONFIG,
@@ -111,27 +95,15 @@ describe('Actions', () => {
         workDirMountPath: '/tmp/pi-gen-work'
       } as any
     })
-    const mockAptRestore = vi.fn().mockResolvedValue(true)
-    const mockAptStart = vi.fn().mockResolvedValue(undefined)
-    MockedAptCache.mockImplementation(function () {
-      return {
-        restore: mockAptRestore,
-        start: mockAptStart,
-        proxyUrl: 'http://172.17.0.1:3142'
-      } as any
-    })
 
     vi.spyOn(core, 'getBooleanInput')
       .mockReturnValueOnce(false) // increase-runner-disk-size
       .mockReturnValueOnce(true) // enable-pigen-cache
     vi.spyOn(core, 'group').mockImplementation(async (_name, fn) => await fn())
-    vi.spyOn(core, 'warning')
 
     await actions.piGen()
 
-    expect(core.warning).toHaveBeenCalledWith(
-      expect.stringContaining('apt-proxy')
-    )
+    expect(build).toHaveBeenCalled()
   })
 
   it('does not run build function twice but invokes cleanup', async () => {
@@ -198,14 +170,10 @@ describe('Actions', () => {
   })
 
   describe('saveCache', () => {
-    it('should save work dir and apt cache when caching enabled', async () => {
+    it('should save work dir cache when caching enabled', async () => {
       const mockSave = vi.fn().mockResolvedValue(undefined)
       vi.mocked(WorkDirCache).mockImplementation(function () {
         return {save: mockSave} as any
-      })
-      const mockAptSave = vi.fn().mockResolvedValue(undefined)
-      vi.mocked(AptCache).mockImplementation(function () {
-        return {save: mockAptSave} as any
       })
 
       vi.spyOn(core, 'getState').mockReturnValue('true')
@@ -220,7 +188,6 @@ describe('Actions', () => {
       await actions.saveCache()
 
       expect(mockSave).toHaveBeenCalled()
-      expect(mockAptSave).toHaveBeenCalled()
     })
 
     it('should not save cache when caching disabled', async () => {
@@ -230,7 +197,6 @@ describe('Actions', () => {
       await actions.saveCache()
 
       expect(MockedWorkDirCache).not.toHaveBeenCalled()
-      expect(MockedAptCache).not.toHaveBeenCalled()
     })
 
     it('should skip save when cache-read-only is true', async () => {

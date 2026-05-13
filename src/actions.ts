@@ -7,13 +7,10 @@ import {clonePigen} from './clone-pigen.js'
 import {removeContainer} from './remove-container.js'
 import {removeRunnerComponents} from './increase-runner-disk-size.js'
 import {WorkDirCache} from './work-dir-cache.js'
-import {AptCache} from './apt-cache.js'
 import {generateCacheKey} from './cache-key.js'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
 const piGenBuildSuccessState = 'pi-gen-build-success'
-const piGenShaState = 'pi-gen-sha'
-const piGenReleaseState = 'pi-gen-release'
 
 async function getPiGenSha(piGenDirectory: string): Promise<string> {
   const result = await exec.getExecOutput(
@@ -59,8 +56,6 @@ export async function piGen(): Promise<void> {
 
     const piGenSha = await getPiGenSha(piGenDirectory)
     core.info(`pi-gen checkout: ${piGenSha}`)
-    core.saveState(piGenShaState, piGenSha)
-    core.saveState(piGenReleaseState, userConfig.release)
 
     const cacheEnabled = core.getBooleanInput('enable-pigen-cache')
     let workDirMount: string | undefined
@@ -75,29 +70,6 @@ export async function piGen(): Promise<void> {
       await core.group('Restoring work directory cache', async () => {
         await workDirCache.restore()
       })
-
-      // Start APT proxy cache
-      const aptCache = await core.group(
-        'Setting up APT proxy cache',
-        async () => {
-          const apt = new AptCache(userConfig.release, piGenSha)
-          await apt.restore()
-          await apt.start()
-          return apt
-        }
-      )
-
-      if (userConfig.aptProxy) {
-        core.warning(
-          `User-configured apt-proxy '${userConfig.aptProxy}' is being ignored ` +
-            `because 'enable-pigen-cache' is enabled. The built-in apt-cacher-ng ` +
-            `cache (${aptCache.proxyUrl}) will be used instead. ` +
-            `Set 'enable-pigen-cache: false' to use your own proxy.`
-        )
-      }
-
-      userConfig.aptProxy = aptCache.proxyUrl
-      core.info(`APT proxy configured: ${aptCache.proxyUrl}`)
     }
 
     core.saveState(piGenBuildStartedState, true)
@@ -139,13 +111,6 @@ export async function saveCache(): Promise<void> {
     await core.group('Saving work directory cache', async () => {
       const workDirCache = new WorkDirCache(generateCacheKey())
       await workDirCache.save()
-    })
-
-    await core.group('Saving APT cache', async () => {
-      const piGenSha = core.getState(piGenShaState)
-      const release = core.getState(piGenReleaseState)
-      const aptCache = new AptCache(release, piGenSha)
-      await aptCache.save()
     })
   } catch (error) {
     core.setFailed((error as Error)?.message ?? error)
