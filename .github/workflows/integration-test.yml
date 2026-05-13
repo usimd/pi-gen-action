@@ -84,7 +84,7 @@ jobs:
           wpa-password: '1234567890'
           timezone: ${{ env.CONFIG_TIMEZONE }}
           pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
-          increase-runner-disk-size: false
+          increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
           temp-repo: deb [arch=amd64 trusted=yes] https://deb.nodesource.com/node_24.x nodistro main
           enable-cloud-init: 0
           enable-pigen-cache: true
