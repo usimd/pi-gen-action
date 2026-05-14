@@ -338,6 +338,13 @@ on feature branches. Remember that the working directory is pretty large and wil
 from a few to maybe tens of gigabytes. Even with aggressive compression settings, one
 single cache can easily consume half the free (10GB) GHA cache volume.
 
+***NOTE***: the caching mechanism is rather dumb, as it just handles compressing and
+pushing the work directory to GHA cache. It does not know anything about `pi-gen`'s
+internals. Naturally, there are conditions in the various stage scripts that check if
+e.g. a file is already present and only then (or if not) does work. With cached content
+being present some execution paths might be skipped that would actually result in a
+different image down the road.
+
 ```yaml
 on:
   push:
