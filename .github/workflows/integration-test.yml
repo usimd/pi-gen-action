@@ -46,7 +46,11 @@ env:
 jobs:
 
   integration-test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, ubuntu-24.04-arm64]
+      fail-fast: false
+    runs-on: ${{ matrix.runs-on }}
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test')
 
     steps:
