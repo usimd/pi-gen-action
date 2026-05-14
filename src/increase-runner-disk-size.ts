@@ -108,6 +108,11 @@ export async function removeRunnerComponents(): Promise<void> {
           'postgresql-client-*',
           'swig',
           'temurin-*',
+          'ivy',
+          'groovy',
+          'bnd',
+          'antlr',
+          'junit*',
           ...(process.arch === 'x64' ? ['google-chrome-stable'] : [])
         ]
         return exec
