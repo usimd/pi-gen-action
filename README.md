@@ -10,8 +10,25 @@ Generated images can subsequently be used in workflows, e.g. uploaded as build a
 `pi-gen` is the official tool to generate Raspberry Pi OS images that can be flashed on SD cards. Refer to the
 `pi-gen` repository for detailed information on the scripts and its usage.
 
-**NOTE**: This action requires a Debian-based distribution as runner (i.e. `ubuntu-latest`), since it invokes tools
-like `sudo` and `apt-get` and relies on QEMU and other Linux native components.
+**NOTE**: This action requires a Debian-based distribution as runner (e.g. `ubuntu-latest` or
+`ubuntu-24.04-arm`), since it invokes tools like `sudo` and `apt-get`.
+
+ARM-based runners are especially attractive to cut down on build times as they do not require
+QEMU for cross-platform building.
+
+```yaml
+jobs:
+  build-image:
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: my-pi-os
+```
+
 
 ## Default behavior
 
