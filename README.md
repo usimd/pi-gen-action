@@ -232,7 +232,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 - [Enable detailed output from `pi-gen` build](#enable-detailed-output-from-pi-gen-build)
 - [Upload final image as artifact](#upload-final-image-as-artifact)
 - [Modify `pi-gen` internal stages](#modify-pi-gen-internal-stages)
-- [Cache work directory to speed up repeated builds](#cache-work-directory-to-speed-up-repeated-buils) 
+- [Cache work directory to speed up repeated builds](#cache-work-directory-to-speed-up-repeated-builds) 
 - [Increase GitHub Actions runner disk space](#increase-github-actions-runner-disk-space)
 - [Use an APT proxy to define where to pull packages from](#use-fast-apt-proxy-for-pi-gen)
 
