@@ -13,16 +13,18 @@ export class PiGen {
 
   constructor(
     private piGenDirectory: string,
-    private config: PiGenConfig
+    private config: PiGenConfig,
+    private workDirMount?: string
   ) {
     this.configFilePath = `${fs.realpathSync(piGenDirectory)}/config`
   }
 
   static async getInstance(
     piGenDirectory: string,
-    config: PiGenConfig
+    config: PiGenConfig,
+    workDirMount?: string
   ): Promise<PiGen> {
-    const instance = new PiGen(piGenDirectory, config)
+    const instance = new PiGen(piGenDirectory, config, workDirMount)
 
     if (!(await instance.validatePigenDirectory())) {
       throw new Error(`pi-gen directory at ${piGenDirectory} is invalid`)
@@ -55,6 +57,12 @@ export class PiGen {
     // By default, we'll pass all user stages as mounts to the Docker run and we'll configure
     // apt to not report progress (which can become excessive).
     let dockerOpts = `${this.getStagesAsDockerMounts()} -e DEBIAN_FRONTEND=noninteractive`
+
+    // Mount cached work directory if available
+    if (this.workDirMount) {
+      dockerOpts = `${dockerOpts} -v ${this.workDirMount}:/pi-gen/work`
+      core.info('Mounting cached work directory into pi-gen container')
+    }
 
     if (this.config.dockerOpts !== undefined && this.config.dockerOpts !== '') {
       dockerOpts = `${this.config.dockerOpts} ${dockerOpts}`

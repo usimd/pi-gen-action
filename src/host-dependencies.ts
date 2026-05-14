@@ -1,4 +1,4 @@
 export const hostDependencies = {
-  packages: ['binfmt-support', 'qemu-user-static'],
+  packages: ['binfmt-support', 'zstd', 'qemu-user-static'],
   modules: ['binfmt_misc']
 }

@@ -1,12 +1,25 @@
 import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 import {configure} from './configure.js'
 import {installHostDependencies} from './install-dependencies.js'
 import {build} from './build.js'
 import {clonePigen} from './clone-pigen.js'
 import {removeContainer} from './remove-container.js'
 import {removeRunnerComponents} from './increase-runner-disk-size.js'
+import {WorkDirCache} from './work-dir-cache.js'
+import {generateCacheKey} from './cache-key.js'
 
 const piGenBuildStartedState = 'pi-gen-build-started'
+const piGenBuildSuccessState = 'pi-gen-build-success'
+
+async function getPiGenSha(piGenDirectory: string): Promise<string> {
+  const result = await exec.getExecOutput(
+    'git',
+    ['rev-parse', '--short', 'HEAD'],
+    {cwd: piGenDirectory, silent: true}
+  )
+  return result.stdout.trim()
+}
 
 export async function piGen(): Promise<void> {
   try {
@@ -41,8 +54,27 @@ export async function piGen(): Promise<void> {
       piGenDirectory
     )
 
+    const piGenSha = await getPiGenSha(piGenDirectory)
+    core.info(`pi-gen checkout: ${piGenSha}`)
+
+    const cacheEnabled = core.getBooleanInput('enable-pigen-cache')
+    let workDirMount: string | undefined
+
+    if (cacheEnabled) {
+      const workDirCache = new WorkDirCache(generateCacheKey())
+
+      // Always mount the work directory so pi-gen writes it to the host
+      workDirMount = workDirCache.workDirMountPath
+
+      // Try to restore cached work directory into the mount path
+      await core.group('Restoring work directory cache', async () => {
+        await workDirCache.restore()
+      })
+    }
+
     core.saveState(piGenBuildStartedState, true)
-    await build(piGenDirectory, userConfig)
+    await build(piGenDirectory, userConfig, workDirMount)
+    core.saveState(piGenBuildSuccessState, true)
   } catch (error) {
     core.setFailed((error as Error)?.message ?? error)
   }
@@ -60,8 +92,34 @@ export async function cleanup(): Promise<void> {
   }
 }
 
+export async function saveCache(): Promise<void> {
+  try {
+    if (!core.getState(piGenBuildSuccessState)) {
+      core.info('Build did not succeed, skipping cache save')
+      return
+    }
+
+    if (!core.getBooleanInput('enable-pigen-cache')) {
+      return
+    }
+
+    if (core.getBooleanInput('cache-read-only')) {
+      core.info('Cache is read-only, skipping cache save')
+      return
+    }
+
+    await core.group('Saving work directory cache', async () => {
+      const workDirCache = new WorkDirCache(generateCacheKey())
+      await workDirCache.save()
+    })
+  } catch (error) {
+    core.setFailed((error as Error)?.message ?? error)
+  }
+}
+
 export async function run(): Promise<void> {
   if (core.getState('main-executed')) {
+    await saveCache()
     await cleanup()
   } else {
     core.saveState('main-executed', true)

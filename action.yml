@@ -172,6 +172,17 @@ inputs:
       If any packages are missing during the build consider adding them to the `extra-host-dependencies` list.
     required: false
     default: false
+  enable-pigen-cache:
+    description: Enables caching of pi-gen work artifacts to GitHub action cache to speed up repetitive builds.
+    required: false
+    default: false
+  cache-read-only:
+    description: |
+      When true, restores caches but never saves them. Use this on feature branches and PRs to benefit from
+      caches created on your default branch without polluting the cache with branch-specific entries.
+      Only effective when 'enable-pigen-cache' is true.
+    required: false
+    default: false
   pi-gen-dir:
     description: Path where selected pi-gen ref will be checked out to. If the path does not yet exist, it will be created (including its parents).
     required: false
@@ -184,6 +195,10 @@ inputs:
     description: Token to use for checking out pi-gen repo.
     required: false
     default: ${{ github.token }}
+  internal-matrix-context:
+    description: Used to access matrix parameters for cache key generation purposes. This is an internal parameter and must not be changed.
+    required: false
+    default: ${{ toJSON(matrix) }}
 
 outputs:
   image-path:
