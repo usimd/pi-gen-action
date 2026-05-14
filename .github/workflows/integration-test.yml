@@ -96,6 +96,7 @@ jobs:
           keyboard-keymap: de
           keyboard-layout: German - no dead keys
           username: ${{ env.CONFIG_USERNAME }}
+          passwordless-sudo: 1
           wpa-essid: foo
           wpa-password: '1234567890'
           timezone: ${{ env.CONFIG_TIMEZONE }}
@@ -131,6 +132,8 @@ jobs:
           test "$LANG" = "$CONFIG_LOCALE"
           test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
           test "$(sudo cat ${ROOTFS_DIR}/home/${CONFIG_USERNAME}/.ssh/authorized_keys)" = "$CONFIG_PUBLIC_KEY"
+          test -f ${ROOTFS_DIR}/etc/sudoers
+          sudo grep -R -q "^${CONFIG_USERNAME} ALL=(ALL) NOPASSWD: ALL$" ${ROOTFS_DIR}/etc/sudoers*
           ! test -f ${ROOTFS_DIR}/lib/netplan/00-network-manager-all.yaml
 
       - run: df -h

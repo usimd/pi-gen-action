@@ -22,6 +22,7 @@ export interface PiGenConfig {
   firstUserName: string
   firstUserPass?: string
   disableFirstBootUserRename?: string
+  passwordlessSudo?: string
   wpaEssid?: string
   wpaPassword?: string
   wpaCountry?: string

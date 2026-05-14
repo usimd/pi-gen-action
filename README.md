@@ -141,6 +141,13 @@ tries to make sure the stage is respected and its changes are included in the fi
     # Password of the intial user account, locked if empty.
     password: ''
 
+    # Setting to `1` will enable passwordless sudo for the first user. This allows the 
+    # user to run commands with sudo without entering a password. Note that this is a 
+    # security risk and should only be enabled if you understand the implications. The 
+    # user will still be able to use sudo with a password even when this is set to 
+    # `0`.
+    passwordless-sudo: 0
+
     # Path where selected pi-gen ref will be checked out to. If the path does not yet 
     # exist, it will be created (including its parents).
     pi-gen-dir: pi-gen
