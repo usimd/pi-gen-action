@@ -29,9 +29,10 @@ function buildUsageSection(
     '  with:'
   ]
 
-  for (const key of Object.keys(actionYaml.inputs as object).sort((a, b) =>
-    a.localeCompare(b)
-  )) {
+  const userActionParameters = Object.keys(actionYaml.inputs as object)
+    .sort((a, b) => a.localeCompare(b))
+    .filter(paramName => !paramName.startsWith('internal-'))
+  for (const key of userActionParameters) {
     const input = (actionYaml.inputs as Record<string, unknown>)[key] as {
       description: string
       default: string | number

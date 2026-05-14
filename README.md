@@ -60,6 +60,12 @@ tries to make sure the stage is respected and its changes are included in the fi
     # for development.
     apt-proxy: ''
 
+    # When true, restores caches but never saves them. Use this on feature branches 
+    # and PRs to benefit from caches created on your default branch without polluting 
+    # the cache with branch-specific entries. Only effective when 'enable-pigen-cache' 
+    # is true.
+    cache-read-only: false
+
     # Compression to apply on final image (either "none", "zip", "xz" or "gz").
     compression: zip
 
@@ -88,6 +94,10 @@ tries to make sure the stage is respected and its changes are included in the fi
     # directory containing the NOOBS files will be saved as output variable 
     # 'image-noobs-path'.
     enable-noobs: false
+
+    # Enables caching of pi-gen work artifacts to GitHub action cache to speed up 
+    # repetitive builds.
+    enable-pigen-cache: false
 
     # Enable SSH access to Pi.
     enable-ssh: 0
@@ -222,6 +232,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 - [Enable detailed output from `pi-gen` build](#enable-detailed-output-from-pi-gen-build)
 - [Upload final image as artifact](#upload-final-image-as-artifact)
 - [Modify `pi-gen` internal stages](#modify-pi-gen-internal-stages)
+- [Cache work directory to speed up repeated builds](#cache-work-directory-to-speed-up-repeated-buils) 
 - [Increase GitHub Actions runner disk space](#increase-github-actions-runner-disk-space)
 - [Use an APT proxy to define where to pull packages from](#use-fast-apt-proxy-for-pi-gen)
 
@@ -313,6 +324,53 @@ jobs:
           image-name: test
           stage-list: clean-stage stage0 stage1 stage2 custom-stage stage3 stage4
           pi-gen-dir: ${{ inputs.custom-pi-gen-dir }}
+```
+
+### Cache work directory to speed up repeated builds
+
+`pi-gen` can take quite a while to succeed on a QEMU environment (on a free GHA runner
+we are talking up to an hour only for `stage2`). To reduce runtime, you can enable
+a feature to cache the entire working directory to GHA cache and restore it when needed.
+
+The caching configuration is heavily inspired by Gradle action's build cache and is most
+effective when a stable release/main branch creates the cache and this is being re-used
+on feature branches. Remember that the working directory is pretty large and will range
+from a few to maybe tens of gigabytes. Even with aggressive compression settings, one
+single cache can easily consume half the free (10GB) GHA cache volume.
+
+***NOTE***: the caching mechanism is rather dumb, as it just handles compressing and
+pushing the work directory to GHA cache. It does not know anything about `pi-gen`'s
+internals. Naturally, there are conditions in the various stage scripts that check if
+e.g. a file is already present and only then (or if not) does work. With cached content
+being present some execution paths might be skipped that would actually result in a
+different image down the road.
+
+```yaml
+on:
+  push:
+
+jobs:
+  update-cache-when-pushing-to-main:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: test
+          stage-list: stage0 stage1 stage2 custom-stage
+          enable-pigen-cache: true
+
+  use-cache-on-any-non-stable-branch:
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    steps:
+      - uses: usimd/pi-gen-action@v1
+        with:
+          image-name: test
+          stage-list: stage0 stage1 stage2 custom-stage
+          enable-pigen-cache: true
+          # The following is important: no new cache will be created
+          cache-read-only: true
 ```
 
 ### Increase GitHub Actions runner disk space

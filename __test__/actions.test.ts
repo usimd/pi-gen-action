@@ -1,21 +1,36 @@
 import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 import {DEFAULT_CONFIG} from '../src/pi-gen-config.js'
 import * as actions from '../src/actions.js'
 import {removeContainer} from '../src/remove-container.js'
 import {build} from '../src/build.js'
 import {removeRunnerComponents} from '../src/increase-runner-disk-size.js'
+import {WorkDirCache} from '../src/work-dir-cache.js'
 
 vi.mock('@actions/core', async importOriginal => {
   return {...(await importOriginal<typeof import('@actions/core')>())}
 })
+vi.mock('@actions/exec', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/exec')>())}
+})
 vi.mock('../src/configure.js', () => ({
-  configure: vi.fn().mockReturnValue(DEFAULT_CONFIG)
+  configure: vi.fn().mockReturnValue({...DEFAULT_CONFIG})
 }))
 vi.mock('../src/install-dependencies.js')
 vi.mock('../src/build.js')
 vi.mock('../src/clone-pigen.js')
 vi.mock('../src/remove-container.js')
 vi.mock('../src/increase-runner-disk-size.js')
+vi.mock('../src/work-dir-cache.js')
+vi.mock('../src/cache-key.js', () => ({
+  generateCacheKey: vi.fn().mockReturnValue({
+    key: 'test-key',
+    restoreKeys: ['restore-1']
+  }),
+  CacheKey: vi.fn()
+}))
+
+const MockedWorkDirCache = vi.mocked(WorkDirCache)
 
 describe('Actions', () => {
   const OLD_ENV = process.env
@@ -23,6 +38,13 @@ describe('Actions', () => {
   beforeEach(() => {
     vi.resetModules()
     process.env = {...OLD_ENV}
+    MockedWorkDirCache.mockClear()
+    // Stub getPiGenSha (git rev-parse)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0,
+      stdout: 'abc1234\n',
+      stderr: ''
+    })
   })
 
   afterAll(() => {
@@ -30,36 +52,93 @@ describe('Actions', () => {
   })
 
   it('should only increase disk space if requested', async () => {
-    vi.spyOn(core, 'getBooleanInput').mockReturnValueOnce(true)
+    vi.spyOn(core, 'getBooleanInput')
+      .mockReturnValueOnce(true) // increase-runner-disk-size
+      .mockReturnValueOnce(false) // enable-pigen-cache
 
     await actions.piGen()
 
     expect(removeRunnerComponents).toHaveBeenCalled()
   })
 
+  it('should setup caching when enable-pigen-cache is true', async () => {
+    const mockRestore = vi.fn().mockResolvedValue(true)
+    MockedWorkDirCache.mockImplementation(function () {
+      return {
+        restore: mockRestore,
+        workDirMountPath: '/tmp/pi-gen-work'
+      } as any
+    })
+
+    vi.spyOn(core, 'getBooleanInput')
+      .mockReturnValueOnce(false) // increase-runner-disk-size
+      .mockReturnValueOnce(true) // enable-pigen-cache
+    vi.spyOn(core, 'group').mockImplementation(async (_name, fn) => await fn())
+
+    await actions.piGen()
+
+    expect(MockedWorkDirCache).toHaveBeenCalled()
+    expect(mockRestore).toHaveBeenCalled()
+  })
+
+  it('should not override user apt-proxy when caching enabled', async () => {
+    const {configure} = await import('../src/configure.js')
+    vi.mocked(configure).mockReturnValue({
+      ...DEFAULT_CONFIG,
+      aptProxy: 'http://user-proxy:3128'
+    } as any)
+
+    const mockRestore = vi.fn().mockResolvedValue(false)
+    MockedWorkDirCache.mockImplementation(function () {
+      return {
+        restore: mockRestore,
+        workDirMountPath: '/tmp/pi-gen-work'
+      } as any
+    })
+
+    vi.spyOn(core, 'getBooleanInput')
+      .mockReturnValueOnce(false) // increase-runner-disk-size
+      .mockReturnValueOnce(true) // enable-pigen-cache
+    vi.spyOn(core, 'group').mockImplementation(async (_name, fn) => await fn())
+
+    await actions.piGen()
+
+    expect(build).toHaveBeenCalled()
+  })
+
   it('does not run build function twice but invokes cleanup', async () => {
-    vi.spyOn(core, 'getState')
-      .mockReturnValueOnce('')
-      .mockReturnValueOnce('true')
-      .mockReturnValueOnce('true')
-    process.env['INPUT_INCREASE-RUNNER-DISK-SIZE'] = 'false'
+    vi.spyOn(core, 'getState').mockImplementation(name => {
+      if (name === 'main-executed') return 'true'
+      if (name === 'pi-gen-build-started') return 'true'
+      return ''
+    })
+    process.env['INPUT_ENABLE-PIGEN-CACHE'] = 'false'
 
-    // expect build here
-    await actions.run()
-    // expect cleanup here
     await actions.run()
 
-    expect(build).toHaveBeenCalledTimes(1)
+    expect(build).toHaveBeenCalledTimes(0)
     expect(removeContainer).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs piGen on first invocation and saves main-executed state', async () => {
+    vi.spyOn(core, 'getState').mockReturnValue('')
+    vi.spyOn(core, 'saveState')
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+
+    await actions.run()
+
+    expect(core.saveState).toHaveBeenCalledWith('main-executed', true)
+    expect(build).toHaveBeenCalledTimes(1)
   })
 
   const errorMessage = 'any error'
   it.each([new Error(errorMessage), errorMessage])(
     'should catch errors thrown during build and set build safely as failed',
     async error => {
-      vi.spyOn(core, 'getInput').mockImplementation((name, options) => {
+      vi.spyOn(core, 'getInput').mockImplementation(() => {
         throw error
       })
+      vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
       vi.spyOn(core, 'setFailed')
 
       await expect(actions.piGen()).resolves.not.toThrow()
@@ -70,9 +149,8 @@ describe('Actions', () => {
   it.each([new Error(errorMessage), errorMessage])(
     'should gracefully catch errors thrown during cleanup and emit a warning message',
     async error => {
-      vi.spyOn(core, 'getState').mockImplementation(name => {
-        throw error
-      })
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.mocked(removeContainer).mockRejectedValue(error)
       vi.spyOn(core, 'warning')
 
       await expect(actions.cleanup()).resolves.not.toThrow()
@@ -89,5 +167,90 @@ describe('Actions', () => {
         expect(removeContainer).toHaveBeenCalledTimes(buildStarted ? 1 : 0)
       }
     )
+  })
+
+  describe('saveCache', () => {
+    it('should save work dir cache when caching enabled', async () => {
+      const mockSave = vi.fn().mockResolvedValue(undefined)
+      vi.mocked(WorkDirCache).mockImplementation(function () {
+        return {save: mockSave} as any
+      })
+
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(
+        (name: string) => name === 'enable-pigen-cache'
+      )
+      vi.spyOn(core, 'getInput').mockReturnValue('pi-gen')
+      vi.spyOn(core, 'group').mockImplementation(async (_name: any, fn: any) =>
+        fn()
+      )
+
+      await actions.saveCache()
+
+      expect(mockSave).toHaveBeenCalled()
+    })
+
+    it('should not save cache when caching disabled', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+
+      await actions.saveCache()
+
+      expect(MockedWorkDirCache).not.toHaveBeenCalled()
+    })
+
+    it('should skip save when cache-read-only is true', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(name => {
+        if (name === 'enable-pigen-cache') return true
+        if (name === 'cache-read-only') return true
+        return false
+      })
+      vi.spyOn(core, 'info')
+
+      await actions.saveCache()
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Cache is read-only, skipping cache save'
+      )
+      expect(MockedWorkDirCache).not.toHaveBeenCalled()
+    })
+
+    it('should skip cache save when build did not succeed', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('')
+      vi.spyOn(core, 'info')
+
+      await actions.saveCache()
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Build did not succeed, skipping cache save'
+      )
+      expect(MockedWorkDirCache).not.toHaveBeenCalled()
+    })
+
+    it('should set failed on error', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(() => {
+        throw new Error('save error')
+      })
+      vi.spyOn(core, 'setFailed')
+
+      await actions.saveCache()
+
+      expect(core.setFailed).toHaveBeenCalledWith('save error')
+    })
+
+    it('should handle non-Error thrown values', async () => {
+      vi.spyOn(core, 'getState').mockReturnValue('true')
+      vi.spyOn(core, 'getBooleanInput').mockImplementation(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 'string error' as unknown
+      })
+      vi.spyOn(core, 'setFailed')
+
+      await actions.saveCache()
+
+      expect(core.setFailed).toHaveBeenCalledWith('string error')
+    })
   })
 })
