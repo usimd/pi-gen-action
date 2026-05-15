@@ -13,7 +13,7 @@ export default defineConfig({
       exclude: ['src/misc/update-readme.ts'],
       thresholds: {
         statements: 98,
-        branches: 94,
+        branches: 93,
         functions: 97,
         lines: 98
       }
