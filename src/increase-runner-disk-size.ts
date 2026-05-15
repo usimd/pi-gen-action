@@ -101,14 +101,19 @@ export async function removeRunnerComponents(): Promise<void> {
           'ghc*',
           'google-cloud-cli',
           'google-cloud-cli-anthoscli',
-          'google-chrome-stable',
           'firefox',
           'sphinxsearch',
           'mysql-server',
           'mysql-client',
           'postgresql-client-*',
           'swig',
-          'temurin-*'
+          'temurin-*',
+          'ivy',
+          'groovy',
+          'bnd',
+          'antlr',
+          'junit*',
+          ...(process.arch === 'x64' ? ['google-chrome-stable'] : [])
         ]
         return exec
           .getExecOutput(

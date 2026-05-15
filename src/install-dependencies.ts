@@ -34,7 +34,6 @@ export async function installHostDependencies(
     core.debug(
       `Installing additional host packages '${installPackages.join(' ')}'`
     )
-    core.debug(`Loading additional host modules '${hostModules.join(' ')}'`)
 
     const sudoPath = await io.which('sudo', true)
 
@@ -72,11 +71,15 @@ export async function installHostDependencies(
         }
       }
     )
-    execOutput = await exec.getExecOutput(
-      sudoPath,
-      ['modprobe', '-a', ...hostModules],
-      {silent: !verbose}
-    )
+
+    if (hostModules.length > 0) {
+      core.debug(`Loading additional host modules '${hostModules.join(' ')}'`)
+      execOutput = await exec.getExecOutput(
+        sudoPath,
+        ['modprobe', '-a', ...hostModules],
+        {silent: !verbose}
+      )
+    }
 
     // qemu-user-static provides qemu-aarch64-static but build-docker.sh expects
     // "qemu-aarch64" in PATH. Create symlink so the static binary is found.
