@@ -100,7 +100,6 @@ export async function removeRunnerComponents(): Promise<void> {
           'gfortran',
           'ghc*',
           'google-cloud-cli',
-          'google-cloud-cli-anthoscli',
           'firefox',
           'sphinxsearch',
           'mysql-server',
