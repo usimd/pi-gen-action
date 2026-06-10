@@ -41,9 +41,12 @@ export class WorkDirCache {
         [
           'tar',
           '--use-compress-program=zstd -T0 -10 --long=31',
-          '--exclude=./*/rootfs/proc/*',
-          '--exclude=./*/rootfs/sys/*',
-          '--exclude=./*/rootfs/dev/*',
+          // Exclude rootfs directories from cache. pi-gen's export-image stage
+          // allocates a fixed-size image based on `du` of the rootfs, then runs
+          // dist-upgrade inside it. A stale cached rootfs causes the size estimate
+          // to be too small for upgraded packages (e.g. kernel + initramfs growth),
+          // resulting in "No space left on device" during image export.
+          '--exclude=./*/*/rootfs',
           '-cf',
           WORK_DIR_ARCHIVE,
           '-C',
