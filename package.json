@@ -39,7 +39,7 @@
     "countries-and-timezones": "3.9.0",
     "json-colorizer": "^3.0.1",
     "object-hash": "^3.0.0",
-    "tmp": "0.2.5"
+    "tmp": "0.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
