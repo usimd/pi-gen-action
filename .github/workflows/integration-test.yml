@@ -67,7 +67,7 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' }}
+          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' || '' }}
           verbose-output: true
           compression: xz
           compression-level: ${{ github.event_name == 'workflow_dispatch' && inputs.compression-level || 1 }}
