@@ -198,7 +198,78 @@ describe('PiGen', () => {
     } as PiGenConfig)
 
     expect(await piGen.hasExportsConfigured()).toBeFalsy()
-    expect(glob.create).toHaveBeenCalledWith('/pi-gen/stage0/EXPORT_*')
+    expect(glob.create).toHaveBeenCalledWith('/pi-gen/stage0/EXPORT_IMAGE')
+  })
+
+  it('does not count a NOOBS-only directive as an image export', async () => {
+    const stage = tmp.dirSync({unsafeCleanup: true})
+    try {
+      fs.writeFileSync(`${stage.name}/EXPORT_NOOBS`, '')
+      const piGen = new PiGen(stage.name, {
+        ...DEFAULT_CONFIG,
+        stageList: [stage.name]
+      })
+
+      expect(await piGen.hasExportsConfigured()).toBe(false)
+    } finally {
+      stage.removeCallback()
+    }
+  })
+
+  it('counts an image directive as an image export', async () => {
+    const stage = tmp.dirSync({unsafeCleanup: true})
+    try {
+      fs.writeFileSync(`${stage.name}/EXPORT_IMAGE`, '')
+      const piGen = new PiGen(stage.name, {
+        ...DEFAULT_CONFIG,
+        stageList: [stage.name]
+      })
+
+      expect(await piGen.hasExportsConfigured()).toBe(true)
+    } finally {
+      stage.removeCallback()
+    }
+  })
+
+  it('does not create NOOBS directives for image exports', async () => {
+    const stage = tmp.dirSync({unsafeCleanup: true})
+    try {
+      fs.writeFileSync(`${stage.name}/EXPORT_IMAGE`, '')
+      mockPiGenDependencies()
+
+      await PiGen.getInstance('pi-gen', {
+        ...DEFAULT_CONFIG,
+        stageList: [stage.name],
+        exportLastStageOnly: 'false'
+      })
+
+      expect(fs.existsSync(`${stage.name}/EXPORT_NOOBS`)).toBe(false)
+    } finally {
+      stage.removeCallback()
+    }
+  })
+
+  it('preserves existing NOOBS directives when configuring image exports', async () => {
+    const stages = [
+      tmp.dirSync({unsafeCleanup: true}),
+      tmp.dirSync({unsafeCleanup: true})
+    ]
+    try {
+      const noobsPath = `${stages[0].name}/EXPORT_NOOBS`
+      fs.writeFileSync(noobsPath, 'custom')
+      mockPiGenDependencies()
+
+      await PiGen.getInstance('pi-gen', {
+        ...DEFAULT_CONFIG,
+        stageList: stages.map(stage => stage.name),
+        exportLastStageOnly: 'true'
+      })
+
+      expect(fs.existsSync(noobsPath)).toBe(true)
+      expect(fs.readFileSync(noobsPath, 'utf8')).toBe('custom')
+    } finally {
+      stages.forEach(stage => stage.removeCallback())
+    }
   })
 
   it('throws an error when configuring empty stage list', async () => {
@@ -206,23 +277,6 @@ describe('PiGen', () => {
       async () =>
         await PiGen.getInstance('', {stageList: [] as string[]} as PiGenConfig)
     ).rejects.toThrow()
-  })
-
-  it('configures NOOBS export for stages that export images', async () => {
-    const stageList = [tmp.dirSync().name, tmp.dirSync().name]
-    fs.writeFileSync(`${stageList[0]}/EXPORT_IMAGE`, '')
-
-    const piGenDir = 'pi-gen'
-    mockPiGenDependencies()
-    vi.spyOn(fs, 'realpathSync').mockReturnValueOnce('/pi-gen/stage0')
-
-    await PiGen.getInstance(piGenDir, {
-      stageList: stageList,
-      enableNoobs: 'true'
-    } as PiGenConfig)
-
-    expect(fs.existsSync(`${stageList[0]}/EXPORT_NOOBS`)).toBeTruthy()
-    expect(fs.existsSync(`${stageList[1]}/EXPORT_NOOBS`)).toBeFalsy()
   })
 
   it('does not require a stage5 directory for Buster', async () => {
@@ -244,36 +298,27 @@ describe('PiGen', () => {
     await expect(pigen).resolves.not.toThrow()
   })
 
-  it.each([
-    [
-      false,
-      [
-        (() => {
-          let stageDir = tmp.dirSync().name
-          fs.writeFileSync(`${stageDir}/EXPORT_IMAGE`, '')
-          fs.writeFileSync(`${stageDir}/EXPORT_NOOBS`, '')
-          return stageDir
-        })(),
-        tmp.dirSync().name
-      ]
-    ],
-    [true, [tmp.dirSync().name, tmp.dirSync().name]]
-  ])(
-    'configures stages correctly when only last one exported and NOOBS = %s',
-    async (noobsEnabled, stageList) => {
+  it('configures only the last stage for image export', async () => {
+    const stages = [
+      tmp.dirSync({unsafeCleanup: true}),
+      tmp.dirSync({unsafeCleanup: true})
+    ]
+    try {
+      fs.writeFileSync(`${stages[0].name}/EXPORT_IMAGE`, '')
       mockPiGenDependencies()
-      await PiGen.getInstance('', {
-        stageList: stageList,
-        exportLastStageOnly: 'true',
-        enableNoobs: noobsEnabled.toString()
-      } as PiGenConfig)
 
-      expect(fs.existsSync(`${stageList[0]}/EXPORT_NOOBS`)).toBeFalsy()
-      expect(fs.existsSync(`${stageList[0]}/EXPORT_IMAGE`)).toBeFalsy()
-      expect(fs.existsSync(`${stageList[1]}/EXPORT_NOOBS`)).toBe(noobsEnabled)
-      expect(fs.existsSync(`${stageList[1]}/EXPORT_IMAGE`)).toBeTruthy()
+      await PiGen.getInstance('pi-gen', {
+        ...DEFAULT_CONFIG,
+        stageList: stages.map(stage => stage.name),
+        exportLastStageOnly: 'true'
+      })
+
+      expect(fs.existsSync(`${stages[0].name}/EXPORT_IMAGE`)).toBe(false)
+      expect(fs.existsSync(`${stages[1].name}/EXPORT_IMAGE`)).toBe(true)
+    } finally {
+      stages.forEach(stage => stage.removeCallback())
     }
-  )
+  })
 
   it.each([
     ['no stage message', false, 'info', 0],
@@ -369,36 +414,6 @@ describe('PiGen', () => {
           compressionType == 'none' ? 'img' : compressionType
         }`,
         expect.anything()
-      )
-    }
-  )
-
-  it.each([
-    ['foo', [] as string[], undefined],
-    [
-      'bar',
-      [
-        '/pi-gen-dir/deploy/bar-lite/os.json',
-        '/pi-gen-dir/deploy/bar-full/os.json'
-      ],
-      '/pi-gen-dir/deploy/bar-lite'
-    ]
-  ])(
-    'resolves path to created NOOBS directory',
-    async (imageName, globResults, expectedResult) => {
-      mockPiGenDependencies()
-      vi.spyOn(glob, 'create').mockResolvedValue({
-        glob: async () => globResults
-      } as glob.Globber)
-
-      const piGen = await PiGen.getInstance('pi-gen-dir', {
-        imgName: imageName,
-        stageList: ['stage0']
-      } as PiGenConfig)
-
-      expect(await piGen.getLastNoobsImagePath()).toBe(expectedResult)
-      expect(glob.create).toHaveBeenLastCalledWith(
-        `pi-gen-dir/deploy/${imageName}*/os.json`
       )
     }
   )

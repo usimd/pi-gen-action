@@ -17,9 +17,7 @@ export async function build(
     const piGen = await PiGen.getInstance(piGenDir, userConfig, workDirMount)
 
     if (!(await piGen.hasExportsConfigured())) {
-      throw new Error(
-        'No NOOBS/image exports are configured, check your config.'
-      )
+      throw new Error('No image exports are configured, check your config.')
     }
 
     execOutput = await piGen.build(verbose)
@@ -31,10 +29,6 @@ export async function build(
     }
 
     core.setOutput('image-path', await piGen.getLastImagePath())
-
-    if (userConfig.enableNoobs === 'true') {
-      core.setOutput('image-noobs-path', await piGen.getLastNoobsImagePath())
-    }
   } catch (error) {
     throw new Error(
       `${(error as Error)?.message ?? error}\n${execOutput?.stderr

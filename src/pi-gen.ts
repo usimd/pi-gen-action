@@ -43,7 +43,7 @@ export class PiGen {
 
   async hasExportsConfigured(): Promise<boolean> {
     for (const stage of this.config.stageList) {
-      const exportGlob = await glob.create(`${stage}/EXPORT_*`)
+      const exportGlob = await glob.create(`${stage}/EXPORT_IMAGE`)
 
       if ((await exportGlob.glob()).length > 0) {
         return true
@@ -108,14 +108,6 @@ export class PiGen {
     )
     const foundImages = await imageGlob.glob()
     return foundImages.length > 0 ? foundImages[0] : undefined
-  }
-
-  async getLastNoobsImagePath(): Promise<string | undefined> {
-    const imageGlob = await glob.create(
-      `${this.piGenDirectory}/deploy/${this.config.imgName}*/os.json`
-    )
-    const foundImages = await imageGlob.glob()
-    return foundImages.length > 0 ? path.dirname(foundImages[0]) : undefined
   }
 
   private async validatePigenDirectory(): Promise<boolean> {
@@ -210,14 +202,8 @@ export class PiGen {
     }
   }
 
-  private configureStageExport(
-    stageDir: string,
-    exportType: 'image' | 'noobs',
-    targetState: boolean
-  ): void {
-    const exportFileName =
-      exportType === 'image' ? 'EXPORT_IMAGE' : 'EXPORT_NOOBS'
-    const configPath = `${stageDir}/${exportFileName}`
+  private configureStageExport(stageDir: string, targetState: boolean): void {
+    const configPath = `${stageDir}/EXPORT_IMAGE`
 
     if (!targetState) {
       try {
@@ -239,18 +225,12 @@ export class PiGen {
 
     if (this.config.exportLastStageOnly === 'true') {
       for (const stage of this.config.stageList.slice(0, -1)) {
-        this.configureStageExport(stage, 'image', false)
-        this.configureStageExport(stage, 'noobs', false)
+        this.configureStageExport(stage, false)
       }
 
-      this.configureStageExport(lastStage, 'image', true)
-
-      if (this.config.enableNoobs === 'true') {
-        this.configureStageExport(lastStage, 'noobs', true)
-      }
+      this.configureStageExport(lastStage, true)
     } else {
       // In this case, only warn about missing export if last stage is a custom stage.
-      // Add any EXPORT_NOOBS, if missing
       if (!Object.values(PiGenStages).includes(path.basename(lastStage))) {
         const imageGlob = await glob.create(`${lastStage}/EXPORT_IMAGE`, {
           matchDirectories: false
@@ -259,21 +239,6 @@ export class PiGen {
           core.warning(
             `User stage ${lastStage} does not have an EXPORT_IMAGE directive and will not be included in the generated image`
           )
-        }
-      }
-
-      for (const stage of this.config.stageList) {
-        const exportGlob = await glob.create(`${stage}/EXPORT*`, {
-          matchDirectories: false
-        })
-        const exportDirectives = await exportGlob.glob()
-
-        if (
-          exportDirectives.some(p => p.endsWith('EXPORT_IMAGE')) &&
-          exportDirectives.length === 1
-        ) {
-          this.configureStageExport(stage, 'noobs', true)
-          core.notice(`Created NOOBS export directive in ${stage}`)
         }
       }
     }
