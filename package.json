@@ -60,7 +60,7 @@
     "semver": "7.8.6",
     "ts-node": "10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "8.72.2",
     "vitest": "^5.0.0",
     "vitest-mock-extended": "^6.0.0",
