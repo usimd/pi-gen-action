@@ -26,7 +26,6 @@ describe('Configure', () => {
     vi.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
     process.env['INPUT_IMAGE-NAME'] = 'test'
     process.env['INPUT_STAGE-LIST'] = 'stage0 stage1'
-    process.env['INPUT_ENABLE-NOOBS'] = 'false'
     process.env['INPUT_EXPORT-LAST-STAGE-ONLY'] = 'true'
 
     expect(await configure()).toEqual(
@@ -42,7 +41,6 @@ describe('Configure', () => {
     vi.spyOn(config, 'validateConfig').mockReturnValue(Promise.resolve())
 
     process.env['INPUT_IMAGE-NAME'] = 'test'
-    process.env['INPUT_ENABLE-NOOBS'] = 'false'
     process.env['INPUT_EXPORT-LAST-STAGE-ONLY'] = 'true'
     process.env['INPUT_PASSWORD'] = 'secretpassword'
     process.env['INPUT_WPA-PASSWORD'] = 'secretpassword'
