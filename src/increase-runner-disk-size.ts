@@ -125,9 +125,10 @@ export async function removeRunnerComponents(): Promise<void> {
             getExecOptions('remove-java-alternatives', verbose)
           )
           .then(() => {
+            // apt's 3.0 solver times out on Ubuntu 26.04 runner package sets.
             return exec.getExecOutput(
               'sudo',
-              ['apt', 'purge', ...purgePackages],
+              ['apt', '-o', 'APT::Solver=internal', 'purge', ...purgePackages],
               getExecOptions('apt-purge-packages', verbose)
             )
           })
