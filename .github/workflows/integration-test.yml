@@ -41,9 +41,19 @@ env:
 jobs:
 
   integration-test:
+    name: integration-test (${{ matrix.runs-on }}${{ matrix.architecture == 'armhf' && ', armhf' || '' }})
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ubuntu-24.04-arm]
+        include:
+          - runs-on: ubuntu-latest
+            pi-gen-version: arm64
+            architecture: arm64
+          - runs-on: ubuntu-24.04-arm
+            pi-gen-version: arm64
+            architecture: arm64
+          - runs-on: ubuntu-24.04
+            pi-gen-version: master
+            architecture: armhf
       fail-fast: false
     runs-on: ${{ matrix.runs-on }}
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test')
@@ -67,6 +77,8 @@ jobs:
         id: build
         with:
           image-name: integration-test
+          pi-gen-version: ${{ matrix.pi-gen-version }}
+          release: trixie
           stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' || '' }}
           verbose-output: true
           compression: xz
@@ -101,6 +113,7 @@ jobs:
           set -ex
           test -x ${ROOTFS_DIR}/usr/bin/curl
           test "$(cat ${ROOTFS_DIR}/opt/hello)" = "world"
+          test "$(cat ${ROOTFS_DIR}/opt/architecture)" = "${{ matrix.architecture }}"
           test -x ${ROOTFS_DIR}/usr/bin/node
           test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "$CONFIG_HOSTNAME"
           grep $CONFIG_USERNAME ${ROOTFS_DIR}/etc/passwd
