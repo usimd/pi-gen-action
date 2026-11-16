@@ -17,7 +17,7 @@ ARM-based runners are especially attractive to cut down on build times as they d
 QEMU for cross-platform building.
 
 Integration tests build Trixie ARM64 images on both x64 and native ARM64 runners,
-and 32-bit ARM (armhf) images on x64 using pi-gen's `master` branch. The tests
+and 32-bit ARM (armhf) images on Ubuntu 24.04 x64 using pi-gen's `master` branch. The tests
 inspect the generated images and verify their target architecture.
 
 ```yaml
