@@ -24,7 +24,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [ labeled, opened, synchronize, reopened ]
+    types: [labeled, opened, synchronize, reopened]
   schedule:
     # Run integration tests every other week to get notified on incompatible pi-gen changes
     - cron: '0 0 1,15 * *'
@@ -39,21 +39,10 @@ env:
   CONFIG_PUBLIC_KEY: ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAoK4bf7Tj47S67Mf3aCsRPOcYU2F91xLBJ4U4n9jqgsAf75NWFX5UfoRQhWsGVsCYfA84ZTYIrIHMw57CLA2gM= a@b.org
 
 jobs:
-
   integration-test:
-    name: integration-test (${{ matrix.runs-on }}${{ matrix.architecture == 'armhf' && ', armhf' || '' }})
     strategy:
       matrix:
-        include:
-          - runs-on: ubuntu-latest
-            pi-gen-version: arm64
-            architecture: arm64
-          - runs-on: ubuntu-24.04-arm
-            pi-gen-version: arm64
-            architecture: arm64
-          - runs-on: ubuntu-24.04
-            pi-gen-version: master
-            architecture: armhf
+        runs-on: [ubuntu-latest, ubuntu-24.04-arm]
       fail-fast: false
     runs-on: ${{ matrix.runs-on }}
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test')
@@ -77,7 +66,7 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          pi-gen-version: ${{ matrix.pi-gen-version }}
+          pi-gen-version: arm64
           release: trixie
           stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' || '' }}
           verbose-output: true
@@ -99,21 +88,101 @@ jobs:
           enable-pigen-cache: true
 
       - name: List working directory
-        run: tree 
-      
+        run: tree
+
       - name: Uncompress image and mount loopback device
         run: |
           set -ex
           xz -d ${{ steps.build.outputs.image-path }}
           file_name="${{ steps.build.outputs.image-path }}"
           ./__test__/mount-pi-gen-image.sh "${file_name/.xz/}" $MOUNT_DIR
-      
+
       - name: Test configuration values
         run: |
           set -ex
           test -x ${ROOTFS_DIR}/usr/bin/curl
           test "$(cat ${ROOTFS_DIR}/opt/hello)" = "world"
-          test "$(cat ${ROOTFS_DIR}/opt/architecture)" = "${{ matrix.architecture }}"
+          test "$(cat ${ROOTFS_DIR}/opt/architecture)" = "arm64"
+          test -x ${ROOTFS_DIR}/usr/bin/node
+          test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "$CONFIG_HOSTNAME"
+          grep $CONFIG_USERNAME ${ROOTFS_DIR}/etc/passwd
+          source ${ROOTFS_DIR}/etc/default/locale
+          test "$LANG" = "$CONFIG_LOCALE"
+          test "$(cat ${ROOTFS_DIR}/etc/timezone)" = "$CONFIG_TIMEZONE"
+          test "$(sudo cat ${ROOTFS_DIR}/home/${CONFIG_USERNAME}/.ssh/authorized_keys)" = "$CONFIG_PUBLIC_KEY"
+          test -f ${ROOTFS_DIR}/etc/sudoers
+          sudo grep -R -q "^${CONFIG_USERNAME} ALL=(ALL) NOPASSWD: ALL$" ${ROOTFS_DIR}/etc/sudoers*
+
+      - run: df -h
+        if: always()
+
+      - name: Remove test label from PR (if set)
+        uses: actions-ecosystem/action-remove-labels@v1
+        if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test') }}
+        with:
+          labels: test
+
+  integration-test-armhf:
+    name: integration-test (ubuntu-24.04, armhf)
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test')
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+
+      - name: Compile action code before test
+        run: npm ci && npm run package
+
+      - name: List all installed runner packages
+        run: sudo apt list --installed
+
+      - name: Run pi-gen build
+        uses: ./
+        id: build
+        with:
+          image-name: integration-test
+          pi-gen-version: master
+          release: trixie
+          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' || '' }}
+          verbose-output: true
+          compression: xz
+          compression-level: ${{ github.event_name == 'workflow_dispatch' && inputs.compression-level || 1 }}
+          locale: ${{ env.CONFIG_LOCALE }}
+          hostname: ${{ env.CONFIG_HOSTNAME }}
+          keyboard-keymap: de
+          keyboard-layout: German - no dead keys
+          username: ${{ env.CONFIG_USERNAME }}
+          passwordless-sudo: 1
+          wpa-essid: foo
+          wpa-password: '1234567890'
+          timezone: ${{ env.CONFIG_TIMEZONE }}
+          pubkey-ssh-first-user: ${{ env.CONFIG_PUBLIC_KEY }}
+          increase-runner-disk-size: ${{ github.event_name != 'workflow_dispatch' || inputs.increase-runner-disk }}
+          temp-repo: deb [arch=amd64 trusted=yes] https://deb.nodesource.com/node_24.x nodistro main
+          enable-cloud-init: 0
+          enable-pigen-cache: true
+
+      - name: List working directory
+        run: tree
+
+      - name: Uncompress image and mount loopback device
+        run: |
+          set -ex
+          xz -d ${{ steps.build.outputs.image-path }}
+          file_name="${{ steps.build.outputs.image-path }}"
+          ./__test__/mount-pi-gen-image.sh "${file_name/.xz/}" $MOUNT_DIR
+
+      - name: Test configuration values
+        run: |
+          set -ex
+          test -x ${ROOTFS_DIR}/usr/bin/curl
+          test "$(cat ${ROOTFS_DIR}/opt/hello)" = "world"
+          test "$(cat ${ROOTFS_DIR}/opt/architecture)" = "armhf"
           test -x ${ROOTFS_DIR}/usr/bin/node
           test "$(cat ${ROOTFS_DIR}/etc/hostname)" = "$CONFIG_HOSTNAME"
           grep $CONFIG_USERNAME ${ROOTFS_DIR}/etc/passwd
