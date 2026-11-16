@@ -17,9 +17,9 @@ export async function installHostDependencies(
 
     const piGenDependencies = await resolvePiGenDependencies(piGenDirectory)
 
-    // qemu-user-binfmt conflicts with qemu-user-static on Ubuntu; we need the
-    // static package for F-flag binfmt_misc to work inside containers
-    const installPackages = [
+    // qemu-user-binfmt conflicts with qemu-user-static on older Ubuntu releases;
+    // we need the static package for F-flag binfmt_misc to work inside containers
+    let installPackages = [
       ...new Set([
         ...hostDependencies.packages,
         ...packages.split(/[\s,]/),
@@ -31,9 +31,6 @@ export async function installHostDependencies(
     const hostModules = [
       ...new Set([...hostDependencies.modules, ...modules.split(/[\s,]/)])
     ].filter(m => m)
-    core.debug(
-      `Installing additional host packages '${installPackages.join(' ')}'`
-    )
 
     const sudoPath = await io.which('sudo', true)
 
@@ -47,6 +44,24 @@ export async function installHostDependencies(
           DEBIAN_FRONTEND: 'noninteractive'
         }
       }
+    )
+
+    if (installPackages.includes('qemu-user-static')) {
+      const policy = await exec.getExecOutput(
+        'apt-cache',
+        ['policy', 'qemu-user-static'],
+        {silent: !verbose, env: {...process.env, LC_ALL: 'C'}}
+      )
+      // Ubuntu 26.04 replaced qemu-user-static with qemu-user-binfmt, which
+      // ships static binaries and registers them with the F flag.
+      if (!/Candidate: (?!\(none\))/.test(policy.stdout)) {
+        installPackages = installPackages.map(p =>
+          p === 'qemu-user-static' ? 'qemu-user-binfmt' : p
+        )
+      }
+    }
+    core.debug(
+      `Installing additional host packages '${installPackages.join(' ')}'`
     )
 
     execOutput = await exec.getExecOutput(
@@ -83,16 +98,14 @@ export async function installHostDependencies(
 
     // qemu-user-static provides qemu-aarch64-static but build-docker.sh expects
     // "qemu-aarch64" in PATH. Create symlink so the static binary is found.
-    execOutput = await exec.getExecOutput(
-      sudoPath,
-      [
-        'ln',
-        '-sf',
-        '/usr/bin/qemu-aarch64-static',
-        '/usr/local/bin/qemu-aarch64'
-      ],
-      {silent: !verbose}
-    )
+    const staticQemuAarch64 = '/usr/bin/qemu-aarch64-static'
+    if (await fileExists(staticQemuAarch64)) {
+      execOutput = await exec.getExecOutput(
+        sudoPath,
+        ['ln', '-sf', staticQemuAarch64, '/usr/local/bin/qemu-aarch64'],
+        {silent: !verbose}
+      )
+    }
 
     core.info(`Installed packages on host: ${installPackages.join(' ')}`)
     core.info(`Loaded modules on host: ${hostModules.join(' ')}`)
@@ -101,6 +114,13 @@ export async function installHostDependencies(
   } finally {
     core.endGroup()
   }
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  return fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false)
 }
 
 async function resolvePiGenDependencies(

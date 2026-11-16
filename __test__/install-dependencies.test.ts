@@ -66,4 +66,58 @@ describe('Install host dependencies', () => {
       expect.anything()
     )
   })
+
+  it('installs qemu-user-binfmt when qemu-user-static is unavailable', async () => {
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(exec, 'getExecOutput').mockImplementation(
+      async (cmdLine: string, args?: string[]) =>
+        ({
+          exitCode: 0,
+          stdout: args?.includes('policy')
+            ? 'qemu-user-static:\n  Installed: (none)\n  Candidate: (none)\n'
+            : ''
+        }) as exec.ExecOutput
+    )
+
+    await installHostDependencies('qemu-user-static', '', '')
+
+    const installArgs = vi
+      .mocked(exec.getExecOutput)
+      .mock.calls.find(([, args]) => args?.includes('install'))?.[1]
+    expect(installArgs).toContain('qemu-user-binfmt')
+    expect(installArgs).not.toContain('qemu-user-static')
+  })
+
+  it('links qemu-aarch64 only when the static binary exists', async () => {
+    vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+    vi.spyOn(exec, 'getExecOutput').mockResolvedValue({
+      exitCode: 0,
+      stdout: ''
+    } as exec.ExecOutput)
+    vi.spyOn(fsPromises, 'access').mockRejectedValueOnce(new Error('ENOENT'))
+
+    await installHostDependencies('', '', '')
+
+    expect(exec.getExecOutput).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.arrayContaining(['ln']),
+      expect.anything()
+    )
+
+    vi.mocked(exec.getExecOutput).mockClear()
+    vi.spyOn(fsPromises, 'access').mockResolvedValueOnce(undefined)
+
+    await installHostDependencies('', '', '')
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      [
+        'ln',
+        '-sf',
+        '/usr/bin/qemu-aarch64-static',
+        '/usr/local/bin/qemu-aarch64'
+      ],
+      expect.anything()
+    )
+  })
 })
