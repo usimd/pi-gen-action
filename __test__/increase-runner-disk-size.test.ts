@@ -59,6 +59,12 @@ describe('Increasing runner disk size', () => {
 
     expect(exec.getExecOutput).toHaveBeenCalledWith(
       'sudo',
+      expect.arrayContaining(['apt', '-o', 'APT::Solver=internal', 'purge']),
+      expect.anything()
+    )
+
+    expect(exec.getExecOutput).toHaveBeenCalledWith(
+      'sudo',
       expect.arrayContaining([
         'sh',
         '-c',
