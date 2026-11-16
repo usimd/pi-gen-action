@@ -43,21 +43,18 @@ describe('Run pi-gen build', () => {
     )
   })
 
-  it('sets output variables to image paths', async () => {
+  it('only sets the image output for a legacy NOOBS configuration', async () => {
     const imagePath = '/image-path.img'
-    const noobsPath = '/noobs-path'
     const piGenMock = mock<PiGen>()
     piGenMock.hasExportsConfigured.mockResolvedValueOnce(true)
-    piGenMock.build.mockResolvedValue({
-      exitCode: 0
-    } as exec.ExecOutput)
+    piGenMock.build.mockResolvedValue({exitCode: 0} as exec.ExecOutput)
     piGenMock.getLastImagePath.mockResolvedValueOnce(imagePath)
-    piGenMock.getLastNoobsImagePath.mockResolvedValueOnce(noobsPath)
     vi.spyOn(PiGen, 'getInstance').mockResolvedValue(piGenMock)
 
-    const conf = {...DEFAULT_CONFIG}
-    conf.enableNoobs = 'true'
-    await build('pi-gen', conf)
-    expect(core.setOutput).toHaveBeenCalledTimes(2)
+    const legacyConfig = {...DEFAULT_CONFIG, enableNoobs: 'true'}
+    await build('pi-gen', legacyConfig)
+
+    expect(core.setOutput).toHaveBeenCalledTimes(1)
+    expect(core.setOutput).toHaveBeenCalledWith('image-path', imagePath)
   })
 })

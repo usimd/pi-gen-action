@@ -42,17 +42,17 @@ This will keep the default `pi-gen` export directives unchanged. If changes in t
 required, a custom stage at first position in the list could [perform the changes](#modify-pi-gen-internal-stages)
 in the other directories.
 
+## Migrating from v1
+
+v2 removes the `enable-noobs` input and `image-noobs-path` output. Continue using
+`@v1` if you need NOOBS support.
+
 ## Outputs
 
 ### `image-path`
 
 If an image was built successfully, the action will set this property to point to the file. This will be located
 in `${{ inputs.pi-gen-dir }}/deploy`.
-
-### `image-noobs-path`
-
-If NOOBS build is enabled by setting `${{ inputs.enable-noobs }}` to `true`, the property will point to the directory
-in `pi-gen`'s output directory containing the build result.
 
 ## How it works
 
@@ -106,11 +106,6 @@ tries to make sure the stage is respected and its changes are included in the fi
     # editing the files in `stage2/04-cloud-init/files`. Cloud-init will be configured 
     # to read them on first boot.
     enable-cloud-init: 1
-
-    # Set whether a NOOBS image should be built as well. If enabled, the output 
-    # directory containing the NOOBS files will be saved as output variable 
-    # 'image-noobs-path'.
-    enable-noobs: false
 
     # Enables caching of pi-gen work artifacts to GitHub action cache to speed up 
     # repetitive builds.

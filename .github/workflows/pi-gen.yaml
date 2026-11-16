@@ -46,7 +46,6 @@ jobs:
           image-name: test
           stage-list: clean-stage stage0 stage1 stage2 test-stage stage3 stage4 stage5
           verbose-output: true
-          enable-noobs: true
           compression: xz
           compression-level: 9
           locale: de_DE.UTF-8
@@ -65,11 +64,5 @@ jobs:
         with:
           name: pi-gen-image
           path: ${{ steps.build.outputs.image-path }}
-          retention-days: 2
-      
-      - uses: actions/upload-artifact@v7
-        with:
-          name: pi-gen-noobs-image
-          path: ${{ steps.build.outputs.image-noobs-path }}
           retention-days: 2
 

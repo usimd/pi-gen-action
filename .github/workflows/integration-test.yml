@@ -2,11 +2,6 @@ name: pi-gen-action-integration-test
 on:
   workflow_dispatch:
     inputs:
-      enable-noobs:
-        description: Enable NOOBS
-        default: true
-        required: false
-        type: boolean
       compression-level:
         description: Image compression level
         default: 1
@@ -72,9 +67,8 @@ jobs:
         id: build
         with:
           image-name: integration-test
-          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' }}
+          stage-list: stage0 stage1 stage2 ./__test__/it-test-stage ${{ inputs.full-image && 'stage3 stage4 stage5' || '' }}
           verbose-output: true
-          enable-noobs: ${{ github.event_name != 'workflow_dispatch' || inputs.enable-noobs }}
           compression: xz
           compression-level: ${{ github.event_name == 'workflow_dispatch' && inputs.compression-level || 1 }}
           locale: ${{ env.CONFIG_LOCALE }}

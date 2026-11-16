@@ -118,11 +118,6 @@ describe('PiGenConfig', () => {
       'stage-list must contain valid pi-gen stage names "stage[0-5]" and/or valid directories'
     ],
     [
-      'enableNoobs',
-      'yes',
-      'enable-noobs must be either set to "true" or "false", was: yes'
-    ],
-    [
       'exportLastStageOnly',
       'no',
       'export-last-stage-only must be either set to "true" or "false", was: no'

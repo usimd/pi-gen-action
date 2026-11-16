@@ -31,7 +31,6 @@ export interface PiGenConfig {
   pubkeyOnlySsh: string
   setfcap?: string
   stageList: string[]
-  enableNoobs: string
   exportLastStageOnly: string
   dockerOpts?: string
   enableCloudInit: string
@@ -53,7 +52,6 @@ export const DEFAULT_CONFIG: PiGenConfig = {
   pubkeyOnlySsh: '0',
   enableCloudInit: '1',
   stageList: ['stage*'],
-  enableNoobs: 'false',
   exportLastStageOnly: 'true'
 }
 
@@ -164,12 +162,6 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
   ) {
     throw new Error(
       'wpa-password must be between 8 and 63 characters (or unset)'
-    )
-  }
-
-  if (!/^(true|false)$/.test(config.enableNoobs)) {
-    throw new Error(
-      `enable-noobs must be either set to "true" or "false", was: ${config.enableNoobs}`
     )
   }
 
