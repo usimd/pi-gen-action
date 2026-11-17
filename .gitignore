@@ -102,6 +102,3 @@ dist/*
 codecov
 codecov.SHA256SUM
 codecov.SHA256SUM.sig
-
-# Generated at build time by npm run update-locales
-src/supported-locales.json

@@ -23,6 +23,9 @@ jobs:
       - name: Test and create dist files
         run: npm ci && npm run all
 
+      - name: Bundle supported Debian locales
+        run: npm run update-locales
+
       - name: Push dist to new tag
         uses: teunmooij/github-versioned-release@v1
         env:
@@ -31,6 +34,7 @@ jobs:
           include: |-
             dist/licenses.txt
             dist/index.js
+            dist/supported-locales.json
             README.md
             LICENSE
             action.yml

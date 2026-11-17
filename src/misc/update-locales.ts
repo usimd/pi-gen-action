@@ -18,7 +18,7 @@ const MIRRORS = [
   'https://deb.debian.org/debian',
   'https://archive.debian.org/debian'
 ]
-const OUTPUT_FILE = 'src/supported-locales.json'
+const OUTPUT_FILE = 'dist/supported-locales.json'
 
 async function download(url: string): Promise<Buffer | undefined> {
   const response = await fetch(url)
@@ -86,11 +86,8 @@ async function updateLocales(): Promise<void> {
     locales[release] = await getSupportedLocales(suite)
     console.log(`${release} (${suite}): ${locales[release].length} locales`)
   }
+  fs.mkdirSync(path.dirname(OUTPUT_FILE), {recursive: true})
   fs.writeFileSync(OUTPUT_FILE, `${JSON.stringify(locales, null, 2)}\n`)
 }
 
-if (process.argv.includes('--if-missing') && fs.existsSync(OUTPUT_FILE)) {
-  console.log(`${OUTPUT_FILE} exists, skipping download`)
-} else {
-  await updateLocales()
-}
+await updateLocales()

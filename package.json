@@ -13,11 +13,7 @@
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "update-readme": "tsx src/misc/update-readme.ts",
-    "update-locales": "NODE_USE_ENV_PROXY=1 tsx src/misc/update-locales.ts",
-    "ensure-locales": "npm run update-locales -- --if-missing",
-    "prelint": "npm run ensure-locales",
-    "pretest": "npm run ensure-locales",
-    "prepackage": "npm run ensure-locales"
+    "update-locales": "NODE_USE_ENV_PROXY=1 tsx src/misc/update-locales.ts"
   },
   "repository": {
     "type": "git",
