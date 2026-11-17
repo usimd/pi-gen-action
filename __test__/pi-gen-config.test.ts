@@ -79,7 +79,7 @@ describe('PiGenConfig', () => {
     [
       'localeDefault',
       'en_DE.UTF-42',
-      'locale is not included in the list of supported locales (retrieved from /usr/share/i18n/SUPPORTED)'
+      'locale is not supported by Debian trixie'
     ],
     ['targetHostname', undefined, 'hostname must not be empty'],
     ['keyboardKeymap', '', 'keyboard-keymap must not be empty'],
@@ -165,6 +165,32 @@ describe('PiGenConfig', () => {
       await expect(
         async () => await validateConfig(piGenConfig)
       ).rejects.toThrow(error)
+    }
+  )
+
+  it.each([
+    ['trixie', 'de_IT.UTF-8', true],
+    ['testing', 'de_IT.UTF-8', true],
+    ['jessie', 'de_IT.UTF-8', false],
+    ['jessie', 'en_GB.UTF-8', true]
+  ])(
+    'validates locale against release %s: %s supported=%s',
+    async (release: string, locale: string, supported: boolean) => {
+      const piGenConfig = {
+        ...DEFAULT_CONFIG,
+        stageList: ['stage0'],
+        release,
+        localeDefault: locale
+      }
+
+      const validation = validateConfig(piGenConfig)
+      if (supported) {
+        await expect(validation).resolves.toBeUndefined()
+      } else {
+        await expect(validation).rejects.toThrow(
+          `locale is not supported by Debian ${release}`
+        )
+      }
     }
   )
 

@@ -5,6 +5,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 import {getAllTimezones} from 'countries-and-timezones'
+import SUPPORTED_LOCALES from './supported-locales.json' with {type: 'json'}
 
 export interface PiGenConfig {
   aptProxy?: string
@@ -106,24 +107,22 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error('compression must be one of ["none", "zip", "gz", "xz"]')
   }
 
-  if (!(
-    /^[0-9]$/.test(config.compressionLevel) ||
-    (deployCompression === 'xz' && config.compressionLevel === '9e')
-  )) {
+  if (
+    !(
+      /^[0-9]$/.test(config.compressionLevel) ||
+      (deployCompression === 'xz' && config.compressionLevel === '9e')
+    )
+  ) {
     throw new Error('compression-level must be between 0 and 9 (or 9e for xz)')
   }
 
-  const cutCmd = await io.which('cut', true)
-  const supportedLocales = (
-    await exec.getExecOutput(
-      cutCmd,
-      ['-d', ' ', '-f1', '/usr/share/i18n/SUPPORTED'],
-      {silent: true}
-    )
-  ).stdout.split('\n')
+  const supportedLocales =
+    SUPPORTED_LOCALES[
+      config.release.toLowerCase() as keyof typeof SUPPORTED_LOCALES
+    ]
   if (!supportedLocales.includes(config.localeDefault)) {
     throw new Error(
-      'locale is not included in the list of supported locales (retrieved from /usr/share/i18n/SUPPORTED)'
+      `locale is not supported by Debian ${config.release} (see /usr/share/i18n/SUPPORTED of its locales package)`
     )
   }
 
