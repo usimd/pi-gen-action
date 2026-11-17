@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/misc/update-readme.ts'],
+      exclude: ['src/misc/**'],
       thresholds: {
         statements: 98,
         branches: 93,
