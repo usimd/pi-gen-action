@@ -1,5 +1,0 @@
-{
-  "jessie": ["en_GB.UTF-8", "en_US.UTF-8"],
-  "trixie": ["de_IT.UTF-8", "en_GB.UTF-8", "en_US.UTF-8"],
-  "testing": ["de_IT.UTF-8", "en_GB.UTF-8", "en_US.UTF-8"]
-}
