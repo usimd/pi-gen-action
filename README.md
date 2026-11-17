@@ -70,7 +70,7 @@ tries to make sure the stage is respected and its changes are included in the fi
 ## Usage
 
 ```yaml
-- uses: usimd/pi-gen-action@v1
+- uses: usimd/pi-gen-action@v2
   with:
     # If you require the use of an apt proxy, set it here. This proxy setting will not 
     # be included in the image, making it safe to use an apt-cacher or similar package 
