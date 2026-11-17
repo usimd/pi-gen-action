@@ -58,6 +58,9 @@ jobs:
       - name: Compile action code before test
         run: npm ci && npm run package
 
+      - name: Bundle supported Debian locales
+        run: npm run update-locales
+
       - name: List all installed runner packages
         run: sudo apt list --installed
 

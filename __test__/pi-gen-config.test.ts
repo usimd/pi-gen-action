@@ -7,12 +7,31 @@ import {
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as tmp from 'tmp'
+import * as core from '@actions/core'
+
+vi.mock('@actions/core', async importOriginal => {
+  return {...(await importOriginal<typeof import('@actions/core')>())}
+})
 
 vi.mock('fs/promises', async importOriginal => {
   return {...(await importOriginal<typeof import('fs/promises')>())}
 })
 
+const localesFixture = path.join(import.meta.dirname, 'supported-locales.json')
+
 describe('PiGenConfig', () => {
+  beforeEach(() => {
+    const readFile = fs.readFile
+    vi.spyOn(fs, 'readFile').mockImplementation((file, options) =>
+      readFile(
+        path.basename(file.toString()) === 'supported-locales.json'
+          ? localesFixture
+          : file,
+        options
+      )
+    )
+  })
+
   it('instance should write config to file', async () => {
     const imageName = 'foo'
     let config = {} as PiGenConfig
@@ -79,7 +98,7 @@ describe('PiGenConfig', () => {
     [
       'localeDefault',
       'en_DE.UTF-42',
-      'locale is not included in the list of supported locales (retrieved from /usr/share/i18n/SUPPORTED)'
+      'locale is not supported by Debian trixie'
     ],
     ['targetHostname', undefined, 'hostname must not be empty'],
     ['keyboardKeymap', '', 'keyboard-keymap must not be empty'],
@@ -167,6 +186,60 @@ describe('PiGenConfig', () => {
       ).rejects.toThrow(error)
     }
   )
+
+  it.each([
+    ['trixie', 'de_IT.UTF-8', true],
+    ['testing', 'de_IT.UTF-8', true],
+    ['jessie', 'de_IT.UTF-8', false],
+    ['jessie', 'en_GB.UTF-8', true]
+  ])(
+    'validates locale against release %s: %s supported=%s',
+    async (release: string, locale: string, supported: boolean) => {
+      const piGenConfig = {
+        ...DEFAULT_CONFIG,
+        stageList: ['stage0'],
+        release,
+        localeDefault: locale
+      }
+
+      const validation = validateConfig(piGenConfig)
+      if (supported) {
+        await expect(validation).resolves.toBeUndefined()
+      } else {
+        await expect(validation).rejects.toThrow(
+          `locale is not supported by Debian ${release}`
+        )
+      }
+    }
+  )
+
+  it('skips locale validation if no locale data is bundled', async () => {
+    vi.spyOn(fs, 'readFile').mockRejectedValue(
+      Object.assign(new Error('not found'), {code: 'ENOENT'})
+    )
+    vi.spyOn(core, 'warning')
+
+    await expect(
+      validateConfig({
+        ...DEFAULT_CONFIG,
+        stageList: ['stage0'],
+        localeDefault: 'en_DE.UTF-42'
+      })
+    ).resolves.toBeUndefined()
+    expect(core.warning).toHaveBeenCalledWith(
+      expect.stringContaining('skipping locale validation')
+    )
+  })
+
+  it('fails if bundled locale data cannot be read', async () => {
+    vi.spyOn(fs, 'readFile').mockRejectedValue(
+      Object.assign(new Error('permission denied'), {code: 'EACCES'})
+    )
+
+    await expect(
+      validateConfig({...DEFAULT_CONFIG, stageList: ['stage0']})
+    ).rejects.toThrow('permission denied')
+  })
 
   it('should work with compressionLevel properly', async () => {
     const piGenConfig = {

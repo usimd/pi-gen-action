@@ -5,6 +5,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as io from '@actions/io'
 import {getAllTimezones} from 'countries-and-timezones'
+import * as path from 'path'
 
 export interface PiGenConfig {
   aptProxy?: string
@@ -80,6 +81,25 @@ export async function writeToFile(
   return fs.writeFile(file, configContent.join('\n'))
 }
 
+// Generated into dist/ by "npm run update-locales" when publishing a release
+async function loadSupportedLocales(
+  release: string
+): Promise<string[] | undefined> {
+  const localesFile = path.join(import.meta.dirname, 'supported-locales.json')
+  let content: string
+  try {
+    content = await fs.readFile(localesFile, 'utf-8')
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return undefined
+    }
+    throw error
+  }
+  return (JSON.parse(content) as Record<string, string[]>)[
+    release.toLowerCase()
+  ]
+}
+
 export async function validateConfig(config: PiGenConfig): Promise<void> {
   if (!config.imgName) {
     throw new Error('image-name must not be empty')
@@ -113,17 +133,14 @@ export async function validateConfig(config: PiGenConfig): Promise<void> {
     throw new Error('compression-level must be between 0 and 9 (or 9e for xz)')
   }
 
-  const cutCmd = await io.which('cut', true)
-  const supportedLocales = (
-    await exec.getExecOutput(
-      cutCmd,
-      ['-d', ' ', '-f1', '/usr/share/i18n/SUPPORTED'],
-      {silent: true}
+  const supportedLocales = await loadSupportedLocales(config.release)
+  if (!supportedLocales) {
+    core.warning(
+      'No locale data bundled with this build of the action, skipping locale validation'
     )
-  ).stdout.split('\n')
-  if (!supportedLocales.includes(config.localeDefault)) {
+  } else if (!supportedLocales.includes(config.localeDefault)) {
     throw new Error(
-      'locale is not included in the list of supported locales (retrieved from /usr/share/i18n/SUPPORTED)'
+      `locale is not supported by Debian ${config.release} (see /usr/share/i18n/SUPPORTED of its locales package)`
     )
   }
 

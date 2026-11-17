@@ -12,7 +12,8 @@
     "all": "npm run format && npm run lint && npm test && npm run package && npm run update-readme",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "update-readme": "tsx src/misc/update-readme.ts"
+    "update-readme": "tsx src/misc/update-readme.ts",
+    "update-locales": "NODE_USE_ENV_PROXY=1 tsx src/misc/update-locales.ts"
   },
   "repository": {
     "type": "git",
