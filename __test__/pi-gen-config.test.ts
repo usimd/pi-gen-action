@@ -231,6 +231,16 @@ describe('PiGenConfig', () => {
     )
   })
 
+  it('fails if bundled locale data cannot be read', async () => {
+    vi.spyOn(fs, 'readFile').mockRejectedValue(
+      Object.assign(new Error('permission denied'), {code: 'EACCES'})
+    )
+
+    await expect(
+      validateConfig({...DEFAULT_CONFIG, stageList: ['stage0']})
+    ).rejects.toThrow('permission denied')
+  })
+
   it('should work with compressionLevel properly', async () => {
     const piGenConfig = {
       ...DEFAULT_CONFIG,
