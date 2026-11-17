@@ -89,4 +89,8 @@ async function updateLocales(): Promise<void> {
   fs.writeFileSync(OUTPUT_FILE, `${JSON.stringify(locales, null, 2)}\n`)
 }
 
-await updateLocales()
+if (process.argv.includes('--if-missing') && fs.existsSync(OUTPUT_FILE)) {
+  console.log(`${OUTPUT_FILE} exists, skipping download`)
+} else {
+  await updateLocales()
+}
